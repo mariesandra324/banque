@@ -47,54 +47,62 @@ public class Utilisateur implements UserDetails{
 
     private LocalDateTime dateModification;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id",nullable = false)
     private Role role;
 
     @Override
-public String getUsername() {
-    return email;
-}
+    public String getUsername() {
+        return email;
+    }
 
 
-@Override
-public String getPassword() {
-    return motDePasse;
-}
+    @Override
+    public String getPassword() {
+        return motDePasse;
+    }
 
 
-@Override
-public Collection<? extends GrantedAuthority> getAuthorities() {
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
 
-    return List.of(
-        new SimpleGrantedAuthority(
-            "ROLE_" + role.getNom()
-        )
-    );
+        System.out.println("ROLE OBJECT : " + role);
 
-}
+        if(role == null){
+            throw new RuntimeException("Le rôle utilisateur est null");
+        }
 
-
-@Override
-public boolean isAccountNonExpired() {
-    return true;
-}
+        System.out.println("ROLE NOM : " + role.getNom());
 
 
-@Override
-public boolean isAccountNonLocked() {
-    return true;
-}
+        return List.of(
+                new SimpleGrantedAuthority(
+                        "ROLE_" + role.getNom()
+                )
+        );
+    }
 
 
-@Override
-public boolean isCredentialsNonExpired() {
-    return true;
-}
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
 
-@Override
-public boolean isEnabled() {
-    return actif;
-}
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+
+    @Override
+    public boolean isEnabled() {
+        return actif;
+    }
 }

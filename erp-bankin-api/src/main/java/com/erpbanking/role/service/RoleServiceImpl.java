@@ -15,7 +15,7 @@ import lombok.*;
 public class RoleServiceImpl implements RoleService{
     private final RoleRepository roleRepository;
 
-
+    private final RoleMapper roleMapper;
 
     @Override
     public RoleResponse create(RoleRequest request){
