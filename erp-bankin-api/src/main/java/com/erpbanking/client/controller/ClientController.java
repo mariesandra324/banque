@@ -4,6 +4,7 @@ import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 import com.erpbanking.client.service.ClientService;
 
+import ch.qos.logback.core.net.server.Client;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/clients")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class ClientController {
 
 
@@ -54,6 +56,13 @@ public class ClientController {
                 clientService.findById(id)
         );
     }
+
+        @GetMapping("/search")
+    public ResponseEntity<List<Client>> searchClients(@RequestParam("query") String query) {
+        // Appelle la méthode corrigée dans le repository/service
+        List<Client> results = clientService.searchClients(query); 
+        return ResponseEntity.ok(results);
+    }    
 
 
     // Modification d'un client

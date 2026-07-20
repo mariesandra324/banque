@@ -43,9 +43,9 @@ public class AuthServiceImpl implements AuthService {
         System.out.println("JWT = " + token);
 
         return LoginResponse.builder()
+                .token(token)
                 .email(utilisateur.getEmail())
                 .role(utilisateur.getRole().getNom())
-                .token(token)
                 .build();
     }
 }

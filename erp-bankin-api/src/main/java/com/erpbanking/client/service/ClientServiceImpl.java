@@ -24,7 +24,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientResponse create(ClientRequest request) {
-
+        
         Client client = clientMapper.toEntity(request);
 
         Client saved = clientRepository.save(client);
@@ -82,5 +82,20 @@ public class ClientServiceImpl implements ClientService {
     public void delete(Long id) {
 
         clientRepository.deleteById(id);
+    }
+
+
+    // @Override
+    // public List<ch.qos.logback.core.net.server.Client> searchClients(String query) {
+    //     // TODO Auto-generated method stub
+    //     throw new UnsupportedOperationException("Unimplemented method 'searchClients'");
+    // }
+
+    @Override
+    public List searchClients(String query) {
+        // Appelle la méthode de recherche automatique du repository sans référence au CIN
+        return clientRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrTelephoneContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            query, query, query, query
+        );
     }
 }
