@@ -15,6 +15,8 @@ public class ClientResponse {
 
     private String prenom;
 
+    private String cin;
+
     private String email;
 
     private String telephone;

@@ -24,7 +24,10 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientResponse create(ClientRequest request) {
-        
+        if (clientRepository.existsByCin(request.getCin())) {
+            throw new RuntimeException("CIN déjà utilisé");
+        }
+
         Client client = clientMapper.toEntity(request);
 
         Client saved = clientRepository.save(client);
@@ -63,9 +66,13 @@ public class ClientServiceImpl implements ClientService {
                     new RuntimeException("Client introuvable")
                 );
 
+        if (!request.getCin().equals(client.getCin()) && clientRepository.existsByCin(request.getCin())) {
+            throw new RuntimeException("CIN déjà utilisé");
+        }
 
         client.setNom(request.getNom());
         client.setPrenom(request.getPrenom());
+        client.setCin(request.getCin());
         client.setEmail(request.getEmail());
         client.setTelephone(request.getTelephone());
         client.setAdresse(request.getAdresse());
@@ -92,10 +99,11 @@ public class ClientServiceImpl implements ClientService {
     // }
 
     @Override
-    public List searchClients(String query) {
-        // Appelle la méthode de recherche automatique du repository sans référence au CIN
-        return clientRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrTelephoneContainingIgnoreCaseOrEmailContainingIgnoreCase(
-            query, query, query, query
-        );
+    public List<ClientResponse> searchClients(String query) {
+        return clientRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrTelephoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCinContainingIgnoreCase(
+            query, query, query, query, query
+        ).stream()
+         .map(clientMapper::toResponse)
+         .toList();
     }
 }

@@ -3,8 +3,6 @@ package com.erpbanking.client.service;
 import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 
-import ch.qos.logback.core.net.server.Client;
-
 import java.util.List;
 
 public interface ClientService {
@@ -19,6 +17,6 @@ public interface ClientService {
 
     void delete(Long id);
 
-    List<Client> searchClients(String query);
+    List<ClientResponse> searchClients(String query);
     
 }

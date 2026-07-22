@@ -9,9 +9,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    List<Client> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrTelephoneContainingIgnoreCaseOrEmailContainingIgnoreCase(
-        String nom, String prenom, String telephone, String email
+    List<Client> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrTelephoneContainingIgnoreCaseOrEmailContainingIgnoreCaseOrCinContainingIgnoreCase(
+        String nom, String prenom, String telephone, String email, String cin
     );
 
     boolean existsByTelephone(String telephone);
+    boolean existsByCin(String cin);
 }

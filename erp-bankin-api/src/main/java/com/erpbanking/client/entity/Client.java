@@ -30,13 +30,15 @@ public class Client {
     private String nom;
     private String prenom;
 
+    @Column(name = "cin", nullable = false, unique = true)
+    private String cin;
+
     @Column( name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "telephone", nullable = false, unique = true)
     private String telephone;
     private String adresse;
-    //private String cin;
     private LocalDate dateNaissance;
     private LocalDate dateCreation;
 }
