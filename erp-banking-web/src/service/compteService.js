@@ -9,6 +9,9 @@ export const getCompte = (id) =>
 export const createCompte = (compte) =>
     api.post("/comptes", compte);
 
+export const previewNumero = (clientId, typeCompte) =>
+    api.get(`/comptes/preview?clientId=${clientId}&typeCompte=${encodeURIComponent(typeCompte)}`);
+
 export const updateCompte = (id, compte) =>
     api.put(`/comptes/${id}`, compte);
 

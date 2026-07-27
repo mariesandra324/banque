@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { getComptes, createCompte, updateCompte, deleteCompte } from '../service/compteService';
+import { getComptes, createCompte, updateCompte, deleteCompte, previewNumero } from '../service/compteService';
 import { clientService } from '../service/clientService';
 
 const Comptes = () => {
@@ -17,7 +17,7 @@ const Comptes = () => {
     numeroCompte: '',
     typeCompte: '',
     solde: '0',
-    statut: '',
+    statut: 'ACTIF',
     clientId: ''
   });
 
@@ -60,10 +60,34 @@ const Comptes = () => {
   const handleOpenAddModal = () => {
     setIsEditing(false);
     setCurrentCompteId(null);
-    setFormData({ numeroCompte: '', typeCompte: '', solde: '0', statut: '', clientId: '' });
+    setFormData({ numeroCompte: '', typeCompte: '', solde: '0', statut: 'ACTIF', clientId: '' });
     setFieldErrors({});
     setIsModalOpen(true);
   };
+
+  // When creating a new account, preview generated numeroCompte when client and type are selected
+  useEffect(() => {
+    const fetchPreview = async () => {
+      if (isEditing) return;
+      const clientId = Number(formData.clientId);
+      const type = formData.typeCompte;
+      if (!clientId || !type) {
+        setFormData((f) => ({ ...f, numeroCompte: '' }));
+        return;
+      }
+
+      try {
+        const resp = await previewNumero(clientId, type);
+        setFormData((f) => ({ ...f, numeroCompte: resp.data.numeroCompte || '' }));
+      } catch (err) {
+        setFormData((f) => ({ ...f, numeroCompte: '' }));
+        const msg = err.response?.data?.message || err.message || 'Impossible de générer le numéro de compte.';
+        setError(msg);
+      }
+    };
+
+    fetchPreview();
+  }, [formData.clientId, formData.typeCompte, isEditing]);
 
   const handleOpenEditModal = (compte) => {
     setIsEditing(true);
@@ -87,14 +111,8 @@ const Comptes = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.numeroCompte.trim()) {
-      errors.numeroCompte = 'Le numéro de compte est requis.';
-    }
     if (!formData.typeCompte.trim()) {
       errors.typeCompte = 'Le type de compte est requis.';
-    }
-    if (!formData.statut.trim()) {
-      errors.statut = 'Le statut du compte est requis.';
     }
     if (!formData.clientId) {
       errors.clientId = 'Le client associé est requis.';
@@ -115,7 +133,6 @@ const Comptes = () => {
     }
 
     const payload = {
-      numeroCompte: formData.numeroCompte.trim(),
       typeCompte: formData.typeCompte.trim(),
       solde: Number(formData.solde.replace(',', '.')),
       statut: formData.statut.trim(),
@@ -240,22 +257,29 @@ const Comptes = () => {
                   type="text"
                   name="numeroCompte"
                   value={formData.numeroCompte}
-                  onChange={handleInputChange}
-                  required
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                  disabled
+                  placeholder={isEditing ? '' : 'Généré automatiquement après sélection client/type'}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', boxSizing: 'border-box' }}
                 />
-                {fieldErrors.numeroCompte && <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>{fieldErrors.numeroCompte}</div>}
+                {!isEditing && !formData.numeroCompte && (
+                  <div style={{ marginTop: '6px', color: '#64748b', fontSize: '13px' }}>Sélectionnez un client et un type pour afficher le N° de compte.</div>
+                )}
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Type de compte</label>
-                <input
-                  type="text"
+                <select
                   name="typeCompte"
                   value={formData.typeCompte}
                   onChange={handleInputChange}
                   required
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
-                />
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box', backgroundColor: 'white' }}
+                >
+                  <option value="">Sélectionnez un type</option>
+                  <option value="Courant">Courant</option>
+                  <option value="Epargne">Épargne</option>
+                  <option value="A terme">À terme</option>
+                  <option value="Devises">Devises</option>
+                </select>
                 {fieldErrors.typeCompte && <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>{fieldErrors.typeCompte}</div>}
               </div>
               <div style={{ marginBottom: '16px' }}>
@@ -271,18 +295,7 @@ const Comptes = () => {
                 />
                 {fieldErrors.solde && <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>{fieldErrors.solde}</div>}
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Statut</label>
-                <input
-                  type="text"
-                  name="statut"
-                  value={formData.statut}
-                  onChange={handleInputChange}
-                  required
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
-                />
-                {fieldErrors.statut && <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>{fieldErrors.statut}</div>}
-              </div>
+              {/* Le statut est géré automatiquement côté backend; champ masqué côté UI */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Client associé</label>
                 <select
