@@ -12,8 +12,8 @@ import com.erpbanking.compte.repository.CompteRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +26,6 @@ public class CompteServiceImpl implements CompteService {
 
     private final ClientRepository clientRepository;
 
-
-
     @Override
     public CompteResponse create(CompteRequest request) {
 
@@ -36,17 +34,33 @@ public class CompteServiceImpl implements CompteService {
                 .orElseThrow(() ->
                     new RuntimeException("Client introuvable")
                 );
+        long existing = compteRepository.countByClientId(client.getId());
+        if (existing >= 3) {
+            throw new RuntimeException("Le client a atteint le nombre maximal de comptes (3)");
+        }
 
-
-        Compte compte = compteMapper.toEntity(request);
+        String numeroCompte = generateNumeroCompte();
+        Compte compte = compteMapper.toEntity(request, numeroCompte);
 
         compte.setClient(client);
-
 
         Compte saved = compteRepository.save(compte);
 
 
         return compteMapper.toResponse(saved);
+    }
+
+    @Override
+    public String previewNumeroCompte(Long clientId, String typeCompte) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client introuvable"));
+
+        long existing = compteRepository.countByClientId(client.getId());
+        if (existing >= 3) {
+            throw new RuntimeException("Le client a atteint le nombre maximal de comptes (3)");
+        }
+
+        return generateNumeroCompte();
     }
 
 
@@ -98,16 +112,23 @@ public class CompteServiceImpl implements CompteService {
                 );
 
 
-        compte.setNumeroCompte(request.getNumeroCompte());
+        // Ne pas modifier le numéro de compte existant lors de la mise à jour
         compte.setTypeCompte(request.getTypeCompte());
-        compte.setSolde(request.getSolde());
-        compte.setStatut(request.getStatut());
+        compte.setSolde(request.getSolde() != null ? request.getSolde() : compte.getSolde());
+        compte.setStatut(request.getStatut() != null && !request.getStatut().isBlank() ? request.getStatut() : compte.getStatut());
         compte.setClient(client);
-
 
         Compte updated = compteRepository.save(compte);
 
 
         return compteMapper.toResponse(updated);
+    }
+
+    private String generateNumeroCompte() {
+        String numero;
+        do {
+            numero = String.format("FR%08d", ThreadLocalRandom.current().nextInt(0, 100_000_000));
+        } while (compteRepository.findByNumeroCompte(numero).isPresent());
+        return numero;
     }
 }

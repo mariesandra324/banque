@@ -1,5 +1,6 @@
 package com.erpbanking.compte.mapper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.springframework.stereotype.Component;
@@ -11,13 +12,13 @@ import com.erpbanking.compte.entity.Compte;
 @Component
 public class CompteMapper {
     
-    public Compte toEntity(CompteRequest request){
+    public Compte toEntity(CompteRequest request, String numeroCompte){
 
         return Compte.builder()
-            .numeroCompte(request.getNumeroCompte())
+            .numeroCompte(numeroCompte)
             .typeCompte(request.getTypeCompte())
-            .solde(request.getSolde())
-            .statut(request.getStatut())
+            .solde(request.getSolde() != null ? request.getSolde() : BigDecimal.ZERO)
+            .statut(request.getStatut() != null && !request.getStatut().isBlank() ? request.getStatut() : "ACTIF")
             .dateCreation(LocalDate.now())
             .build();
     }

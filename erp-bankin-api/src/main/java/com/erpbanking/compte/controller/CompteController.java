@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -31,6 +32,16 @@ public class CompteController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(compteService.create(request));
+    }
+
+    // Preview generated account number for selected client and type
+    @GetMapping("/preview")
+    public ResponseEntity<Map<String, String>> previewNumero(
+            @RequestParam Long clientId,
+            @RequestParam(required = false) String typeCompte
+    ) {
+        String numero = compteService.previewNumeroCompte(clientId, typeCompte);
+        return ResponseEntity.ok(Map.of("numeroCompte", numero));
     }
 
 

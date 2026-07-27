@@ -10,8 +10,11 @@ import java.util.List;
 
 public interface TransactionRepository  extends JpaRepository<Transaction, Long>{
     
-    @Query ("SELECT t FROM Transaction t where t.compteSource.numeroCompte =:numeroCompte OR t.compteDestination.numeroCompte =:numeroCompte ORDER BY t.dateTransaction DESC")
-    List<Transaction> findByNumeroCompte (@Param("numeroCompte") String numeroCompte);
+    @Query("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd WHERE cs.numeroCompte = :numeroCompte OR cd.numeroCompte = :numeroCompte ORDER BY t.dateTransaction DESC")
+    List<Transaction> findByNumeroCompte(@Param("numeroCompte") String numeroCompte);
+
+    @Query("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd ORDER BY t.dateTransaction DESC")
+    List<Transaction> findAllWithAccountsOrderByDateTransactionDesc();
 
     Transaction findByReference(String reference);
 }

@@ -26,8 +26,14 @@ public class TransactionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // Récupérer l'historique des transactions d'un compte
-    @GetMapping("/compte/{numeroCompte}")
+    // Récupérer toutes les transactions
+    @GetMapping
+    public ResponseEntity<List<TransactionResponse>> obtenirToutesTransactions() {
+        return ResponseEntity.ok(transactionService.obtenirToutesTransactions());
+    }
+
+    // Récupérer l'historique des transactions d'un compte (alias historique)
+    @GetMapping({"/compte/{numeroCompte}", "/historique/{numeroCompte}"})
     public ResponseEntity<List<TransactionResponse>> obtenirHistorique(@PathVariable String numeroCompte) {
         return ResponseEntity.ok(transactionService.obtenirHistoriqueCompte(numeroCompte));
     }

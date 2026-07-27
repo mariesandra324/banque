@@ -10,6 +10,8 @@ import com.erpbanking.compte.entity.Compte;
 public interface CompteRepository extends JpaRepository<Compte, Long>{
 
     Optional<Compte> findByNumeroCompte(String numeroCompte);
+
+    long countByClientId(Long clientId);
 }
     
 

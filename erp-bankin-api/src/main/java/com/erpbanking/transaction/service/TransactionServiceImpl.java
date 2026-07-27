@@ -100,6 +100,14 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public List<TransactionResponse> obtenirToutesTransactions() {
+        return transactionRepository.findAllWithAccountsOrderByDateTransactionDesc()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
     public TransactionResponse obtenirParReference(String reference) {
         Transaction tx = transactionRepository.findByReference(reference);
         if (tx == null) {
