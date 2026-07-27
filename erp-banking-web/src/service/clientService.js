@@ -1,17 +1,23 @@
 // Remplace par l'URL de ton serveur Java (ex: Spring Boot tourne souvent sur le port 8080)
 const API_URL = "http://localhost:8080/api/clients"; 
 
+const getHeaders = () => {
+  const token = localStorage.getItem("token");
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const clientService = {
   // 1. Récupérer tous les clients (GET)
   getAllClients: async () => {
-    const token = localStorage.getItem("token"); // Si ton API est sécurisée par JWT
     const response = await fetch(API_URL, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // Enlève la ligne du dessous si ton API n'utilise pas de token de sécurité
-        "Authorization": `Bearer ${token}` 
-      }
+      headers: getHeaders()
     });
     
     if (!response.ok) {
@@ -40,13 +46,9 @@ export const clientService = {
 
   // 3. MODIFIER un client (PUT) 
   updateClient: async (id, clientData) => {
-    const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/${id}`, {
       method: "PUT", 
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers: getHeaders(),
       body: JSON.stringify(clientData)
     });
 
@@ -58,12 +60,9 @@ export const clientService = {
 
   // 4. Supprimer un client (DELETE)
   deleteClient: async (id) => {
-    const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      headers: getHeaders()
     });
 
     if (!response.ok) {
@@ -74,13 +73,9 @@ export const clientService = {
 
   // 5. Rechercher des clients par mot-clé (CIN, Téléphone, Email)
   searchClients: async (query) => {
-    const token = localStorage.getItem("token"); 
     const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
+      headers: getHeaders()
     });
 
     if (!response.ok) {

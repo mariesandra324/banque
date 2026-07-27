@@ -4,6 +4,8 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from '../pages/Dashboard';
 import Login from '../features/auth/Login';
 import Clients from '../pages/Clients';
+import Comptes from '../pages/Comptes';
+import Transactions from '../pages/Transactions';
 
 // Un composant de garde ultra-simple pour le Sprint 1
 const ProtectedRoute = ({ children }) => {
@@ -37,6 +39,8 @@ const AppRoutes = () => {
             <Route index element={<Dashboard />} />
             <Route path='dashboard' element={<Dashboard/>}/>
             <Route path="clients" element={<Clients />} />
+            <Route path="comptes" element={<Comptes />} />
+            <Route path="transactions" element={<Transactions />} />
       </Route>
 
       {/* Si l'utilisateur tape une URL inconnue, on le redirige vers l'accueil (qui vérifiera s'il est connecté) */}

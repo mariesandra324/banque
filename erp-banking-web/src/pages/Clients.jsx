@@ -8,8 +8,8 @@ const Clients = () => {
   const [error, setError] = useState(null);
   //notification
   const [notification, setNotification] = useState(null);
-  // message d'erreur rouge spécifique au formulaire
-  const [formError, setFormError] = useState('');
+  // messages d'erreur par champ du formulaire
+  const [fieldErrors, setFieldErrors] = useState({ cin: '', telephone: '' });
 
   //recherche
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,12 +20,15 @@ const Clients = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentClientId, setCurrentClientId] = useState(null);
 
+  const PHONE_PREFIX = '+261';
+
   // État pour les champs du formulaire
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
+    cin: '',
     email: '',
-    telephone: '+261',
+    telephone: PHONE_PREFIX,
     adresse: '',
     dateNaissance: '' //  "YYYY-MM-DD"
   });
@@ -58,8 +61,10 @@ const Clients = () => {
       setLoading(true);
       const data = await clientService.getAllClients();
       setClients(data);
+      setError(null);
     } catch (err) {
-      setError(err.message);
+      console.error("Erreur API clients :", err);
+      setError(err.message ?? "Erreur inconnue lors de la récupération des clients.");
     } finally {
       setLoading(false);
     }
@@ -98,7 +103,8 @@ const Clients = () => {
   // Ouvrir la modale pour l'ajout
   const handleOpenAddModal = () => {
     setIsEditing(false);
-    setFormData({ nom: '', prenom: '', email: '', telephone: '', adresse: '', dateNaissance: '' });
+    setFormData({ nom: '', prenom: '', cin: '', email: '', telephone: '+261', adresse: '', dateNaissance: '' });
+    setFieldErrors({ cin: '', telephone: '' });
     setIsModalOpen(true);
   };
 
@@ -108,46 +114,78 @@ const Clients = () => {
     setIsEditing(true);
     setCurrentClientId(client.id);
     
-    // Si ton backend Java renvoie une date complète ou avec timezone, on extrait uniquement la partie "YYYY-MM-DD" pour l'input type="date"
-    const formattedDate = client.dateNaissance ? client.dateNaissance.substring(0, 10) : '';
+    let formattedDate = '';
+    if (client.dateNaissance) {
+      const rawDate = typeof client.dateNaissance === 'string'
+        ? client.dateNaissance
+        : new Date(client.dateNaissance).toISOString();
+      formattedDate = rawDate.substring(0, 10);
+    }
 
     setFormData({
       nom: client.nom,
       prenom: client.prenom,
+      cin: client.cin || '',
       email: client.email,
       telephone: client.telephone,
       adresse: client.adresse,
       dateNaissance: formattedDate
     });
+    setFieldErrors({ cin: '', telephone: '' });
     setIsModalOpen(true);
   };
 
   // Gérer le changement dans les champs de saisie
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'telephone') {
+      let normalized = value;
+      if (!normalized.startsWith(PHONE_PREFIX)) {
+        const afterPrefix = normalized.replace(/^\+?261/, '');
+        normalized = PHONE_PREFIX + afterPrefix;
+      }
+      setFormData({ ...formData, telephone: normalized });
+      setFieldErrors({ ...fieldErrors, telephone: '' });
+      return;
+    }
+
     setFormData({ ...formData, [name]: value });
+    setFieldErrors({ ...fieldErrors, [name]: '' });
   };
 
   // Soumettre le formulaire (Ajout OU Modification)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormError('');
     const phoneRegex = /^\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}$|^\+261(32|33|34|37|38)\d{7}$/;
-    
+    const errors = { cin: '', telephone: '' };
+
+    const cinValue = formData.cin?.trim() || '';
+    if (!/^[0-9]{12}$/.test(cinValue)) {
+      errors.cin = "Votre CIN est incorrecte. Il doit contenir exactement 12 chiffres.";
+    }
+
     if (!phoneRegex.test(formData.telephone.trim())) {
-      setFormError("Le numéro doit commencer par +261 et utiliser un opérateur valide (32, 33, 34, 37, 38) suivi de 7 chiffres.");
+      errors.telephone = "Votre téléphone est incorrect. Utilisez +261 suivi de 9 chiffres valides.";
+    }
+
+    if (errors.cin || errors.telephone) {
+      setFieldErrors(errors);
       return;
     }
     try {
       if (isEditing) {
         await clientService.updateClient(currentClientId, formData);
+        showNotification("Client modifié avec succès.");
       } else {
         await clientService.createClient(formData);
+        showNotification("Client ajouté avec succès.");
       }
       setIsModalOpen(false);
       loadClients(); 
     } catch (err) {
-      alert("Erreur lors de l'enregistrement : " + err.message);
+      console.error("Erreur sauvegarde client :", err);
+      alert("Erreur lors de l'enregistrement : " + (err.message || "Erreur inconnue."));
     }
   };
 
@@ -157,8 +195,10 @@ const Clients = () => {
       try {
         await clientService.deleteClient(id);
         setClients(clients.filter(client => client.id !== id));
+        showNotification("Client supprimé avec succès.");
       } catch (err) {
-        alert("Impossible de supprimer le client : " + err.message);
+        console.error("Erreur suppression client :", err);
+        alert("Impossible de supprimer le client : " + (err.message || "Erreur inconnue."));
       }
     }
   };
@@ -214,11 +254,8 @@ const Clients = () => {
         )}
       </div>
       {/* En-tête */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>Gestion des clients</h1>
-          <p style={{ color: '#64748b', marginTop: '4px' }}>Données réelles de la base de données.</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
+        
         <button 
           onClick={handleOpenAddModal}
           style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
@@ -226,6 +263,12 @@ const Clients = () => {
           + Ajouter un client
         </button>
       </div>
+
+      {notification && (
+        <div style={{ marginBottom: '18px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #d1fae5' }}>
+          {notification}
+        </div>
+      )}
 
       {/* Tableau des données */}
       <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
@@ -305,6 +348,19 @@ const Clients = () => {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>CIN</label>
+                <input 
+                  type="text" name="cin" value={formData.cin} onChange={handleInputChange} required
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+                />
+                {fieldErrors.cin && (
+                  <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>
+                    {fieldErrors.cin}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>E-mail</label>
                 <input 
                   type="email" name="email" value={formData.email} onChange={handleInputChange} required
@@ -318,6 +374,11 @@ const Clients = () => {
                   type="text" name="telephone" value={formData.telephone} onChange={handleInputChange} required
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
                 />
+                {fieldErrors.telephone && (
+                  <div style={{ marginTop: '6px', color: '#b91c1c', fontSize: '13px' }}>
+                    {fieldErrors.telephone}
+                  </div>
+                )}
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Adresse</label>
