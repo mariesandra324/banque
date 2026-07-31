@@ -6,15 +6,15 @@ import {
   ArrowLeftRight,
   Landmark,
   FileText,
-  Settings
+  Settings,UserCog
 } from "lucide-react";
 import "../styles/sidebar.css";
+import { useAuth } from "../hooks/useAuth";
 
 function Sidebar() {
-  // Récupération du rôle stocké lors du Login (Sprint 1)
-  const role = localStorage.getItem("role");
+  const { user } = useAuth();
+  const role = user?.role;
 
-  // Helper pour filtrer l'accès de façon sécurisée
   const hasAccess = (allowedRoles) => {
     return allowedRoles.includes(role);
   };
@@ -26,13 +26,19 @@ function Sidebar() {
         Tableau de bord
       </NavLink>
 
-      {/* Seuls les AGENTS ou ADMINS gèrent les clients (Sprint 2) */}
-      {/* {hasAccess(["AGENT", "ADMIN"]) && ( */}
+      {hasAccess(["ADMIN", "AGENT", "GESTIONNAIRE", "COMPTABLE"]) && (
         <NavLink to="/clients" className={({ isActive }) => isActive ? "active" : ""}>
           <Users size={18} />
           Clients
         </NavLink>
-      {/* )} */}
+      )}
+
+      {hasAccess(["ADMIN"]) && (
+        <NavLink to="/utilisateurs" className={({ isActive }) => isActive ? "active" : ""}>
+          <UserCog size={18} />
+          Utilisateurs
+        </NavLink>
+      )}
 
       <NavLink to="/comptes">
         <CreditCard size={18} />
@@ -49,8 +55,8 @@ function Sidebar() {
         Crédits
       </NavLink>
 
-      {/* Seuls les ADMINS ou AGENTS accèdent aux rapports de l'ERP */}
-      {hasAccess(["ADMIN", "AGENT"]) && (
+      {/* Seuls les ADMINS ou COMPTABLES accèdent aux rapports financiers */}
+      {hasAccess(["ADMIN", "COMPTABLE"]) && (
         <NavLink to="/rapports">
           <FileText size={18} />
           Rapports

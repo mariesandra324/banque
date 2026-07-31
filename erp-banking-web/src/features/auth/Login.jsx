@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Landmark } from "lucide-react";
-import { login } from "./authService";
+import { useAuth } from "../../hooks/useAuth";
 import "../../styles/login.css";
 
 function Login() {
 
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [email, setEmail] = useState("");
     const [motDePasse, setMotDePasse] = useState("");
@@ -23,14 +24,10 @@ function Login() {
 
         try {
 
-            const response = await login({
+            await login({
                 email,
                 motDePasse
             });
-
-            localStorage.setItem("token", response.token);
-            localStorage.setItem("email", response.email);
-            localStorage.setItem("role", response.role);
 
             navigate("/dashboard");
 

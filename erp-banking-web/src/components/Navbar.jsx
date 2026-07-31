@@ -1,16 +1,18 @@
 import { Bell, Search, UserCircle, Menu, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/navbar.css";
 
 function Navbar({ toggleSidebar }) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const email = localStorage.getItem("email");
-  const role = localStorage.getItem("role");
+  const email = user?.email;
+  const role = user?.role;
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/login"); 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -54,7 +56,7 @@ function Navbar({ toggleSidebar }) {
         <div className="divider"></div>
 
         {/* Bouton de Déconnexion */}
-        <button className="logout-btn" onClick={logout} title="Se déconnecter">
+        <button className="logout-btn" onClick={handleLogout} title="Se déconnecter">
           <LogOut className="icon logout-icon" size={20} />
         </button>
       </div>

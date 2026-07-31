@@ -1,20 +1,18 @@
-import axios from 'axios';
+import api from './api'; 
 
-const API_URL = 'http://localhost:8080/api/transactions';
+const RESOURCE = '/transactions';
 
 export const effectuerTransaction = async (transactionData) => {
-    // transactionData = { type, montant, numeroCompteSource, numeroCompteDestination, description }
-    const response = await axios.post(API_URL, transactionData);
-    return response.data;
+  const response = await api.post(RESOURCE, transactionData);
+  return response.data;
 };
 
 export const getHistoriqueCompte = async (numeroCompte) => {
-    const response = await axios.get(`${API_URL}/historique/${numeroCompte}`);
-    return response.data;
+  const response = await api.get(`${RESOURCE}/historique/${numeroCompte}`);
+  return response.data;
 };
 
 export const getAllTransactions = async () => {
-    const response = await axios.get(API_URL);
-    return response.data;
+  const response = await api.get(RESOURCE);
+  return response.data;
 };
-

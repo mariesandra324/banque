@@ -12,14 +12,11 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       const token = authService.getToken();
       if (token) {
-        // Configure le token par défaut pour toutes les requêtes axios dans ton service api
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        try {
-          // Récupère les infos fraîches de l'utilisateur (rôle et permissions)
-          const userData = await authService.getCurrentUser();
+        const userData = await authService.getCurrentUser();
+        if (userData?.email && userData?.role) {
           setUser(userData);
-        // eslint-disable-next-line no-unused-vars
-        } catch (error) {
+        } else {
           authService.logout();
         }
       }
@@ -29,9 +26,9 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (username, password) => {
-    const data = await authService.login(username, password);
-    setUser(data.user);
+  const login = async (credentials) => {
+    const data = await authService.login(credentials);
+    setUser({ email: data.email, role: data.role });
     api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
     return data;
   };

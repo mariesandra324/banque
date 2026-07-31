@@ -1,22 +1,32 @@
 import api from './api';
 
 const authService = {
-  login: async (username, password) => {
-    const response = await api.post('/auth/login', { username, password });
+  login: async ({ email, motDePasse }) => {
+    const response = await api.post('/auth/login', { email, motDePasse });
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('email', response.data.email);
+      localStorage.setItem('role', response.data.role);
     }
-    return response.data; // Doit retourner { token, user: { username, role, permissions } }
+    return response.data;
   },
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('email');
+    localStorage.removeItem('role');
   },
 
   getCurrentUser: async () => {
-    // Optionnel : si tu as un endpoint de vérification de session / profil
-    const response = await api.get('/auth/me');
-    return response.data;
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      return {
+        email: localStorage.getItem('email'),
+        role: localStorage.getItem('role')
+      };
+    }
   },
 
   getToken: () => {
