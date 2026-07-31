@@ -36,7 +36,7 @@ public class Role {
     @Column(name = "date_modification")
     private LocalDateTime dateModification;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),

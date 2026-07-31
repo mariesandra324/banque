@@ -8,11 +8,13 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+import com.erpbanking.security.AuthorizationService;
 
 @RestController
 @RequestMapping("/api/comptes")
@@ -21,10 +23,12 @@ public class CompteController {
 
 
     private final CompteService compteService;
+    private final AuthorizationService authorizationService;
 
 
     // Création d'un compte
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<CompteResponse> create(
             @RequestBody CompteRequest request
     ) {
@@ -36,6 +40,7 @@ public class CompteController {
 
     // Preview generated account number for selected client and type
     @GetMapping("/preview")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<Map<String, String>> previewNumero(
             @RequestParam Long clientId,
             @RequestParam(required = false) String typeCompte
@@ -47,6 +52,7 @@ public class CompteController {
 
     // Liste des comptes
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
     public ResponseEntity<List<CompteResponse>> findAll() {
 
         return ResponseEntity.ok(
@@ -57,6 +63,7 @@ public class CompteController {
 
     // Recherche d'un compte par ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE') or @authorizationService.isCompteOwner(#id)")
     public ResponseEntity<CompteResponse> findById(
             @PathVariable Long id
     ) {
@@ -69,6 +76,7 @@ public class CompteController {
 
     // Modification d'un compte
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<CompteResponse> update(
             @PathVariable Long id,
             @RequestBody CompteRequest request
@@ -82,6 +90,7 @@ public class CompteController {
 
     // Suppression d'un compte
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id
     ) {

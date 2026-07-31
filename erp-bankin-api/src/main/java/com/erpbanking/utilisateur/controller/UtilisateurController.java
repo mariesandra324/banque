@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.erpbanking.common.ApiResponse;
 import com.erpbanking.utilisateur.dto.UtilisateurRequest;
@@ -19,6 +20,7 @@ public class UtilisateurController {
     private final UtilisateurService utilisateurService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> create(
             @Valid @RequestBody UtilisateurRequest request) {
 
@@ -29,6 +31,7 @@ public class UtilisateurController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UtilisateurResponse>>> findAll() {
 
         return ResponseEntity.ok(
@@ -38,6 +41,7 @@ public class UtilisateurController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> findById(
             @PathVariable Long id) {
 
@@ -48,6 +52,7 @@ public class UtilisateurController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody UtilisateurRequest request) {
@@ -59,6 +64,7 @@ public class UtilisateurController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Object>> delete(
             @PathVariable Long id) {
 

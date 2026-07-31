@@ -20,7 +20,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+public LoginResponse login(LoginRequest request) {
+
+    try {
 
         System.out.println("AVANT AUTHENTIFICATION");
 
@@ -37,15 +39,19 @@ public class AuthServiceImpl implements AuthService {
         Utilisateur utilisateur =
                 (Utilisateur) authentication.getPrincipal();
 
-        // Génération du JWT
         String token = jwtService.generateToken(utilisateur);
-
-        System.out.println("JWT = " + token);
 
         return LoginResponse.builder()
                 .token(token)
                 .email(utilisateur.getEmail())
                 .role(utilisateur.getRole().getNom())
                 .build();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+
+        throw e;
     }
+}
 }

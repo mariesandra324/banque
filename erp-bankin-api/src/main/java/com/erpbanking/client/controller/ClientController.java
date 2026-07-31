@@ -3,11 +3,13 @@ package com.erpbanking.client.controller;
 import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 import com.erpbanking.client.service.ClientService;
+import com.erpbanking.security.AuthorizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,10 +23,12 @@ public class ClientController {
 
 
     private final ClientService clientService;
+    private final AuthorizationService authorizationService;
 
 
     // Création d'un client
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<ClientResponse> create(
             @Valid @RequestBody ClientRequest request
     ) {
@@ -37,6 +41,7 @@ public class ClientController {
 
     // Liste des clients
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
     public ResponseEntity<List<ClientResponse>> findAll() {
 
         return ResponseEntity.ok(
@@ -47,6 +52,7 @@ public class ClientController {
 
     // Recherche par ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE') or @authorizationService.isClientOwner(#id)")
     public ResponseEntity<ClientResponse> findById(
             @PathVariable Long id
     ) {
@@ -57,6 +63,7 @@ public class ClientController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
     public ResponseEntity<List<ClientResponse>> searchClients(@RequestParam("query") String query) {
         List<ClientResponse> results = clientService.searchClients(query);
         return ResponseEntity.ok(results);
@@ -65,6 +72,7 @@ public class ClientController {
 
     // Modification d'un client
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or @authorizationService.isClientOwner(#id)")
     public ResponseEntity<ClientResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody ClientRequest request
@@ -78,6 +86,7 @@ public class ClientController {
 
     // Suppression d'un client
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id
     ) {

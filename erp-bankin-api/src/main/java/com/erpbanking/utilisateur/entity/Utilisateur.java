@@ -1,12 +1,15 @@
 package com.erpbanking.utilisateur.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.erpbanking.permission.entity.Permission;
 
 import com.erpbanking.role.entity.Role;
 import jakarta.persistence.*;
@@ -64,23 +67,40 @@ public class Utilisateur implements UserDetails{
 
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+public Collection<? extends GrantedAuthority> getAuthorities() {
 
-        System.out.println("ROLE OBJECT : " + role);
+    List<GrantedAuthority> authorities = new ArrayList<>();
 
-        if(role == null){
-            throw new RuntimeException("Le rôle utilisateur est null");
+    authorities.add(
+            new SimpleGrantedAuthority("ROLE_" + role.getNom())
+    );
+
+    if (role.getPermissions() != null) {
+
+        for (Permission permission : role.getPermissions()) {
+
+            System.out.println("Permission : " + permission);
+
+            if (permission == null) {
+                System.out.println("Permission NULL");
+                continue;
+            }
+
+            System.out.println("Nom = " + permission.getNom());
+            System.out.println("Actif = " + permission.getActif());
+
+            if (Boolean.TRUE.equals(permission.getActif())
+                    && permission.getNom() != null) {
+
+                authorities.add(
+                        new SimpleGrantedAuthority(permission.getNom())
+                );
+            }
         }
-
-        System.out.println("ROLE NOM : " + role.getNom());
-
-
-        return List.of(
-                new SimpleGrantedAuthority(
-                        "ROLE_" + role.getNom()
-                )
-        );
     }
+
+    return authorities;
+}
 
 
     @Override

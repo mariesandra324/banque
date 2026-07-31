@@ -6,7 +6,6 @@ import com.erpbanking.transaction.dto.TransactionRequest;
 import com.erpbanking.transaction.dto.TransactionResponse;
 import com.erpbanking.transaction.entity.Transaction;
 import com.erpbanking.transaction.entity.StatutTransaction;
-import com.erpbanking.transaction.entity.TypeTransaction;
 import com.erpbanking.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CompteRepository compteRepository; 
     @Override
-    @Transactional // Garantit la cohérence : rollback auto en cas d'exception
+    @Transactional 
     public TransactionResponse effectuerTransaction(TransactionRequest request) {
 
         // 1. Récupération du compte source

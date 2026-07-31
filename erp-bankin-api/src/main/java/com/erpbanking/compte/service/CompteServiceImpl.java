@@ -124,6 +124,7 @@ public class CompteServiceImpl implements CompteService {
         return compteMapper.toResponse(updated);
     }
 
+    //automatisation
     private String generateNumeroCompte() {
         String numero;
         do {
