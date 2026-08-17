@@ -26,17 +26,17 @@ function Sidebar() {
         Tableau de bord
       </NavLink>
 
-      {hasAccess(["ADMIN", "AGENT", "GESTIONNAIRE", "COMPTABLE"]) && (
-        <NavLink to="/clients" className={({ isActive }) => isActive ? "active" : ""}>
-          <Users size={18} />
-          Clients
-        </NavLink>
-      )}
-
       {hasAccess(["ADMIN"]) && (
         <NavLink to="/utilisateurs" className={({ isActive }) => isActive ? "active" : ""}>
           <UserCog size={18} />
           Utilisateurs
+        </NavLink>
+      )}
+
+      {hasAccess(["ADMIN", "AGENT", "GESTIONNAIRE", "COMPTABLE"]) && (
+        <NavLink to="/clients" className={({ isActive }) => isActive ? "active" : ""}>
+          <Users size={18} />
+          Clients
         </NavLink>
       )}
 

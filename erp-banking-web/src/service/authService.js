@@ -7,6 +7,7 @@ const authService = {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('email', response.data.email);
       localStorage.setItem('role', response.data.role);
+      localStorage.setItem('codeGuichet', response.data.codeGuichet);
     }
     return response.data;
   },
@@ -15,6 +16,7 @@ const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('email');
     localStorage.removeItem('role');
+    localStorage.removeItem('codeGuichet');
   },
 
   getCurrentUser: async () => {

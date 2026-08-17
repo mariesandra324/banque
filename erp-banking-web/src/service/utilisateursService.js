@@ -10,6 +10,7 @@ const authHeader = () => ({
 
 export const getUtilisateurs = () =>
     axios.get(API_URL, authHeader());
+    console.log("Réponse backend :");
 
 export const createUtilisateur = (data) =>
     axios.post(API_URL, data, authHeader());
