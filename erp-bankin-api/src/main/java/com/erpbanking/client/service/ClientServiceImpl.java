@@ -18,7 +18,7 @@ public class ClientServiceImpl implements ClientService {
 
 
     private final ClientRepository clientRepository;
-
+    
     private final ClientMapper clientMapper;
 
 
@@ -90,13 +90,6 @@ public class ClientServiceImpl implements ClientService {
 
         clientRepository.deleteById(id);
     }
-
-
-    // @Override
-    // public List<ch.qos.logback.core.net.server.Client> searchClients(String query) {
-    //     // TODO Auto-generated method stub
-    //     throw new UnsupportedOperationException("Unimplemented method 'searchClients'");
-    // }
 
     @Override
     public List<ClientResponse> searchClients(String query) {

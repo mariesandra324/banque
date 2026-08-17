@@ -1,5 +1,8 @@
 package com.erpbanking.utilisateur.dto;
 
+import com.erpbanking.guichet.entity.Guichet;
+
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -20,6 +23,8 @@ public class UtilisateurRequest {
     private String motDePasse;
 
     private String telephone;
+
+    private Long guichetId;
 
     private Long roleId;
 }

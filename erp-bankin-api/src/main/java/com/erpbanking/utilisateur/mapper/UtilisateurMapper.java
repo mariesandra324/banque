@@ -22,6 +22,14 @@ public class UtilisateurMapper {
 
                 .role(utilisateur.getRole().getNom())
 
+                .codeGuichet(
+                    utilisateur.getGuichet() != null
+                    ? utilisateur.getGuichet().getCodeGuichet()
+                    : null
+                )
+
+                .actif(utilisateur.getActif())
+                
                 .build();
 
     }

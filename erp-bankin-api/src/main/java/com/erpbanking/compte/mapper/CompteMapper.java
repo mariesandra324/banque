@@ -37,6 +37,10 @@ public class CompteMapper {
                 ? compte.getClient().getId() 
                 : null
             )
+            .codeBanque(compte.getCodeBanque())
+            .codeGuichet(compte.getCodeGuichet())
+            .cleRib(compte.getCleRib())
+            .iban(compte.getIban())
             .build();
 }
 }

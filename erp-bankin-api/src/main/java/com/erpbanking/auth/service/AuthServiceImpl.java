@@ -40,11 +40,17 @@ public LoginResponse login(LoginRequest request) {
                 (Utilisateur) authentication.getPrincipal();
 
         String token = jwtService.generateToken(utilisateur);
+        
+        String codeGuichet = null;
 
+        if (utilisateur.getGuichet() != null) {
+        codeGuichet = utilisateur.getGuichet().getCodeGuichet();
+        }
         return LoginResponse.builder()
                 .token(token)
                 .email(utilisateur.getEmail())
                 .role(utilisateur.getRole().getNom())
+                .codeGuichet(codeGuichet)
                 .build();
 
     } catch (Exception e) {

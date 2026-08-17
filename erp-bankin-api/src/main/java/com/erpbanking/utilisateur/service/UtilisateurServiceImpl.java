@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.erpbanking.common.ResourceNotFoundException;
 import com.erpbanking.role.repository.RoleRepository;
+import com.erpbanking.guichet.entity.Guichet;
+import com.erpbanking.guichet.repository.GuichetRepository;
 import com.erpbanking.role.entity.Role;
 import com.erpbanking.utilisateur.dto.UtilisateurRequest;
 import com.erpbanking.utilisateur.dto.UtilisateurResponse;
@@ -22,6 +24,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final RoleRepository roleRepository;
+    private final GuichetRepository guichetRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -35,6 +38,9 @@ public class UtilisateurServiceImpl implements UtilisateurService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Rôle introuvable."));
 
+        Guichet guichet= guichetRepository.findById(request.getGuichetId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("code guichet introuvable"));
         Utilisateur utilisateur = Utilisateur.builder()
                 .nom(request.getNom())
                 .prenom(request.getPrenom())
@@ -42,6 +48,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
                 .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
                 .telephone(request.getTelephone())
                 .role(role)
+                .guichet(guichet)
                 .build();
 
         utilisateur = utilisateurRepository.save(utilisateur);
@@ -71,38 +78,52 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     @Override
     public UtilisateurResponse update(Long id, UtilisateurRequest request) {
 
-        Utilisateur utilisateur = utilisateurRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Utilisateur introuvable."));
+    Utilisateur utilisateur = utilisateurRepository.findById(id)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Utilisateur introuvable."));
 
-        Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Rôle introuvable."));
+    Role role = roleRepository.findById(request.getRoleId())
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Rôle introuvable."));
 
-        utilisateur.setNom(request.getNom());
-        utilisateur.setPrenom(request.getPrenom());
-        utilisateur.setTelephone(request.getTelephone());
-        utilisateur.setRole(role);
+    Guichet guichet = null;
 
-        if (!utilisateur.getEmail().equals(request.getEmail())) {
-
-            if (utilisateurRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("Cet email est déjà utilisé.");
-            }
-
-            utilisateur.setEmail(request.getEmail());
-        }
-
-        if (request.getMotDePasse() != null && !request.getMotDePasse().isBlank()) {
-            utilisateur.setMotDePasse(
-                    passwordEncoder.encode(request.getMotDePasse())
+if (request.getGuichetId() != null) {
+    guichet = guichetRepository.findById(request.getGuichetId())
+            .orElseThrow(() ->
+                new RuntimeException("Guichet introuvable")
             );
+}
+
+utilisateur.setGuichet(guichet);
+
+    utilisateur.setNom(request.getNom());
+    utilisateur.setPrenom(request.getPrenom());
+    utilisateur.setTelephone(request.getTelephone());
+    utilisateur.setRole(role);
+    utilisateur.setGuichet(guichet);
+
+    if (!utilisateur.getEmail().equals(request.getEmail())) {
+
+        if (utilisateurRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Cet email est déjà utilisé.");
         }
 
-        utilisateur = utilisateurRepository.save(utilisateur);
-
-        return UtilisateurMapper.toResponse(utilisateur);
+        utilisateur.setEmail(request.getEmail());
     }
+
+    if (request.getMotDePasse() != null
+            && !request.getMotDePasse().isBlank()) {
+
+        utilisateur.setMotDePasse(
+                passwordEncoder.encode(request.getMotDePasse())
+        );
+    }
+
+    utilisateur = utilisateurRepository.save(utilisateur);
+
+    return UtilisateurMapper.toResponse(utilisateur);
+}
 
     @Override
     public void delete(Long id) {

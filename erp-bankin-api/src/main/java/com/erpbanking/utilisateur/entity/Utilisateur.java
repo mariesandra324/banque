@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.erpbanking.guichet.entity.Guichet;
 import com.erpbanking.permission.entity.Permission;
 
 import com.erpbanking.role.entity.Role;
@@ -58,7 +59,9 @@ public class Utilisateur implements UserDetails{
     public String getUsername() {
         return email;
     }
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "guichet_id")
+    private Guichet guichet;
 
     @Override
     public String getPassword() {

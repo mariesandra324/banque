@@ -18,15 +18,13 @@ public class CompteResponse {
     private Long id;
 
     private String numeroCompte;
-
     private String typeCompte;
-
     private  BigDecimal solde;
-
     private String statut;
-
     private LocalDate dateCreation;
-
     private Long clientId;
-
+    private String codeBanque;
+    private String codeGuichet;
+    private String cleRib;
+    private String iban;
 }

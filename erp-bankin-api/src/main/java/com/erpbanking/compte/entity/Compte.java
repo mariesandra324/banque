@@ -42,6 +42,18 @@ public class Compte {
 
     private String statut;
 
+    @Column(name = "code_banque", nullable = false, length = 5)
+    private String codeBanque;
+
+    @Column(name = "code_guichet", nullable = false, length = 5)
+    private String codeGuichet;
+
+    @Column(name = "cle_rib", nullable = false, length = 2)
+    private String cleRib;
+
+    @Column(nullable = true, length = 27)
+    private String iban;
+
     @ManyToOne
     @JoinColumn(name = "clientId")
     private Client client;

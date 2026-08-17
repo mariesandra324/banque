@@ -15,6 +15,10 @@ public class UtilisateurResponse {
     private String email;
 
     private String telephone;
+    
+    private String codeGuichet;
 
     private String role;
+
+    private Boolean actif;
 }

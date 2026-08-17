@@ -17,4 +17,5 @@ public class CompteRequest {
     private String statut;
 
     private Long clientId;
+    
 }
