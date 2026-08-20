@@ -1,6 +1,7 @@
 package com.erpbanking.credit.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,10 +81,12 @@ public class DemandeCreditController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
         public ResponseEntity<DemandeCreditResponse> updateStatut(
                 @PathVariable Long id,
-                @RequestParam StatutDemandeCredit statut) {
+                @RequestParam StatutDemandeCredit statut,
+                @RequestBody(required = false) Map<String, String> body ) {
 
+        String motifRejet = body != null ? body.get("motifRejet"):null;
         return ResponseEntity.ok(
-                demandeCreditService.updateStatut(id, statut)
+                demandeCreditService.updateStatut(id, statut, motifRejet)
         );
         }
 }

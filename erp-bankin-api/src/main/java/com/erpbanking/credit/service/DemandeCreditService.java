@@ -13,5 +13,5 @@ public interface DemandeCreditService {
     DemandeCreditResponse getById(Long id);
     List<DemandeCreditResponse> getByClientId(Long clientId);
     List<DemandeCreditResponse> getByStatut(StatutDemandeCredit statut);
-    DemandeCreditResponse updateStatut(Long id, StatutDemandeCredit statut);
+    DemandeCreditResponse updateStatut(Long id, StatutDemandeCredit statut,String motifRejet);
 }

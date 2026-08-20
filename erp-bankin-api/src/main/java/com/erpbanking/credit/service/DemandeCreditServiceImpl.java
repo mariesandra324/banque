@@ -2,8 +2,6 @@ package com.erpbanking.credit.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.erpbanking.client.entity.Client;
@@ -116,7 +114,8 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
     @Override
         public DemandeCreditResponse updateStatut(
                 Long id,
-                StatutDemandeCredit statut) {
+                StatutDemandeCredit statut,
+                String motifRejet ) {
 
         DemandeCredit demande = demandeCreditRepository.findById(id)
                 .orElseThrow(() ->
@@ -127,6 +126,17 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
 
         demande.setStatut(statut);
         demande.setDateDecision(LocalDateTime.now());
+
+        if (statut == StatutDemandeCredit.REJETER){
+                if (motifRejet == null || motifRejet.trim().isEmpty()) {
+                        throw new IllegalArgumentException(
+                                "Le motif de rejet est obligatoire."
+                        );
+                }
+                demande.setMotifRejet(motifRejet);
+        }else{
+                demande.setMotifRejet(null);
+        }
 
         demande = demandeCreditRepository.save(demande);
 
