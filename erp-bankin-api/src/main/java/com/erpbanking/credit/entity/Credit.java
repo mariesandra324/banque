@@ -43,10 +43,10 @@ public class Credit {
     private BigDecimal tauxInteret;
 
     @Column(nullable = false)
-    private LocalDateTime duree;
+    private Integer duree;
 
     @Column(nullable = false,  precision = 15, scale = 2)
-    private String mensualite;
+    private BigDecimal mensualite;
     
     @Column(nullable = false)
     private LocalDateTime dateDebut;

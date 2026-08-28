@@ -22,8 +22,8 @@ public class CreditResponse {
     private String numeroCredit;
     private BigDecimal montant;
     private BigDecimal tauxInteret;
-    private LocalDateTime duree;
-    private String mensualite;
+    private Integer duree;
+    private BigDecimal mensualite;
     private LocalDateTime dateDebut;
     private BigDecimal capitalRestant;
     private StatutCredit statut;

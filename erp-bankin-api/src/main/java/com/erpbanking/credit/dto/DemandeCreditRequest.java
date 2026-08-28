@@ -1,6 +1,7 @@
 package com.erpbanking.credit.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -28,4 +29,16 @@ public class DemandeCreditRequest {
 
     @NotNull
     private Long clientId;
+    
+    private String profession;
+
+    private BigDecimal tauxInteret;
+
+    private LocalDateTime dateDecision;
+
+    private String typeContrat;
+
+    private BigDecimal revenuMensuel;
+
+    private BigDecimal chargesMensuelles;
 }
