@@ -6,8 +6,12 @@ import Dashboard from '../pages/Dashboard';
 import Login from '../features/auth/Login';
 import Clients from '../pages/Clients';
 import Comptes from '../pages/Comptes';
+import Credit from '../pages/Credit';
 import Transactions from '../pages/Transactions';
 import Utilisateurs from '../pages/Utilisateurs';
+import DemandeCreditDetail from '../features/credit/DemandeCreditDetail';
+import DemandeCreditForm from '../features/credit/DemandeCreditForm';
+import CreditForm from '../features/credit/CreditForm';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -63,6 +67,11 @@ const AppRoutes = () => {
             <Route path="comptes" element={<Comptes />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="utilisateurs" element={<Utilisateurs />} />
+            <Route path="credits" element={<Credit />} />
+            <Route path="credits/demandes/:id" element={<DemandeCreditDetail />} />
+            <Route path="credits/demandes/nouvelle" element={<DemandeCreditForm />} />
+            <Route path="credits/nouveau" element={<CreditForm />} />
+
       </Route>
 
       {/* Si l'utilisateur tape une URL inconnue, on le redirige vers l'accueil (qui vérifiera s'il est connecté) */}
