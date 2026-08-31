@@ -1,0 +1,207 @@
+/* Variables de couleurs globales adaptées à une appli bancaire (Ardoise/Bleu nuit) */
+:root {
+  --primary-color: #0f172a; /* Slate 900 */
+  --border-color: #e2e8f0;   /* Slate 200 */
+  --text-main: #334155;      /* Slate 700 */
+  --text-muted: #64748b;     /* Slate 500 */
+  --bg-hover: #f1f5f9;       /* Slate 100 */
+  --danger-color: #ef4444;   /* Red 500 */
+}
+
+/* Container de la Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  padding: 0 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-main);
+}
+
+/* --- SECTION GAUCHE --- */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-main);
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* --- SECTION CENTRE (Recherche) --- */
+.navbar-center {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 24px;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #f8fafc;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-box input:focus {
+  border-color: #3b82f6; /* Focus bleu */
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* --- SECTION DROITE (Notifications, Profil, Logout) --- */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Espace constant entre chaque bloc */
+}
+
+/* Icônes d'action (Notification) */
+.action-icons {
+  display: flex;
+  align-items: center;
+}
+
+.notification {
+  position: relative;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  color: var(--text-main);
+}
+
+.notification:hover {
+  background-color: var(--bg-hover);
+}
+
+.notification .badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: var(--danger-color);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* Séparateurs verticaux */
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+}
+
+/* Profil Utilisateur */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-icon {
+  color: var(--text-muted);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 150px; /* Évite qu'un email trop long casse toute la ligne */
+}
+
+.user-email {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Coupe élégamment l'adresse par des "..." si elle est trop longue */
+}
+
+.user-role {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2563eb; /* Rôle écrit en bleu pro */
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* Bouton Déconnexion */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #fee2e2; /* Fond rouge clair au survol */
+}
+
+.logout-icon {
+  transition: color 0.2s ease;
+}
+
+.logout-btn:hover .logout-icon {
+  color: var(--danger-color); /* Icône devient rouge au survol */
+}

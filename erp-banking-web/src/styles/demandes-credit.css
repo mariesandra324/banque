@@ -1,0 +1,126 @@
+.demandes-credit-page {
+    padding: 24px;
+}
+
+.credit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.credit-header h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+.credit-header p {
+    margin-top: 6px;
+    color: #6b7280;
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.credit-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.credit-filters select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+}
+
+.credit-table-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 10px;
+}
+
+.credit-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.credit-table th,
+.credit-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.credit-table th {
+    font-weight: 600;
+}
+
+.credit-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: #dcfce7;
+}
+
+.btn-danger {
+    background: #fee2e2;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.en_attente {
+    background: #fef3c7;
+}
+
+.status-badge.acceptee {
+    background: #dcfce7;
+}
+
+.status-badge.refusee {
+    background: #fee2e2;
+}
+
+.empty-table {
+    text-align: center !important;
+    padding: 30px !important;
+    color: #6b7280;
+}
+
+.credit-error {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #fee2e2;
+}
+
+.credit-loading {
+    padding: 40px;
+    text-align: center;
+}

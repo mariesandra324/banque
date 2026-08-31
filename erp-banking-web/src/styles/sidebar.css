@@ -1,0 +1,41 @@
+.sidebar {
+    width: 250px;
+    /* Aligné exactement sous la Navbar de 70px */
+    height: calc(100vh - 70px); 
+    background: #1e293b; /* Couleur ardoise sombre moderne */
+    position: fixed;
+    top: 70px; /* S'aligne parfaitement sous les 70px de la Navbar */
+    left: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-top: 15px;
+    border-right: 1px solid #334155;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar a {
+    color: #94a3b8;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 24px;
+    transition: all 0.2s ease-in-out;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.sidebar a:hover {
+    background: #334155;
+    color: #f8fafc;
+}
+
+/* Style de la route active */
+.sidebar a.active {
+    background: #1d4ed8; /* Bleu banque profond et cohérent */
+    color: #ffffff;
+    font-weight: 600;
+    border-left: 4px solid #3b82f6; /* Indicateur d'activité bleu vif */
+}
