@@ -20,8 +20,12 @@ export const rejeterDemande = async (id) => {
 };
 
 export const creerDemandeCredit = async (donnees) => {
-  const response = await api.post('/demandes-credit', donnees);
-  console.log("creerDemandeCredit");
+  const response = await api.post('/demandes-credit', donnees, {
+    headers: {
+      ...(donnees instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' })
+    }
+  });
+  console.log('creerDemandeCredit');
   return response.data;
 };
 

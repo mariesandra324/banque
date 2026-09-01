@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download, FileText } from 'lucide-react';
 import demandeCreditService from '../../service/demandeCreditService';
 
 const formatMontant = (montant) =>
@@ -113,7 +113,7 @@ function DemandeCreditDetail() {
 
       <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '20px' }}>
         {[
-          ['Client', `${demande.client?.nom || ''} ${demande.client?.prenom || ''}`],
+          ['Client', `${demande.clientNom || ''} ${demande.clientPrenom || ''}`],
           ['Montant demandé', formatMontant(demande.montantDemande)],
           ['Durée', `${demande.duree ?? '-'} mois`],
           ["Taux d'intérêt", demande.tauxInteret ? `${demande.tauxInteret}%` : '-'],
@@ -131,6 +131,98 @@ function DemandeCreditDetail() {
             <span style={{ color: '#1f2937', fontWeight: '500', textAlign: 'right' }}>{valeur}</span>
           </div>
         ))}
+
+        <div style={{ paddingTop: '14px', borderTop: '1px solid #f1f5f9', marginTop: '12px' }}>
+          <div style={{ color: '#64748b', fontSize: '13px', marginBottom: '10px', fontWeight: '600' }}>
+            Pièces jointes
+          </div>
+
+          {Array.isArray(demande.piecesJointes) && demande.piecesJointes.length > 0 ? (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {demande.piecesJointes.map((piece, index) => {
+                const isImage = piece.typeFichier?.startsWith('image/');
+                const isPdf = piece.typeFichier === 'application/pdf';
+                const urlFichier = `http://localhost:8080/uploads/credits/${piece.cheminFichier.split('/').pop()}`;
+
+                return (
+                  <div key={`${piece.id}-${index}`} style={{
+                    padding: '10px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <FileText size={18} color='#64748b' />
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
+                        {piece.nomFichier}
+                      </span>
+                      <a
+                        href={urlFichier}
+                        download={piece.nomFichier}
+                        style={{
+                          marginLeft: 'auto',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '6px 10px',
+                          backgroundColor: '#2563eb',
+                          color: 'white',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Download size={12} /> Télécharger
+                      </a>
+                    </div>
+
+                    {isImage && (
+                      <div style={{
+                        marginTop: '10px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        backgroundColor: 'white',
+                        padding: '8px',
+                        borderRadius: '6px',
+                      }}>
+                        <img
+                          src={urlFichier}
+                          alt={piece.nomFichier}
+                          style={{
+                            maxWidth: '200px',
+                            maxHeight: '200px',
+                            borderRadius: '4px',
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {isPdf && (
+                      <div style={{
+                        marginTop: '10px',
+                        fontSize: '12px',
+                        color: '#64748b',
+                        padding: '8px',
+                        backgroundColor: 'white',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                      }}>
+                        📄 Document PDF - Cliquez sur "Télécharger" pour voir
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ color: '#94a3b8', fontSize: '13px' }}>Aucune pièce jointe</div>
+          )}
+        </div>
       </div>
 
       {estEnAttente && (

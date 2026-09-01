@@ -2,6 +2,7 @@ package com.erpbanking.credit.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.erpbanking.credit.entity.StatutDemandeCredit;
 
@@ -32,4 +33,6 @@ public class DemandeCreditResponse {
     private Long clientId;
     private String clientNom;
     private String clientPrenom;
+
+    private List<PieceJointeResponse> piecesJointes;
 }

@@ -1,7 +1,6 @@
 package com.erpbanking.credit.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +12,7 @@ import com.erpbanking.credit.dto.DemandeCreditRequest;
 import com.erpbanking.credit.dto.DemandeCreditResponse;
 import com.erpbanking.credit.entity.StatutDemandeCredit;
 import com.erpbanking.credit.service.DemandeCreditService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,20 +23,39 @@ import lombok.RequiredArgsConstructor;
 public class DemandeCreditController {
 
     private final DemandeCreditService demandeCreditService;
+    private final ObjectMapper objectMapper;
 
         // Créer une demande de crédit
         @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @PreAuthorize("hasAnyRole('ADMIN','AGENT', 'CLIENT')")
         public ResponseEntity<DemandeCreditResponse> creer(
-            @RequestPart("demande")
-                DemandeCreditRequest request,
+            @RequestPart("demande") String demandeJson,
 
-                @RequestPart(
-                        value = "fichiers",
-                        required = false
-                )
-                List<MultipartFile> fichiers) {
-                
+            @RequestPart(
+                    value = "pieces",
+                    required = false
+            )
+            List<MultipartFile> fichiers) throws Exception {
+
+        System.out.println("JSON RECU : " + demandeJson);
+        System.out.println("FICHIERS RECUS : "+ (fichiers == null ? "NULL" : fichiers.size()));
+        
+        if (fichiers != null) {
+                for (MultipartFile fichier : fichiers) {
+                System.out.println(
+                        "FICHIER : " + fichier.getOriginalFilename()
+                );
+                }
+        }
+
+        DemandeCreditRequest request =
+                objectMapper.readValue(
+                        demandeJson,
+                        DemandeCreditRequest.class
+                );
+
+        System.out.println("DEMANDE CONVERTIE");
+
         return ResponseEntity.ok(
                 demandeCreditService.creer(request, fichiers)
         );
@@ -91,15 +110,10 @@ public class DemandeCreditController {
         public ResponseEntity<DemandeCreditResponse> updateStatut(
                 @PathVariable Long id,
                 @RequestParam StatutDemandeCredit statut,
-                @RequestBody(required = false) Map<String, String> body ) {
+			@RequestParam(required = false) String motif) {
 
-        String motifRejet = body != null ? body.get("motifRejet"):null;
-        return ResponseEntity.ok(
-                demandeCreditService.updateStatut(id, statut, motifRejet)
-        );
-
-
-        }
-
-        
+		return ResponseEntity.ok(
+				demandeCreditService.updateStatut(id, statut, motif)
+		);
+	}
 }

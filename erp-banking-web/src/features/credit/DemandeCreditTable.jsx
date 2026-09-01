@@ -20,7 +20,7 @@ const formatDate = (dateString) => {
   return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('fr-FR');
 };
 
-function DemandeCreditTable({ demandes = [], onApprouver, onRejeter }) {
+function DemandeCreditTable({ demandes = [] }) {
   const navigate = useNavigate();
   const [recherche, setRecherche] = useState('');
   const [statutFiltre, setStatutFiltre] = useState('');
@@ -101,7 +101,6 @@ function DemandeCreditTable({ demandes = [], onApprouver, onRejeter }) {
             ) : (
               demandesPage.map((d) => {
                 const badge = styleStatut(d.statut);
-                const estEnAttente = (d.statut || '').toUpperCase().includes('ATTENTE');
                 return (
                   <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px 16px', fontWeight: '500', color: '#1f2937', fontSize: '14px' }}>{d.reference || `#${d.id}`}</td>
@@ -124,22 +123,6 @@ function DemandeCreditTable({ demandes = [], onApprouver, onRejeter }) {
                       >
                         Détails
                       </button>
-                      {estEnAttente && (
-                        <>
-                          <button
-                            onClick={() => onApprouver?.(d.id)}
-                            style={{ marginRight: '10px', color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
-                          >
-                            Approuver
-                          </button>
-                          <button
-                            onClick={() => onRejeter?.(d.id)}
-                            style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
-                          >
-                            Rejeter
-                          </button>
-                        </>
-                      )}
                     </td>
                   </tr>
                 );
