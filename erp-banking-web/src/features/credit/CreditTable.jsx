@@ -97,7 +97,7 @@ function CreditTable({ credits = [], onVoir }) {
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px 16px', fontWeight: '500', color: '#1f2937', fontSize: '14px' }}>{c.numeroCredit}</td>
-                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{c.client?.nom} {c.client?.prenom}</td>
+                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{c.clientNom} {c.clientPrenom}</td>
                     <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{formatMontant(c.montant)}</td>
                     <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{c.tauxInteret}%</td>
                     <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{formatMontant(c.mensualite)}</td>

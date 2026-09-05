@@ -116,4 +116,14 @@ public class DemandeCreditController {
 				demandeCreditService.updateStatut(id, statut, motif)
 		);
 	}
+
+        @PutMapping("/{id}/ACCEPTER")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
+        public ResponseEntity<DemandeCreditResponse> accepter(
+                @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                demandeCreditService.accepter(id)
+        );
+        }
 }

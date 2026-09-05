@@ -1,5 +1,6 @@
 package com.erpbanking.credit.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.erpbanking.client.entity.Client;
@@ -7,10 +8,12 @@ import com.erpbanking.credit.dto.CreditRequest;
 import com.erpbanking.credit.dto.CreditResponse;
 import com.erpbanking.credit.entity.Credit;
 import com.erpbanking.credit.entity.DemandeCredit;
+import com.erpbanking.credit.entity.OffreCredit;
 import com.erpbanking.credit.entity.StatutCredit;
 import com.erpbanking.credit.entity.StatutDemandeCredit;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.DemandeCreditRepository;
+import com.erpbanking.credit.repository.OffreCreditRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +29,8 @@ public class CreditServiceImpl implements CreditService {
     
     private final CreditRepository creditRepository;
     private final DemandeCreditRepository demandeCreditRepository;
-
+    private final OffreCreditRepository offreCreditRepository;
+    
     @Override
     public CreditResponse create(CreditRequest request)
     {
@@ -44,6 +48,7 @@ public class CreditServiceImpl implements CreditService {
         if(creditRepository
             .findByDemandeCreditId(demande.getId())
             .isPresent())
+            
         {
             throw new IllegalArgumentException("un crédit existe déjà pour cette demande.");
         }
@@ -156,4 +161,111 @@ public class CreditServiceImpl implements CreditService {
                 )
                 .build();
     }
+
+        @Override
+        public CreditResponse createFromDemande(Long demandeCreditId) {
+
+        DemandeCredit demande = demandeCreditRepository
+                .findById(demandeCreditId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Demande de crédit introuvable : "
+                                + demandeCreditId
+                        )
+                );
+
+        if (demande.getStatut() != StatutDemandeCredit.ACCEPTER) {
+                throw new IllegalArgumentException(
+                        "La demande doit être acceptée avant de créer le crédit."
+                );
+        }
+
+        if (creditRepository
+                .findByDemandeCreditId(demande.getId())
+                .isPresent()) {
+
+                throw new IllegalArgumentException(
+                        "Un crédit existe déjà pour cette demande."
+                );
+        }
+
+        Client client = demande.getClient();
+
+        Credit credit = Credit.builder()
+                .numeroCredit(genererNumeroCredit())
+                .montant(demande.getMontantDemande())
+                .tauxInteret(demande.getTauxInteret())
+                .duree(demande.getDuree())
+
+                // À adapter selon ton calcul actuel
+                .mensualite(demande.getRevenuMensuel())
+
+                .dateDebut(LocalDateTime.now())
+                .capitalRestant(demande.getMontantDemande())
+
+                .statut(StatutCredit.EN_COURS)
+
+                .demandeCredit(demande)
+                .client(client)
+                .build();
+
+        credit = creditRepository.save(credit);
+
+        return toResponse(credit);
+        }
+
+        @Override
+        public CreditResponse createFromOffre(Long offreId) {
+
+        OffreCredit offre = offreCreditRepository
+                .findById(offreId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Offre de crédit introuvable : " + offreId
+                        )
+                );
+
+        if (!"ACCEPTEE".equalsIgnoreCase(offre.getStatut())) {
+                throw new IllegalArgumentException(
+                        "L'offre doit être acceptée avant de créer le crédit."
+                );
+        }
+
+        DemandeCredit demande = offre.getDemandeCredit();
+
+        if (demande == null) {
+                throw new IllegalArgumentException(
+                        "Aucune demande de crédit associée à cette offre."
+                );
+        }
+
+        if (creditRepository
+                .findByDemandeCreditId(demande.getId())
+                .isPresent()) {
+
+                throw new IllegalArgumentException(
+                        "Un crédit existe déjà pour cette demande."
+                );
+        }
+
+        Client client = offre.getClient();
+
+        Credit credit = Credit.builder()
+                .numeroCredit(genererNumeroCredit())
+                .montant(offre.getMontantPropose())
+                .tauxInteret(offre.getTauxInteret())
+                .duree(offre.getDuree())
+                .mensualite(offre.getMensualite())
+                .dateDebut(LocalDateTime.now())
+                .capitalRestant(offre.getMontantPropose())
+                .statut(StatutCredit.EN_COURS)
+                .demandeCredit(demande)
+                .client(client)
+                .offreCredit(offre)
+                .build();
+
+        credit = creditRepository.save(credit);
+
+        return toResponse(credit);
+        }
 }

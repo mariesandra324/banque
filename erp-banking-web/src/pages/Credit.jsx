@@ -9,9 +9,13 @@ import {
   creerDemandeCredit, creerCredit,
 } from '../service/creditService';
 import demandeCreditService from '../service/demandeCreditService';
+import OffreCreditTable from '../features/credit/OffreCreditTable';
+import offreCreditService from '../service/offreCreditService';
+import OffreCreditForm from '../features/credit/OffreCreditForm';
 
 const ONGLETS = [
   { id: 'demandes', label: 'Demandes de crédit' },
+  { id: 'offres', label: 'Offres de crédits'},
   { id: 'credits', label: 'Crédits' },
 ];
 
@@ -22,16 +26,19 @@ function Credit() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [formOuvert, setFormOuvert] = useState(false);
+  const [offres, setOffres] = useState([]);
 
   const chargerDonnees = async () => {
     setChargement(true);
     setErreur(null);
     try {
-      const [demandesData, creditsData] = await Promise.all([
+      const [demandesData,offresData, creditsData] = await Promise.all([
         demandeCreditService.getAll(),
+        offreCreditService.getAll(),
         getCredits(),
       ]);
       setDemandes(demandesData);
+      setOffres(offresData);
       setCredits(creditsData);
     } catch (err) {
       console.error(err);
@@ -73,6 +80,18 @@ function Credit() {
   };
 
   const fermerFormulaire = () => setFormOuvert(false);
+  const handleCreerOffre = async (donnees) => {
+  try {
+    await offreCreditService.creer(donnees);
+    await chargerDonnees();
+  } catch (err) {
+    console.error(
+      "Erreur création offre :",
+      err.response?.data || err.message
+    );
+    throw err;
+  }
+};
 
   if (formOuvert && ongletActif === 'demandes') {
     return (
@@ -83,6 +102,15 @@ function Credit() {
     );
   }
 
+  if (formOuvert && ongletActif === 'offres') {
+  return (
+    <OffreCreditForm
+      onClose={fermerFormulaire}
+      onSubmit={handleCreerOffre}
+    />
+  );
+}
+
   if (formOuvert && ongletActif === 'credits') {
     return (
       <CreditForm
@@ -91,6 +119,28 @@ function Credit() {
       />
     );
   }
+
+    const handleAccepterOffre = async (id) => {
+      try {
+          await offreCreditService.accepter(id);
+
+          await chargerDonnees();
+
+          // On peut ensuite afficher automatiquement l'onglet crédits
+          setOngletActif('credits');
+
+      } catch (err) {
+          console.error(
+              "Erreur acceptation offre:",
+              err.response?.data || err.message
+          );
+
+          setErreur(
+              err.response?.data?.message ||
+              "Impossible d'accepter cette offre."
+          );
+      }
+  };
 
   return (
     <div style={{ padding: '24px' }}>
@@ -107,7 +157,7 @@ function Credit() {
           }}
         >
           <Plus size={16} />
-          {ongletActif === 'demandes' ? 'Nouvelle demande' : 'Nouveau crédit'}
+          {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres'?'Nouvelle crédit' : 'Nouveau crédit'}
         </button>
       </div>
 
@@ -141,6 +191,9 @@ function Credit() {
         </div>
       ) : ongletActif === 'demandes' ? (
         <DemandeCreditTable demandes={demandes} onApprouver={handleApprouver} onRejeter={handleRejeter} />
+      ): ongletActif === 'offres' ? (
+
+        <OffreCreditTable offres={offres} onAccepter={handleAccepterOffre} onActualiser={chargerDonnees}/>
       ) : (
         <CreditTable credits={credits} />
       )}

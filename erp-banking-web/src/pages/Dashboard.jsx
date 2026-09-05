@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Users, Wallet, ArrowLeftRight, Landmark, TrendingUp} from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,CartesianGrid,} from 'recharts';
 import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import demandeCreditService from '../service/demandeCreditService';
@@ -44,7 +40,6 @@ function StatCard({ label, value, delta, sparkColor, icon: Icon }) {
 }
 
 function Dashboard() {
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalClients: 0,
     totalComptes: 0,

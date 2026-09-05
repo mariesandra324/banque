@@ -1,0 +1,799 @@
+.offre-credit-container {
+    background-color: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* =========================
+   BARRE DE RECHERCHE
+========================= */
+
+.offre-credit-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.offre-search {
+    position: relative;
+    width: 260px;
+}
+
+.offre-search input {
+    width: 100%;
+    padding: 8px 10px 8px 32px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.offre-search input:focus {
+    border-color: #2563eb;
+}
+
+.offre-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.offre-credit-toolbar select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    background-color: white;
+    outline: none;
+}
+
+/* =========================
+   TABLEAU
+========================= */
+
+.offre-table-wrapper {
+    overflow-x: auto;
+}
+
+.offre-credit-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.offre-credit-table thead tr {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.offre-credit-table th {
+    padding: 12px 16px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.offre-credit-table td {
+    padding: 12px 16px;
+    color: #475569;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.offre-credit-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.offre-credit-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.offre-numero {
+    font-weight: 600;
+    color: #1f2937 !important;
+}
+
+/* =========================
+   STATUT
+========================= */
+
+.offre-statut {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.statut-acceptee {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.statut-refusee {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.statut-attente {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.offre-actions {
+    white-space: nowrap;
+}
+
+.btn-details {
+    margin-right: 8px;
+    color: #2563eb;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.btn-details:hover {
+    text-decoration: underline;
+}
+
+.btn-accepter,
+.btn-refuser {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.btn-accepter {
+    margin-right: 6px;
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.btn-accepter:hover {
+    background-color: #bbf7d0;
+}
+
+.btn-refuser {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.btn-refuser:hover {
+    background-color: #fecaca;
+}
+
+/* =========================
+   AUCUNE OFFRE
+========================= */
+
+.offre-empty {
+    padding: 32px !important;
+    text-align: center;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+}
+
+/* =========================
+   PAGINATION
+========================= */
+
+.offre-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.offre-pagination > span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.offre-pagination-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.offre-pagination-buttons button {
+    min-width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    color: #1f2937;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.offre-pagination-buttons button:hover {
+    background-color: #f1f5f9;
+}
+
+.offre-pagination-buttons button.page-active {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+/* =========================================================
+   FORMULAIRE CREDIT / OFFRE CREDIT
+   ========================================================= */
+
+.credit-form-page {
+  padding: 24px;
+  max-width: 680px;
+}
+
+.credit-back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  padding: 0;
+}
+
+.credit-back-button:hover {
+  color: #2563eb;
+}
+
+.credit-form-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+.credit-form-card {
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+}
+
+.credit-error-global {
+  padding: 10px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.credit-form-group {
+  margin-bottom: 14px;
+}
+
+.credit-form-label {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.credit-form-input {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  box-sizing: border-box;
+  outline: none;
+  background-color: white;
+}
+
+.credit-form-input:focus {
+  border-color: #2563eb;
+}
+
+.credit-form-input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.credit-input-error {
+  border-color: #dc2626;
+}
+
+.credit-field-error {
+  display: block;
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.credit-form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.credit-form-half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.credit-monthly-row {
+  display: flex;
+  gap: 8px;
+}
+
+.credit-monthly-row .credit-form-input {
+  flex: 1;
+}
+
+.credit-calculate-button {
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: #f8fafc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.credit-calculate-button:hover {
+  background-color: #f1f5f9;
+}
+
+.credit-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.credit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.credit-button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.credit-button-cancel {
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #1f2937;
+}
+
+.credit-button-cancel:hover {
+  background-color: #f8fafc;
+}
+
+.credit-button-primary {
+  border: none;
+  background-color: #2563eb;
+  color: white;
+}
+
+.credit-button-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.credit-button-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .credit-form-page {
+    padding: 16px;
+  }
+
+  .credit-form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .credit-form-half {
+    margin-bottom: 14px;
+  }
+
+  .credit-monthly-row {
+    flex-direction: column;
+  }
+
+  .credit-calculate-button {
+    width: 100%;
+  }
+
+  .credit-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .credit-button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   OFFRE DE CRÉDIT - DÉTAIL (APERÇU A4 / PDF)
+   ========================================================= */
+
+.offre-detail-page,
+.offre-detail-page * {
+    box-sizing: border-box;
+}
+
+.offre-detail-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    padding: 20px 24px 40px;
+}
+
+
+/* ================= TOOLBAR ================= */
+
+.offre-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-retour {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-actions button {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-accepter {
+    background: #16a34a;
+    color: white;
+    border: none;
+}
+
+.btn-refuser {
+    background: white;
+    color: #dc2626;
+    border: 1px solid #dc2626;
+}
+
+.btn-imprimer {
+    background: white;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+
+/* ================= LAYOUT ================= */
+
+.offre-detail-layout {
+    display: flex;
+    justify-content: center;
+}
+
+
+/* ================= APERCU ================= */
+
+.offre-preview-panel {
+    min-width: 0;
+    width: 100%;
+    max-width: 210mm;
+}
+
+.preview-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.preview-title div {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.preview-title strong {
+    font-size: 14px;
+    color: #334155;
+}
+
+.preview-title span {
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.preview-print-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 7px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+
+/* ================= A4 ================= */
+
+.offre-a4 {
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    padding: 15mm;
+    margin: 0 auto;
+    color: #1f2937;
+    font-size: 11px;
+    line-height: 1.45;
+    box-shadow:
+        0 10px 35px rgba(15, 23, 42, 0.15);
+}
+
+
+.offre-a4-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #1f2937;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.offre-a4-titre {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.banque-logo {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+}
+
+.offre-a4-titre h1 {
+    font-size: 16px;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+.offre-a4-titre p {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.offre-a4-ref {
+    text-align: right;
+}
+
+.offre-a4-ref p {
+    margin: 2px 0;
+    font-size: 10px;
+}
+
+
+.offre-a4-section {
+    margin-bottom: 13px;
+}
+
+.offre-a4-section h2 {
+    font-size: 12px;
+    margin: 0 0 7px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.offre-a4-section p {
+    margin: 3px 0;
+}
+
+
+.a4-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+}
+
+
+/* ================= TABLE ================= */
+
+.offre-a4-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+.offre-a4-table th,
+.offre-a4-table td {
+    border: 1px solid #cbd5e1;
+    padding: 5px 7px;
+    text-align: left;
+    font-size: 10.5px;
+}
+
+.offre-a4-table th {
+    background: #f1f5f9;
+    font-weight: 700;
+}
+
+
+/* ================= COUT ================= */
+
+.a4-cost-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid #cbd5e1;
+    margin-top: 5px;
+}
+
+.a4-cost-box div {
+    padding: 8px;
+    border-right: 1px solid #cbd5e1;
+}
+
+.a4-cost-box div:last-child {
+    border-right: none;
+}
+
+.a4-cost-box span {
+    display: block;
+    color: #64748b;
+    font-size: 9px;
+    margin-bottom: 3px;
+}
+
+.a4-cost-box strong {
+    font-size: 11px;
+}
+
+.offre-a4-note {
+    color: #64748b;
+    font-style: italic;
+    font-size: 9px;
+    margin-top: 6px !important;
+}
+
+
+/* ================= DOCUMENTS ================= */
+
+.a4-documents-list {
+    columns: 2;
+    margin: 5px 0;
+    padding-left: 18px;
+}
+
+.a4-documents-list li {
+    margin-bottom: 3px;
+}
+
+
+/* ================= DECISION ================= */
+
+.a4-decision {
+    display: flex;
+    gap: 45px;
+    margin-top: 8px;
+}
+
+.a4-decision div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+
+/* ================= SIGNATURES ================= */
+
+.offre-a4-signatures {
+    display: flex;
+    justify-content: space-between;
+    gap: 50px;
+    margin-top: 25px;
+}
+
+.offre-a4-signatures > div {
+    width: 45%;
+}
+
+.offre-a4-signatures p {
+    font-size: 10px;
+}
+
+.offre-a4-signature-ligne {
+    border-top: 1px solid #1f2937;
+    margin: 30px 0 5px;
+}
+
+
+/* ================= FOOTER ================= */
+
+.offre-a4-footer {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #cbd5e1;
+    margin-top: 20px;
+    padding-top: 6px;
+    color: #94a3b8;
+    font-size: 8px;
+}
+
+@media (max-width: 900px) {
+
+    .offre-preview-panel {
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+
+    .offre-a4 {
+        margin-left: 0;
+    }
+}

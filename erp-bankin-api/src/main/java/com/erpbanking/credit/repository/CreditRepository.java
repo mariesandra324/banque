@@ -11,6 +11,8 @@ import com.erpbanking.credit.entity.StatutCredit;
 public interface CreditRepository extends JpaRepository<Credit, Long >{
         Optional<Credit> findByNumeroCredit(String numeroCredit);
         List<Credit> findByClientId(Long clientId);
+        Optional<Credit> findByOffreCreditId(Long offreCreditId);
         List<Credit> findByStatut(StatutCredit statut);
         Optional<Credit> findByDemandeCreditId(Long demandeCreditId);
+        boolean existsByDemandeCreditId(Long demandeCreditId);
 }

@@ -12,6 +12,7 @@ import Utilisateurs from '../pages/Utilisateurs';
 import DemandeCreditDetail from '../features/credit/DemandeCreditDetail';
 import DemandeCreditForm from '../features/credit/DemandeCreditForm';
 import CreditForm from '../features/credit/CreditForm';
+import OffreCreditDetail from "../features/credit/OffreCreditDetail";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -71,7 +72,7 @@ const AppRoutes = () => {
             <Route path="credits/demandes/:id" element={<DemandeCreditDetail />} />
             <Route path="credits/demandes/nouvelle" element={<DemandeCreditForm />} />
             <Route path="credits/nouveau" element={<CreditForm />} />
-
+            <Route path="/credits/offres/:id" element={<OffreCreditDetail />}/>
       </Route>
 
       {/* Si l'utilisateur tape une URL inconnue, on le redirige vers l'accueil (qui vérifiera s'il est connecté) */}

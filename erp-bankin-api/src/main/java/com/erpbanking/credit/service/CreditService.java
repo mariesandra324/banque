@@ -8,6 +8,8 @@ import com.erpbanking.credit.entity.StatutCredit;
 
 public interface CreditService {
     CreditResponse create(CreditRequest request);
+    CreditResponse createFromDemande(Long demandeCreditId);
+    CreditResponse createFromOffre(Long offreId);
     List<CreditResponse> getAll();
     CreditResponse getByNumero(String numeroCredit);
     CreditResponse getById(Long id);

@@ -35,6 +35,7 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
     private final PieceJointeRepository pieceJointeRepository;
     private final DemandeCreditRepository demandeCreditRepository;
     private final ClientRepository clientRepository;
+    private final CreditService creditService;
 
     @Override
     public DemandeCreditResponse creer(DemandeCreditRequest request,List<MultipartFile> fichiers) {
@@ -227,6 +228,35 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
         }
 
         demande = demandeCreditRepository.save(demande);
+
+        return toResponse(demande);
+        }
+
+        @Override
+        public DemandeCreditResponse accepter(Long id) {
+
+        DemandeCredit demande = demandeCreditRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Demande de crédit introuvable : " + id
+                        )
+                );
+
+        if (demande.getStatut() != StatutDemandeCredit.EN_ATTENTE) {
+                throw new IllegalArgumentException(
+                        "Cette demande ne peut plus être acceptée."
+                );
+        }
+
+        demande.setStatut(StatutDemandeCredit.ACCEPTER);
+        demande.setDateDecision(LocalDateTime.now());
+        demande.setMotifRejet(null);
+
+        demande = demandeCreditRepository.save(demande);
+
+        // Création automatique du crédit
+        creditService.createFromDemande(demande.getId());
 
         return toResponse(demande);
         }

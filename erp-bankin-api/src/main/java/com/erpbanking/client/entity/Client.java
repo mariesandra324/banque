@@ -41,4 +41,7 @@ public class Client {
     private String adresse;
     private LocalDate dateNaissance;
     private LocalDate dateCreation;
+
+    @Column(name = "code_personnel_hash")
+    private String codePersonnelHash;
 }
