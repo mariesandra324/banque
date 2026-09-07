@@ -5,6 +5,7 @@ import com.erpbanking.client.dto.ClientResponse;
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.client.mapper.ClientMapper;
 import com.erpbanking.client.repository.ClientRepository;
+import com.erpbanking.common.exception.DuplicateResourceException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -65,9 +66,16 @@ public class ClientServiceImpl implements ClientService {
                 .orElseThrow(() ->
                     new RuntimeException("Client introuvable")
                 );
-
+        
         if (!request.getCin().equals(client.getCin()) && clientRepository.existsByCin(request.getCin())) {
             throw new RuntimeException("CIN déjà utilisé");
+        }
+        if (!request.getEmail().equals(client.getEmail()) && clientRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Cet email est déjà utilisé par un autre client.");
+        }
+ 
+        if (!request.getTelephone().equals(client.getTelephone()) && clientRepository.existsByTelephone(request.getTelephone())) {
+            throw new DuplicateResourceException("Ce numéro de téléphone est déjà utilisé par un autre client.");
         }
 
         client.setNom(request.getNom());

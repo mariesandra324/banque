@@ -3,9 +3,13 @@ package com.erpbanking.auth.controller;
 
 import com.erpbanking.auth.dto.LoginRequest;
 import com.erpbanking.auth.dto.LoginResponse;
+import com.erpbanking.auth.dto.MeResponse;
 import com.erpbanking.auth.service.AuthService;
+import com.erpbanking.utilisateur.entity.Utilisateur;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -29,6 +33,28 @@ public class AuthController {
                 authService.login(request)
         );
 
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> me(
+            @AuthenticationPrincipal Utilisateur utilisateur
+    ){
+ 
+        return ResponseEntity.ok(
+                MeResponse.builder()
+                        .nom(utilisateur.getNom())
+                        .prenom(utilisateur.getPrenom())
+                        .email(utilisateur.getEmail())
+                        .telephone(utilisateur.getTelephone())
+                        .role(utilisateur.getRole().getNom())
+                        .codeGuichet(
+                            utilisateur.getGuichet() != null
+                                ? utilisateur.getGuichet().getCodeGuichet()
+                                : null
+                        )
+                        .build()
+        );
+ 
     }
 
 }

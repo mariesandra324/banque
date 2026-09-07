@@ -57,13 +57,16 @@
 .navbar-center {
   flex: 1;
   max-width: 400px;
-  margin: 0 24px;
+  margin: 0 24px 0 auto;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .search-box {
   position: relative;
   display: flex;
   align-items: center;
+  width: 280px;
 }
 
 .search-icon {
@@ -145,39 +148,25 @@
   background-color: var(--border-color);
 }
 
-/* Profil Utilisateur */
+/* Profil Utilisateur (bouton → page Paramètres) */
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.user-profile:hover {
+  background-color: var(--bg-hover);
 }
 
 .avatar-icon {
   color: var(--text-muted);
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  max-width: 150px; /* Évite qu'un email trop long casse toute la ligne */
-}
-
-.user-email {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Coupe élégamment l'adresse par des "..." si elle est trop longue */
-}
-
-.user-role {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #2563eb; /* Rôle écrit en bleu pro */
-  text-transform: uppercase;
-  margin-top: 1px;
 }
 
 /* Bouton Déconnexion */

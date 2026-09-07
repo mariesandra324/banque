@@ -283,21 +283,28 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                 );
         }
 
-        // 4. Accepter l'offre
-        System.out.println("=== CREATION DU CREDIT ===");
-
-        CreditResponse creditResponse =
-                creditService.createFromOffre(offreId);
-
-        System.out.println("=== CREDIT CREE ===");
-
-        // 5. Maintenant que le crédit est créé,
-        //    marquer l'offre comme acceptée
+        // 4. Marquer l'offre comme acceptée AVANT de créer le crédit,
+        //    car createFromOffre() exige que l'offre soit déjà au statut ACCEPTEE.
         offre.setStatut("ACCEPTEE");
-
         offreCreditRepository.save(offre);
 
-        System.out.println("=== OFFRE ACCEPTEE ===");
+        System.out.println("=== OFFRE MARQUEE ACCEPTEE ===");
+
+        // 5. Créer le crédit à partir de l'offre désormais acceptée
+        System.out.println("=== CREATION DU CREDIT ===");
+
+        CreditResponse creditResponse;
+        try {
+            creditResponse = creditService.createFromOffre(offreId);
+        } catch (RuntimeException e) {
+            // La création du crédit a échoué : on annule le passage à ACCEPTEE
+            // pour ne pas laisser l'offre dans un état incohérent (acceptée sans crédit).
+            offre.setStatut("EN_ATTENTE");
+            offreCreditRepository.save(offre);
+            throw e;
+        }
+
+        System.out.println("=== CREDIT CREE ===");
 
         // 6. Envoyer l'email de confirmation
         Client client = offre.getClient();
@@ -426,4 +433,3 @@ public OffreCreditResponse refuserParToken(String token) {
 }
 
 }
-

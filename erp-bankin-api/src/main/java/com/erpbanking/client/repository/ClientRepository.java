@@ -15,4 +15,5 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     boolean existsByTelephone(String telephone);
     boolean existsByCin(String cin);
+    boolean existsByEmail(String email);
 }

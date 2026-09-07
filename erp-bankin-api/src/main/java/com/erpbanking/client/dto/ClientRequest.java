@@ -22,7 +22,7 @@ public class ClientRequest {
     private String email;
 
     @NotBlank(message = "Le téléphone est obligatoire.")
-    @Pattern(regexp = "^\\+261(34|37|33|32|38)\\d{7}$", message = "Le téléphone doit être au format +26134xxxxxxx, +26137xxxxxxx, +26133xxxxxxx, +26132xxxxxxx ou +26138xxxxxxx.")
+    @Pattern(regexp = "^\\+261(34|37|33|32|38|36)\\d{7}$", message = "Le téléphone doit être au format +26134xxxxxxx, +26137xxxxxxx, +26133xxxxxxx, +26132xxxxxxx ou +26138xxxxxxx.")
     private String telephone;
     private String adresse;
     private LocalDate dateNaissance;

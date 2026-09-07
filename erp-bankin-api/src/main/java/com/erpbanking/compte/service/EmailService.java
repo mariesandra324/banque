@@ -5,6 +5,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
@@ -16,6 +17,7 @@ public class EmailService {
     
     private final JavaMailSender mailSender;
 
+    @Async
     public void envoyerNumeroCompte(
             String emailClient,
             String nomClient,
@@ -60,6 +62,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void envoyerPinCarte(
             String emailClient,
             String nomClient,
@@ -112,6 +115,7 @@ public class EmailService {
     }
     }
 
+    @Async
     public void envoyerConfirmationOffreAcceptee(
         String emailClient,
         String nomClient,
@@ -142,6 +146,7 @@ public class EmailService {
     mailSender.send(message);
 }
 
+@Async
 public void envoyerOffrePdf(String emailClient, String nomClient, String numeroOffre, byte[] pdf) {
 
     try {
@@ -165,6 +170,7 @@ public void envoyerOffrePdf(String emailClient, String nomClient, String numeroO
     }
 }
 
+@Async
 public void envoyerConfirmationOffreRefusee(String emailClient, String nomClient, String numeroOffre) {
 
     try {

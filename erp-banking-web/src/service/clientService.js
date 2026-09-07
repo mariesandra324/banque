@@ -12,6 +12,14 @@ const getHeaders = () => {
   return headers;
 };
 
+const extraireMessageErreur = async (response, messageParDefaut) => {
+  try {
+    const body = await response.json();
+    return body?.message || messageParDefaut;
+  } catch {
+    return messageParDefaut;
+  }
+};
 export const clientService = {
   // 1. Récupérer tous les clients (GET)
   getAllClients: async () => {
@@ -39,7 +47,7 @@ export const clientService = {
     });
 
     if (!response.ok) {
-      throw new Error("Erreur lors de la création du client");
+      throw new Error(await extraireMessageErreur(response, "Erreur lors de la création du client"));
     }
     return response.json();
   },
@@ -66,9 +74,9 @@ export const clientService = {
     });
 
     if (!response.ok) {
-      throw new Error("Erreur lors de la suppression du client");
+      throw new Error(await extraireMessageErreur(response, "Erreur lors de la modification du client"));
     }
-    return true;
+    return response.json();
   },
 
   // 5. Rechercher des clients par mot-clé (CIN, Téléphone, Email)

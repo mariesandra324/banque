@@ -1,14 +1,12 @@
-import { Bell, Search, UserCircle, Menu, LogOut } from "lucide-react";
+import { Bell, UserCircle, Menu, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import GlobalSearch from "./GlobalSearch";
 import "../styles/navbar.css";
 
 function Navbar({ toggleSidebar }) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  const email = user?.email;
-  const role = user?.role;
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -25,10 +23,7 @@ function Navbar({ toggleSidebar }) {
       </div>
 
       <div className="navbar-center">
-        <div className="search-box">
-          <Search size={18} className="search-icon" />
-          <input type="text" placeholder="Rechercher..." />
-        </div>
+        <GlobalSearch />
       </div>
 
       <div className="navbar-right">
@@ -43,14 +38,14 @@ function Navbar({ toggleSidebar }) {
         {/* Séparateur visuel vertical */}
         <div className="divider"></div>
 
-        {/* Profil Utilisateur */}
-        <div className="user-profile">
+        {/* Profil Utilisateur : clic → page Paramètres */}
+        <button
+          className="user-profile"
+          onClick={() => navigate("/parametres")}
+          title="Paramètres"
+        >
           <UserCircle size={32} className="avatar-icon" />
-          <div className="user-details">
-            <span className="user-email" title={email}>{email}</span>
-            <span className="user-role">{role}</span>
-          </div>
-        </div>
+        </button>
 
         {/* Séparateur visuel vertical avant déconnexion */}
         <div className="divider"></div>
