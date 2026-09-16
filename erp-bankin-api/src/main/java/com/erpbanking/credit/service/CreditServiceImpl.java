@@ -30,7 +30,8 @@ public class CreditServiceImpl implements CreditService {
     private final CreditRepository creditRepository;
     private final DemandeCreditRepository demandeCreditRepository;
     private final OffreCreditRepository offreCreditRepository;
-    
+    private final EcheancierService echeancierService;
+
     @Override
     public CreditResponse create(CreditRequest request)
     {
@@ -69,7 +70,7 @@ public class CreditServiceImpl implements CreditService {
                 .build();
 
         credit = creditRepository.save(credit);
-
+        echeancierService.genererEcheancier(credit);
         return toResponse(credit);
     }
 
@@ -210,7 +211,7 @@ public class CreditServiceImpl implements CreditService {
                 .build();
 
         credit = creditRepository.save(credit);
-
+        echeancierService.genererEcheancier(credit);
         return toResponse(credit);
         }
 
@@ -265,7 +266,7 @@ public class CreditServiceImpl implements CreditService {
                 .build();
 
         credit = creditRepository.save(credit);
-
+        echeancierService.genererEcheancier(credit);
         return toResponse(credit);
         }
 }

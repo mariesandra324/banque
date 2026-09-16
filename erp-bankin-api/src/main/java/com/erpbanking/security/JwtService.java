@@ -104,7 +104,7 @@ public class JwtService {
     /**
      * Lecture complète du JWT
      */
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
 
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -123,6 +123,14 @@ public class JwtService {
 
         return Keys.hmacShaKeyFor(keyBytes);
 
+    }
+
+    public String generateMobileToken( ClientUserDetails clientUserDetails, Long clientId ) 
+    {
+         Map<String, Object> claims = new HashMap<>(); 
+         claims.put("type", "CLIENT"); 
+         claims.put("clientId", clientId);
+          return generateToken( claims, clientUserDetails ); 
     }
 
 }

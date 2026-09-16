@@ -1,28 +1,51 @@
 package com.erpbanking.credit.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.*;
 
+@Entity
+@Table(name = "echeances")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Echeance {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    
     private Long id;
 
-    private String numeroEcheance;
+    @Column(nullable = false)
+    private Integer numeroEcheance;
 
     @Column(nullable = false)
-    private LocalDateTime dateEcheance;
+    private LocalDate dateEcheance;
 
-    private String montant;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal montant;
 
-    private String capital;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal capital;
 
-    private String restDu;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal interet;
 
-    private String statut;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal capitalRestant;
+
+    /**
+     * EN_ATTENTE, PAYEE, EN_RETARD
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatutEcheance statut;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "credit_id", nullable = false)
+    private Credit credit;
 }

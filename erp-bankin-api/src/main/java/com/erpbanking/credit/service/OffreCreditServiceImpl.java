@@ -32,6 +32,7 @@ public class OffreCreditServiceImpl implements OffreCreditService {
     private final CreditRepository creditRepository;
     private final EmailService emailService;
     private final OffrePdfService offrePdfService;
+    
 
     @Override
     public OffreCreditResponse create(OffreCreditRequest request) {
@@ -104,7 +105,8 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                     client.getEmail(),
                     nomClient.trim(),
                     saved.getNumeroOffre(),
-                    pdf
+                    pdf,
+                    saved.getToken()
             );
 
             System.out.println("10. EMAIL ENVOYE !");
@@ -330,7 +332,7 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                         nomClient.trim(),
                         offre.getNumeroOffre(),
                         offre.getMontantPropose().toString(),
-                        offre.getTauxInteret().toString()
+                        LocalDate.now().toString()
                 );
 
                 System.out.println("=== EMAIL DE CONFIRMATION ENVOYE ===");

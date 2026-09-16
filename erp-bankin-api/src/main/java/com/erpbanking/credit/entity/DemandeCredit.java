@@ -41,6 +41,7 @@ public class DemandeCredit {
     @Column(nullable = false)
     private Integer duree;
 
+    @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal tauxInteret;
 
     @Column(nullable = false, length = 500)

@@ -1,5 +1,6 @@
 package com.erpbanking.client.controller;
 
+import com.erpbanking.client.dto.ClientDossierResponse;
 import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 import com.erpbanking.client.service.ClientService;
@@ -48,6 +49,22 @@ public class ClientController {
                 clientService.findAll()
         );
     }
+    
+    @GetMapping("/{id}/dossier")
+        @PreAuthorize(
+                "hasRole('ADMIN') or " +
+                "hasRole('GESTIONNAIRE') or " +
+                "hasRole('AGENT') or " +
+                "hasRole('COMPTABLE') or " +
+                "@authorizationService.isClientOwner(#id)"
+        )
+        public ResponseEntity<ClientDossierResponse> getDossier(
+                @PathVariable Long id
+        ) {
+        return ResponseEntity.ok(
+                clientService.getDossier(id)
+        );
+        }
 
 
     // Recherche par ID
@@ -95,4 +112,6 @@ public class ClientController {
 
         return ResponseEntity.noContent().build();
     }
+
+    
 }

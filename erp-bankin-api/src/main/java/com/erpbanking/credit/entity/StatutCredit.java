@@ -4,5 +4,7 @@ public enum StatutCredit {
     ACTIF,
     EN_COURS,
     TERMINE,
-    ANNULE
+    ANNULE,
+    SOLDE
+
 }

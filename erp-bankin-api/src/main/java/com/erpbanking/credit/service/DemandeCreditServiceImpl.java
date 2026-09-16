@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.client.repository.ClientRepository;
+import com.erpbanking.compte.service.EmailService;
 import com.erpbanking.credit.dto.DemandeCreditRequest;
 import com.erpbanking.credit.dto.DemandeCreditResponse;
 import com.erpbanking.credit.dto.PieceJointeResponse;
@@ -36,86 +37,99 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
     private final DemandeCreditRepository demandeCreditRepository;
     private final ClientRepository clientRepository;
     private final CreditService creditService;
+    private final EmailService emailService;
 
-    @Override
-    public DemandeCreditResponse creer(DemandeCreditRequest request,List<MultipartFile> fichiers) {
+        @Override
+        public DemandeCreditResponse creer(DemandeCreditRequest request, List<MultipartFile> fichiers) {
 
-    Client client = clientRepository.findById(request.getClientId())
-            .orElseThrow(() ->
-                    new IllegalArgumentException(
-                            "Client introuvable : " + request.getClientId()
-                    )
-            );
+        // 1. Recherche du client
+        Client client = clientRepository.findById(request.getClientId())
+                .orElseThrow(() -> new IllegalArgumentException("Client introuvable : " + request.getClientId()));
 
-    System.out.println("CLIENT TROUVE : " + client.getId());
+        System.out.println("CLIENT TROUVE : " + client.getId());
 
-    DemandeCredit demande = DemandeCredit.builder()
-            .montantDemande(request.getMontantDemande())
-            .duree(request.getDuree())
-            .motif(request.getMotif())
-            .tauxInteret(request.getTauxInteret())
+        // 2. Construction de l'entité
+        DemandeCredit demande = DemandeCredit.builder()
+                .montantDemande(request.getMontantDemande())
+                .duree(request.getDuree())
+                .motif(request.getMotif())
+                .tauxInteret(request.getTauxInteret())
+                .profession(request.getProfession())
+                .typeContrat(request.getTypeContrat())
+                .revenuMensuel(request.getRevenuMensuel())
+                .chargesMensuelles(request.getChargesMensuelles())
+                .client(client)
+                .dateDemande(LocalDateTime.now())
+                .statut(StatutDemandeCredit.EN_ATTENTE)
+                .dateDecision(null)
+                .motifRejet(null)
+                .build();
 
-            .profession(request.getProfession())
-            .typeContrat(request.getTypeContrat())
-            .revenuMensuel(request.getRevenuMensuel())
-            .chargesMensuelles(request.getChargesMensuelles())
+        demande = demandeCreditRepository.save(demande);
+        System.out.println("DEMANDE CONSTRUITE ET SAUVEGARDÉE : " + demande.getId());
 
-            .client(client)
-            .dateDemande(LocalDateTime.now())
-            .statut(StatutDemandeCredit.EN_ATTENTE)
-            .dateDecision(null)
-            .motifRejet(null)
-            .build();
-
-    System.out.println("DEMANDE CONSTRUITE");
-
-    demande = demandeCreditRepository.save(demande);
-
-    if (fichiers != null && !fichiers.isEmpty()) {
-        Path dossierUpload = Paths.get("uploads", "credits");
-        try {
-            Files.createDirectories(dossierUpload);
-        } catch (IOException e) {
-            throw new IllegalStateException("Impossible de créer le dossier de pièces jointes", e);
-        }
-
-        for (MultipartFile fichier : fichiers) {
-            System.out.println("FICHIER RECU : " + fichier.getOriginalFilename());
-            System.out.println("TYPE : " + fichier.getContentType());
-            System.out.println("TAILLE : " + fichier.getSize());
-            System.out.println("VIDE ? " + fichier.isEmpty());
-
-            if (!fichier.isEmpty()) {
-                String nomFichierOriginal = fichier.getOriginalFilename();
-                String nomFichierUnique = UUID.randomUUID() + "_" + nomFichierOriginal;
-                Path cheminFichier = dossierUpload.resolve(nomFichierUnique);
-
-                try (InputStream inputStream = fichier.getInputStream()) {
-                    Files.copy(inputStream, cheminFichier, StandardCopyOption.REPLACE_EXISTING);
+        // 3. Gestion des fichiers joints
+        if (fichiers != null && !fichiers.isEmpty()) {
+                Path dossierUpload = Paths.get("uploads", "credits");
+                try {
+                Files.createDirectories(dossierUpload);
                 } catch (IOException e) {
-                    throw new IllegalStateException("Impossible de stocker la pièce jointe: " + nomFichierOriginal, e);
+                throw new IllegalStateException("Impossible de créer le dossier de pièces jointes", e);
                 }
 
-                String cheminPersistant = cheminFichier.toString().replace('\\', '/');
+                for (MultipartFile fichier : fichiers) {
+                if (fichier != null && !fichier.isEmpty()) {
+                        String nomOriginal = fichier.getOriginalFilename();
+                        // Sécurisation du nom de fichier pour éviter le path traversal
+                        String nomNettoye = (nomOriginal != null) ? Paths.get(nomOriginal).getFileName().toString() : "document";
+                        String nomFichierUnique = UUID.randomUUID() + "_" + nomNettoye;
+                        
+                        Path cheminFichier = dossierUpload.resolve(nomFichierUnique);
 
-                PieceJointe document = PieceJointe.builder()
-                        .nomFichier(nomFichierOriginal)
-                        .typeFichier(fichier.getContentType())
-                        .cheminFichier(cheminPersistant)
-                        .dateAjout(LocalDateTime.now())
-                        .demandeCredit(demande)
-                        .build();
+                        try (InputStream inputStream = fichier.getInputStream()) {
+                        Files.copy(inputStream, cheminFichier, StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                        throw new IllegalStateException("Impossible de stocker la pièce jointe: " + nomNettoye, e);
+                        }
 
-                System.out.println("SAUVEGARDE PIECE JOINTE : " + cheminPersistant);
-                pieceJointeRepository.save(document);
-            }
+                        String cheminPersistant = cheminFichier.toString().replace('\\', '/');
+
+                        PieceJointe document = PieceJointe.builder()
+                                .nomFichier(nomNettoye)
+                                .typeFichier(fichier.getContentType())
+                                .cheminFichier(cheminPersistant)
+                                .dateAjout(LocalDateTime.now())
+                                .demandeCredit(demande)
+                                .build();
+
+                        pieceJointeRepository.save(document);
+                        System.out.println("SAUVEGARDE PIECE JOINTE : " + cheminPersistant);
+                }
+                }
         }
-    }
 
-    System.out.println("DEMANDE SAUVEE : " + demande.getId());
+        // 4. Notification par email
+        if (client.getEmail() != null && !client.getEmail().isBlank()) {
+                String nomClient = (client.getNom() != null ? client.getNom() : "") + " " +
+                                (client.getPrenom() != null ? client.getPrenom() : "");
 
-    return toResponse(demande);
-    }
+                try {
+                emailService.envoyerConfirmationDemandeCredit(
+                        client.getEmail(),
+                        nomClient.trim(),
+                        demande.getId().toString(),
+                        demande.getMontantDemande().toString(),
+                        demande.getDuree()
+                );
+                System.out.println("EMAIL CONFIRMATION DEMANDE ENVOYE A : " + client.getEmail());
+                } catch (Exception e) {
+                System.err.println("ERREUR ENVOI EMAIL DEMANDE : " + e.getMessage());
+                }
+        }
+
+        // 5. Retour de la réponse
+        return toResponse(demande);
+        }
 
     @Override
     public List<DemandeCreditResponse> getAll() {
@@ -230,7 +244,7 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
         demande = demandeCreditRepository.save(demande);
 
         return toResponse(demande);
-        }
+                }
 
         @Override
         public DemandeCreditResponse accepter(Long id) {

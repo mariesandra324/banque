@@ -4,6 +4,8 @@ package com.erpbanking.auth.controller;
 import com.erpbanking.auth.dto.LoginRequest;
 import com.erpbanking.auth.dto.LoginResponse;
 import com.erpbanking.auth.dto.MeResponse;
+import com.erpbanking.auth.dto.MobileLoginRequest;
+import com.erpbanking.auth.dto.MobileLoginResponse;
 import com.erpbanking.auth.service.AuthService;
 import com.erpbanking.utilisateur.entity.Utilisateur;
 
@@ -57,4 +59,15 @@ public class AuthController {
  
     }
 
+    @PostMapping("/mobile/login")
+        public ResponseEntity<MobileLoginResponse> mobileLogin(
+                @RequestBody MobileLoginRequest request
+        ) {
+
+        return ResponseEntity.ok(
+                authService.mobileLogin(request)
+        );
+        }
+
+        
 }

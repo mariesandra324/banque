@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import com.erpbanking.credit.dto.CreditRequest;
 import com.erpbanking.credit.dto.CreditResponse;
+import com.erpbanking.credit.dto.EcheanceResponse;
+import com.erpbanking.credit.dto.RemboursementResponse;
 import com.erpbanking.credit.entity.StatutCredit;
 import com.erpbanking.credit.service.CreditService;
+import com.erpbanking.credit.service.EcheancierService;
+import com.erpbanking.credit.service.RemboursementService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class CreditController {
 
     private final CreditService creditService;
+    private final EcheancierService echeancierService;
+    private final RemboursementService remboursementService;
 
     // Créer un crédit
     @PostMapping
@@ -78,4 +84,43 @@ public class CreditController {
                 creditService.getByStatut(statut)
         );
     }
+
+    // récuperer l'échéancier d'un crédit
+    @GetMapping("/{id}/echeancier")
+        public ResponseEntity<List<EcheanceResponse>> getEcheancier(
+                @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                echeancierService.getEcheancier(id)
+        );
+     }
+
+     // récuperer le remboursement
+     @PostMapping("/{creditId}/remboursement/{echeanceId}")
+        public ResponseEntity<RemboursementResponse> effectuerRemboursement(
+                @PathVariable Long creditId,
+                @PathVariable Long echeanceId) {
+
+        return ResponseEntity.ok(
+                remboursementService.effectuerRemboursement(
+                        creditId,
+                        echeanceId
+                )
+        );
+      }
+
+      //historique de remboursement
+      @GetMapping("/{creditId}/remboursements")
+        public ResponseEntity<List<RemboursementResponse>> getRemboursements(
+                @PathVariable Long creditId) {
+
+        return ResponseEntity.ok(
+                remboursementService
+                        .getRemboursementsByCredit(creditId)
+        );
+        }
+
+
+
+
 }

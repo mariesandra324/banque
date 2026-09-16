@@ -68,6 +68,9 @@ public class Utilisateur implements UserDetails{
         return motDePasse;
     }
 
+    @Column(name = "code_personnel", unique = true)
+    private String codePersonnel;
+
 
     @Override
 public Collection<? extends GrantedAuthority> getAuthorities() {

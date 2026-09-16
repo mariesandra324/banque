@@ -17,4 +17,7 @@ public interface TransactionRepository  extends JpaRepository<Transaction, Long>
     List<Transaction> findAllWithAccountsOrderByDateTransactionDesc();
 
     Transaction findByReference(String reference);
+
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd WHERE (cs.client.id = :clientId OR cd.client.id = :clientId) ORDER BY t.dateTransaction DESC ")
+    List<Transaction> findByClientId(@Param("clientId") Long clientId);
 }

@@ -2,6 +2,7 @@ package com.erpbanking.transaction.service;
 
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.repository.CompteRepository;
+import com.erpbanking.compte.service.EmailService;
 import com.erpbanking.transaction.dto.TransactionRequest;
 import com.erpbanking.transaction.dto.TransactionResponse;
 import com.erpbanking.transaction.entity.Transaction;
@@ -20,7 +21,71 @@ import java.util.UUID;
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final CompteRepository compteRepository; 
+    private final CompteRepository compteRepository;
+    private final EmailService emailService;
+
+    private void envoyerNotificationTransactionSource(Transaction transaction) {
+
+    Compte compteSource = transaction.getCompteSource();
+
+    if (compteSource == null || compteSource.getClient() == null) {
+        return;
+    }
+
+    if (compteSource.getClient().getEmail() == null ||
+        compteSource.getClient().getEmail().isBlank()) {
+        return;
+    }
+
+    String nomClient =
+            compteSource.getClient().getPrenom()
+                    + " "
+                    + compteSource.getClient().getNom();
+
+    emailService.envoyerNotificationTransaction(
+            compteSource.getClient().getEmail(),
+            nomClient,
+            transaction.getType().name(),
+            transaction.getMontant().toString(),
+            compteSource.getNumeroCompte(),
+            transaction.getReference(),
+            transaction.getDateTransaction().toString(),
+            transaction.getDescription()
+    );
+}
+private void envoyerNotificationTransactionDestination(
+        Transaction transaction
+) {
+
+    Compte compteDestination =
+            transaction.getCompteDestination();
+
+    if (compteDestination == null ||
+        compteDestination.getClient() == null) {
+        return;
+    }
+
+    if (compteDestination.getClient().getEmail() == null ||
+        compteDestination.getClient().getEmail().isBlank()) {
+        return;
+    }
+
+    String nomClient =
+            compteDestination.getClient().getPrenom()
+                    + " "
+                    + compteDestination.getClient().getNom();
+
+    emailService.envoyerNotificationTransaction(
+            compteDestination.getClient().getEmail(),
+            nomClient,
+            "VIREMENT REÇU",
+            transaction.getMontant().toString(),
+            compteDestination.getNumeroCompte(),
+            transaction.getReference(),
+            transaction.getDateTransaction().toString(),
+            transaction.getDescription()
+    );
+}
     @Override
     @Transactional 
     public TransactionResponse effectuerTransaction(TransactionRequest request) {
@@ -86,13 +151,22 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
 
         Transaction savedTx = transactionRepository.save(transaction);
-
+        envoyerNotificationTransactionSource(savedTx);
+        envoyerNotificationTransactionDestination(savedTx);
         return mapToResponse(savedTx);
     }
 
     @Override
     public List<TransactionResponse> obtenirHistoriqueCompte(String numeroCompte) {
         return transactionRepository.findByNumeroCompte(numeroCompte)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public List<TransactionResponse> obtenirHistoriqueClient(Long clientId) {
+        return transactionRepository.findByClientId(clientId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

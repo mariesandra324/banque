@@ -1,5 +1,6 @@
 package com.erpbanking.compte.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,7 @@ public interface CompteRepository extends JpaRepository<Compte, Long>{
     Optional<Compte> findByNumeroCompte(String numeroCompte);
 
     long countByClientId(Long clientId);
+    List<Compte> findByClientId(Long clientId);
 }
     
 

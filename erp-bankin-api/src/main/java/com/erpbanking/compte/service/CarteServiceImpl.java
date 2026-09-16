@@ -57,13 +57,13 @@ public class CarteServiceImpl implements CarteService{
 
 
         // 4. Vérifier que le client possède un email
-        if (client.getEmail() == null ||
-                client.getEmail().isBlank()) {
+        String emailClient = client.getEmail();
 
-            throw new RuntimeException(
-                    "Le client ne possède pas d'adresse email."
-            );
+        if (emailClient == null || emailClient.isBlank()) {
+        throw new RuntimeException("Le client ne possède pas d'adresse email.");
         }
+
+        emailClient = emailClient.trim();
 
 
         // 5. Générer le numéro de carte
@@ -104,8 +104,16 @@ public class CarteServiceImpl implements CarteService{
         // 11. Envoyer le PIN par email
         String nomClient = construireNomClient(client);
 
+        System.out.println("=================================");
+System.out.println("EMAIL CLIENT RÉCUPÉRÉ = [" + emailClient + "]");
+System.out.println("PIN GÉNÉRÉ = " + pin);
+System.out.println("NUMÉRO CARTE = " + numeroCarte);
+System.out.println("=================================");
+
+System.out.println("DESTINATAIRE = [" + emailClient + "]");
+
         emailService.envoyerPinCarte(
-                client.getEmail(),
+                client.getEmail().trim(),
                 nomClient,
                 numeroCarte,
                 pin

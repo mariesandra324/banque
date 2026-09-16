@@ -50,4 +50,15 @@ public class TransactionController {
     public ResponseEntity<TransactionResponse> obtenirParReference(@PathVariable String reference) {
         return ResponseEntity.ok(transactionService.obtenirParReference(reference));
     }
+
+    //récupere l'historique de client
+    @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('COMPTABLE') or hasRole('GESTIONNAIRE')")
+    public ResponseEntity<List<TransactionResponse>> obtenirHistoriqueClient(
+            @PathVariable Long clientId
+    ) {
+        return ResponseEntity.ok(
+                transactionService.obtenirHistoriqueClient(clientId)
+        );
+    }
 }

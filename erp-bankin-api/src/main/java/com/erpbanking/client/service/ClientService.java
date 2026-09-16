@@ -1,5 +1,6 @@
 package com.erpbanking.client.service;
 
+import com.erpbanking.client.dto.ClientDossierResponse;
 import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 
@@ -18,5 +19,7 @@ public interface ClientService {
     void delete(Long id);
 
     List<ClientResponse> searchClients(String query);
+
+    ClientDossierResponse getDossier(Long clientId);
     
 }
