@@ -80,6 +80,6 @@ public class OffrePdfService {
     }
 
     private String formatMontant(java.math.BigDecimal montant) {
-        return String.format("%,.2f Ar", montant);
+        return montant == null ? "-" : String.format("%,.2f Ar", montant);
     }
 }

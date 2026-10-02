@@ -6,9 +6,9 @@ import lombok.Data;
 @Data
 public class MobileLoginRequest {
 
-    @NotBlank(message = "Le numéro de carte ou de compte est obligatoire")
-    private String numero;
+    @NotBlank(message = "Le nom complet est obligatoire")
+    private String nomComplet;
 
-    @NotBlank(message = "Le PIN est obligatoire")
-    private String pin;
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    private String motDePasse;
 }

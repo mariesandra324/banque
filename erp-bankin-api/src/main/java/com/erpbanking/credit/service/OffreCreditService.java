@@ -16,6 +16,8 @@ public interface OffreCreditService {
 
     CreditResponse accepterOffre(Long offreId);
 
+    CreditResponse accepterOffreParClient(Long offreId, Long clientId);
+
     List<OffreCreditResponse> getByClientId(Long clientId);
 
     List<OffreCreditResponse> getByDemandeCreditId(Long demandeCreditId);

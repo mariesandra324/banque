@@ -1,5 +1,8 @@
 package com.erpbanking.compte.service;
 
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.client.repository.ClientRepository;
 
@@ -9,6 +12,8 @@ import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.mapper.CompteMapper;
 import com.erpbanking.compte.repository.CompteRepository;
 
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.utilisateur.entity.Utilisateur;
 
 import lombok.RequiredArgsConstructor;
@@ -33,13 +38,15 @@ public class CompteServiceImpl implements CompteService {
 
     private final RibService ribService;
 
+    private final NotificationService notificationService;
+
+    private final AuditService auditService;
+
     // Préfixe à 2 chiffres selon le type de compte (norme RIB : 11 chiffres au total pour numeroCompte).
     // Les clés doivent matcher exactement les valeurs du <select> côté frontend (Comptes.jsx).
     private static final Map<String, String> PREFIXES_PAR_TYPE = Map.of(
             "Courant", "01",
-            "Epargne", "02",
-            "A terme", "03",
-            "Devises", "04"
+            "Epargne", "02"
     );
 
     private static final int LONGUEUR_SUFFIXE = 9;
@@ -76,6 +83,31 @@ public class CompteServiceImpl implements CompteService {
 
         Compte saved = compteRepository.save(compte);
 
+        String nomClient = (client.getPrenom() != null ? client.getPrenom() : "")
+                + " " + (client.getNom() != null ? client.getNom() : "");
+        String detail = "Compte " + saved.getNumeroCompte()
+                + " (" + saved.getTypeCompte() + ") créé pour "
+                + nomClient.trim() + ".";
+
+        notificationService.creerPourRole(
+                NotificationType.COMPTE_CREE,
+                detail,
+                "/comptes"
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.COMPTE_CREE_AGENT,
+                detail,
+                "/comptes"
+        );
+
+        auditService.journaliser(
+                AuditAction.CREATION,
+                AuditModule.COMPTES,
+                "Compte #" + saved.getId(),
+                "Création du compte " + saved.getNumeroCompte()
+                        + " (" + saved.getTypeCompte() + ") pour " + nomClient.trim() + "."
+        );
 
         return compteMapper.toResponse(saved);
     }
@@ -144,7 +176,21 @@ public class CompteServiceImpl implements CompteService {
     @Override
     public void delete(Long id) {
 
+        Compte compte = compteRepository.findById(id)
+                .orElseThrow(() ->
+                    new RuntimeException("Compte introuvable")
+                );
+
+        String numero = compte.getNumeroCompte();
+
         compteRepository.deleteById(id);
+
+        auditService.journaliser(
+                AuditAction.SUPPRESSION,
+                AuditModule.COMPTES,
+                "Compte #" + id,
+                "Suppression du compte " + numero + "."
+        );
     }
 
 
@@ -172,6 +218,14 @@ public class CompteServiceImpl implements CompteService {
 
         Compte updated = compteRepository.save(compte);
 
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.COMPTES,
+                "Compte #" + updated.getId(),
+                "Modification du compte " + updated.getNumeroCompte()
+                        + " (type : " + updated.getTypeCompte()
+                        + ", statut : " + updated.getStatut() + ")."
+        );
 
         return compteMapper.toResponse(updated);
     }

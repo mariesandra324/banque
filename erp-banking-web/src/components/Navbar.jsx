@@ -1,12 +1,16 @@
-import { Bell, UserCircle, Menu, LogOut } from "lucide-react";
+import { UserCircle, Menu, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../hooks/useTheme";
 import GlobalSearch from "./GlobalSearch";
+import NotificationBell from "./NotificationBell";
 import "../styles/navbar.css";
 
 function Navbar({ toggleSidebar }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === 'dark';
 
   const handleLogout = () => {
     logout();
@@ -29,13 +33,23 @@ function Navbar({ toggleSidebar }) {
       <div className="navbar-right">
         {/* Zone des icônes d'action */}
         <div className="action-icons">
-          <div className="notification">
-            <Bell className="icon" size={20} />
-            <span className="badge">3</span>
-          </div>
+          <NotificationBell />
         </div>
 
-        {/* Séparateur visuel vertical */}
+        <div className="divider"></div>
+
+        {/* Bouton Mode Sombre / Mode Clair */}
+        <button
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          title={darkMode ? "Passer au mode clair" : "Passer au mode sombre"}
+        >
+          {darkMode ? (
+            <Moon className="icon theme-icon" size={20} />
+          ) : (
+            <Sun className="icon theme-icon" size={20} style={{ color: '#f59e0b' }}/>
+          )}
+        </button>
         <div className="divider"></div>
 
         {/* Profil Utilisateur : clic → page Paramètres */}
@@ -47,7 +61,6 @@ function Navbar({ toggleSidebar }) {
           <UserCircle size={32} className="avatar-icon" />
         </button>
 
-        {/* Séparateur visuel vertical avant déconnexion */}
         <div className="divider"></div>
 
         {/* Bouton de Déconnexion */}

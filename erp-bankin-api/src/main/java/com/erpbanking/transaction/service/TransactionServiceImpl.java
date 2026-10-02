@@ -3,6 +3,13 @@ package com.erpbanking.transaction.service;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.repository.CompteRepository;
 import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.guichet.entity.Guichet;
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
+import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.transaction.dto.TransactionRequest;
 import com.erpbanking.transaction.dto.TransactionResponse;
 import com.erpbanking.transaction.entity.Transaction;
@@ -23,6 +30,16 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CompteRepository compteRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
+
+    private NotificationType typeClientSource(Transaction transaction) {
+        return switch (transaction.getType()) {
+            case DEPOT -> NotificationType.DEPOT_EFFECTUE;
+            case RETRAIT -> NotificationType.RETRAIT_EFFECTUE;
+            case VIREMENT -> NotificationType.VIREMENT_EFFECTUE;
+        };
+    }
 
     private void envoyerNotificationTransactionSource(Transaction transaction) {
 
@@ -42,15 +59,34 @@ public class TransactionServiceImpl implements TransactionService {
                     + " "
                     + compteSource.getClient().getNom();
 
-    emailService.envoyerNotificationTransaction(
-            compteSource.getClient().getEmail(),
-            nomClient,
-            transaction.getType().name(),
-            transaction.getMontant().toString(),
-            compteSource.getNumeroCompte(),
-            transaction.getReference(),
-            transaction.getDateTransaction().toString(),
-            transaction.getDescription()
+    NotificationType type = typeClientSource(transaction);
+    String message = switch (type) {
+        case DEPOT_EFFECTUE ->
+            "Dépôt de " + transaction.getMontant() + " Ar effectué sur votre compte " + compteSource.getNumeroCompte();
+        case RETRAIT_EFFECTUE ->
+            "Retrait de " + transaction.getMontant() + " Ar effectué sur votre compte " + compteSource.getNumeroCompte();
+        default ->
+            "Virement de " + transaction.getMontant() + " Ar effectué depuis votre compte " + compteSource.getNumeroCompte();
+    };
+
+    if (notificationService.emailActivePourClient(compteSource.getClient().getId(), type)) {
+        emailService.envoyerNotificationTransaction(
+                compteSource.getClient().getEmail(),
+                nomClient,
+                transaction.getType().name(),
+                transaction.getMontant().toString(),
+                compteSource.getNumeroCompte(),
+                transaction.getReference(),
+                transaction.getDateTransaction().toString(),
+                transaction.getDescription()
+        );
+    }
+
+    notificationService.creerPourClient(
+            compteSource.getClient().getId(),
+            type,
+            message,
+            transaction.getReference()
     );
 }
 private void envoyerNotificationTransactionDestination(
@@ -75,20 +111,35 @@ private void envoyerNotificationTransactionDestination(
                     + " "
                     + compteDestination.getClient().getNom();
 
-    emailService.envoyerNotificationTransaction(
-            compteDestination.getClient().getEmail(),
-            nomClient,
-            "VIREMENT REÇU",
-            transaction.getMontant().toString(),
-            compteDestination.getNumeroCompte(),
-            transaction.getReference(),
-            transaction.getDateTransaction().toString(),
-            transaction.getDescription()
+    if (notificationService.emailActivePourClient(compteDestination.getClient().getId(), NotificationType.VIREMENT_RECU)) {
+        emailService.envoyerNotificationTransaction(
+                compteDestination.getClient().getEmail(),
+                nomClient,
+                "VIREMENT REÇU",
+                transaction.getMontant().toString(),
+                compteDestination.getNumeroCompte(),
+                transaction.getReference(),
+                transaction.getDateTransaction().toString(),
+                transaction.getDescription()
+        );
+    }
+
+    notificationService.creerPourClient(
+            compteDestination.getClient().getId(),
+            NotificationType.VIREMENT_RECU,
+            "Vous avez reçu un virement de " + transaction.getMontant() + " Ar sur votre compte " + compteDestination.getNumeroCompte(),
+            transaction.getReference()
     );
 }
     @Override
     @Transactional 
     public TransactionResponse effectuerTransaction(TransactionRequest request) {
+        return effectuerTransaction(request, null);
+    }
+
+    @Override
+    @Transactional
+    public TransactionResponse effectuerTransaction(TransactionRequest request, Guichet guichet) {
 
         // 1. Récupération du compte source
         Compte compteSource = compteRepository.findByNumeroCompte(request.getNumeroCompteSource())
@@ -148,11 +199,42 @@ private void envoyerNotificationTransactionDestination(
                 .statut(StatutTransaction.SUCCES)
                 .compteSource(compteSource)
                 .compteDestination(compteDestination)
+                .guichet(guichet)
                 .build();
 
         Transaction savedTx = transactionRepository.save(transaction);
         envoyerNotificationTransactionSource(savedTx);
         envoyerNotificationTransactionDestination(savedTx);
+
+        String detail = "Transaction " + savedTx.getReference()
+                + " (" + savedTx.getType() + ") d'un montant de "
+                + savedTx.getMontant() + " Ar.";
+
+        notificationService.creerPourRole(
+                NotificationType.TRANSACTION_EFFECTUEE,
+                detail,
+                "/transactions"
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.TRANSACTION_A_COMPTABILISER,
+                detail,
+                "/transactions"
+        );
+
+        AuditAction auditAction = switch (savedTx.getType()) {
+            case DEPOT -> AuditAction.DEPOT;
+            case RETRAIT -> AuditAction.RETRAIT;
+            case VIREMENT -> AuditAction.VIREMENT;
+        };
+        String auditDescription = detail;
+        auditService.journaliser(
+                auditAction,
+                AuditModule.TRANSACTIONS,
+                "Transaction #" + savedTx.getId(),
+                auditDescription
+        );
+
         return mapToResponse(savedTx);
     }
 
@@ -200,6 +282,7 @@ private void envoyerNotificationTransactionDestination(
                 .statut(tx.getStatut())
                 .numeroCompteSource(tx.getCompteSource() != null ? tx.getCompteSource().getNumeroCompte() : null)
                 .numeroCompteDestination(tx.getCompteDestination() != null ? tx.getCompteDestination().getNumeroCompte() : null)
+                .codeGuichet(tx.getGuichet() != null ? tx.getGuichet().getCodeGuichet() : null)
                 .build();
     }
 

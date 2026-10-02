@@ -63,6 +63,9 @@ public class DemandeCredit {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
+    @Column(name = "compte_id")
+    private Long compteId;
+
     private String profession;
 
     private String typeContrat;

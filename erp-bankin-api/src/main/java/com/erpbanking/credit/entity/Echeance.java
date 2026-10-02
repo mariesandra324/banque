@@ -38,9 +38,6 @@ public class Echeance {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal capitalRestant;
 
-    /**
-     * EN_ATTENTE, PAYEE, EN_RETARD
-     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutEcheance statut;

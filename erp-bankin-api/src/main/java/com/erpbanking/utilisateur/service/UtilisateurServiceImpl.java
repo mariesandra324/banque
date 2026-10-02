@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
 import com.erpbanking.common.ResourceNotFoundException;
 import com.erpbanking.role.repository.RoleRepository;
 import com.erpbanking.guichet.entity.Guichet;
@@ -26,6 +30,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final RoleRepository roleRepository;
     private final GuichetRepository guichetRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     @Override
     public UtilisateurResponse create(UtilisateurRequest request) {
@@ -52,6 +57,14 @@ public class UtilisateurServiceImpl implements UtilisateurService {
                 .build();
 
         utilisateur = utilisateurRepository.save(utilisateur);
+
+        auditService.journaliser(
+                AuditAction.CREATION,
+                AuditModule.UTILISATEURS,
+                "Utilisateur #" + utilisateur.getId(),
+                "Création de l'utilisateur " + utilisateur.getPrenom() + " " + utilisateur.getNom()
+                        + " (" + utilisateur.getEmail() + ") avec le rôle " + role.getNom() + "."
+        );
 
         return UtilisateurMapper.toResponse(utilisateur);
     }
@@ -120,10 +133,18 @@ utilisateur.setGuichet(guichet);
         );
     }
 
-    utilisateur = utilisateurRepository.save(utilisateur);
+        utilisateur = utilisateurRepository.save(utilisateur);
 
-    return UtilisateurMapper.toResponse(utilisateur);
-}
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.UTILISATEURS,
+                "Utilisateur #" + utilisateur.getId(),
+                "Modification de l'utilisateur " + utilisateur.getPrenom() + " " + utilisateur.getNom()
+                        + " (" + utilisateur.getEmail() + "), rôle " + role.getNom() + "."
+        );
+
+        return UtilisateurMapper.toResponse(utilisateur);
+    }
 
     @Override
     public void delete(Long id) {
@@ -135,6 +156,13 @@ utilisateur.setGuichet(guichet);
         utilisateur.setActif(false);
 
         utilisateurRepository.save(utilisateur);
+
+        auditService.journaliser(
+                AuditAction.DESACTIVATION,
+                AuditModule.UTILISATEURS,
+                "Utilisateur #" + utilisateur.getId(),
+                "Désactivation du compte de l'utilisateur " + utilisateur.getPrenom() + " " + utilisateur.getNom() + "."
+        );
     }
     
 }

@@ -1,15 +1,21 @@
 package com.erpbanking.client.service;
 import java.util.Objects;
 
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
 import com.erpbanking.client.dto.ClientDossierResponse;
 import com.erpbanking.client.dto.ClientRequest;
 import com.erpbanking.client.dto.ClientResponse;
 import com.erpbanking.client.entity.Client;
+import com.erpbanking.client.entity.ClientMobile;
+import com.erpbanking.client.entity.StatutMobile;
 import com.erpbanking.client.mapper.ClientMapper;
 import com.erpbanking.compte.entity.Carte;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.dto.CompteResponse;
 import com.erpbanking.client.repository.ClientRepository;
+import com.erpbanking.client.repository.ClientMobileRepository;
 import com.erpbanking.common.exception.DuplicateResourceException;
 import com.erpbanking.compte.dto.CarteResponse;
 import com.erpbanking.compte.repository.CarteRepository;
@@ -23,12 +29,15 @@ import com.erpbanking.credit.entity.OffreCredit;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.DemandeCreditRepository;
 import com.erpbanking.credit.repository.OffreCreditRepository;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.transaction.dto.TransactionResponse;
 import com.erpbanking.transaction.entity.Transaction;
 import com.erpbanking.transaction.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,12 +51,16 @@ public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
+    private final ClientMobileRepository clientMobileRepository;
     private final CompteRepository compteRepository;
     private final CarteRepository carteRepository;
     private final TransactionRepository transactionRepository;
     private final DemandeCreditRepository demandeCreditRepository;
     private final OffreCreditRepository offreCreditRepository;
     private final CreditRepository creditRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
 
     private CompteResponse mapCompteToResponse(Compte compte) {
     return CompteResponse.builder()
@@ -155,8 +168,73 @@ private CreditResponse mapCreditToResponse(Credit credit) {
         Client client = clientMapper.toEntity(request);
         Client saved = clientRepository.save(client);
 
-        return clientMapper.toResponse(saved);
+        if (Boolean.TRUE.equals(request.getCreerAccesMobile())) {
+            creerAccesMobileInitial(saved, request);
+        }
+
+        String nomComplet = (saved.getPrenom() != null ? saved.getPrenom() : "")
+                + " " + (saved.getNom() != null ? saved.getNom() : "");
+        String lien = "/clients/" + saved.getId();
+
+        notificationService.creerPourRole(
+                NotificationType.CLIENT_CREE,
+                nomComplet.trim() + " (CIN " + saved.getCin() + ") vient d'être enregistré.",
+                lien
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.CLIENT_A_TRAITER,
+                nomComplet.trim() + " a été enregistré et doit être vérifié.",
+                lien
+        );
+
+        auditService.journaliser(
+                AuditAction.CREATION,
+                AuditModule.CLIENTS,
+                "Client #" + saved.getId(),
+                "Création du client " + nomComplet.trim() + " (CIN " + saved.getCin() + ")."
+        );
+
+        return mapAvecMobile(clientMapper.toResponse(saved));
     }
+
+    private void creerAccesMobileInitial(Client client, ClientRequest request) {
+
+        String identifiant = (request.getIdentifiantMobile() != null
+                && !request.getIdentifiantMobile().isBlank())
+                    ? request.getIdentifiantMobile().trim()
+                    : (client.getEmail() != null
+                        ? client.getEmail()
+                        : client.getTelephone());
+
+        if (clientMobileRepository.existsByIdentifiant(identifiant)) {
+            throw new DuplicateResourceException(
+                "Cet identifiant mobile est déjà utilisé"
+            );
+        }
+
+        // Par défaut le code personnel vaut 000000 ; le client le
+        // modifiera selon ses choix depuis l'application mobile.
+        String codePersonnel = (request.getCodePersonnel() != null
+                && !request.getCodePersonnel().isBlank())
+                    ? request.getCodePersonnel().trim()
+                    : "000000";
+
+        String hash = passwordEncoder.encode(codePersonnel);
+
+        ClientMobile clientMobile = ClientMobile.builder()
+                .client(client)
+                .identifiant(identifiant)
+                .motDePasseHash(hash)
+                .statut(StatutMobile.EN_ATTENTE)
+                .dateInscription(java.time.LocalDateTime.now())
+                .build();
+
+        clientMobileRepository.save(clientMobile);
+
+        client.setCodePersonnelHash(hash);
+        clientRepository.save(client);
+    }   
 
 
     @Override
@@ -164,6 +242,7 @@ private CreditResponse mapCreditToResponse(Credit credit) {
         return clientRepository.findAll()
                 .stream()
                 .map(clientMapper::toResponse)
+                .map(this::mapAvecMobile)
                 .toList();
     }
 
@@ -176,7 +255,7 @@ private CreditResponse mapCreditToResponse(Credit credit) {
                     new RuntimeException("Client introuvable")
                 );
 
-        return clientMapper.toResponse(client);
+        return mapAvecMobile(clientMapper.toResponse(client));
     }
 
 
@@ -210,6 +289,13 @@ private CreditResponse mapCreditToResponse(Credit credit) {
 
         Client updated = clientRepository.save(client);
 
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.CLIENTS,
+                "Client #" + updated.getId(),
+                "Modification de la fiche client " + updated.getPrenom() + " " + updated.getNom() + "."
+        );
+
         return clientMapper.toResponse(updated);
     }
 
@@ -217,7 +303,21 @@ private CreditResponse mapCreditToResponse(Credit credit) {
     @Override
     public void delete(Long id) {
 
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() ->
+                    new RuntimeException("Client introuvable")
+                );
+
+        String identite = client.getPrenom() + " " + client.getNom();
+
         clientRepository.deleteById(id);
+
+        auditService.journaliser(
+                AuditAction.SUPPRESSION,
+                AuditModule.CLIENTS,
+                "Client #" + id,
+                "Suppression du client " + identite + "."
+        );
     }
 
     @Override
@@ -226,7 +326,20 @@ private CreditResponse mapCreditToResponse(Credit credit) {
             query, query, query, query, query
         ).stream()
          .map(clientMapper::toResponse)
+         .map(this::mapAvecMobile)
          .toList();
+    }
+
+    private ClientResponse mapAvecMobile(ClientResponse response) {
+
+        clientMobileRepository.findByClientId(response.getId())
+                .ifPresent(mobile -> {
+                    response.setMobileStatut(mobile.getStatut());
+                    response.setMobileIdentifiant(mobile.getIdentifiant());
+                    response.setMobileDateInscription(mobile.getDateInscription());
+                });
+
+        return response;
     }
 
     @Override
@@ -239,7 +352,7 @@ private CreditResponse mapCreditToResponse(Credit credit) {
                 );
 
         ClientResponse clientResponse =
-                clientMapper.toResponse(client);
+                mapAvecMobile(clientMapper.toResponse(client));
 
         List<CompteResponse> comptes =
                 compteRepository.findByClientId(clientId)

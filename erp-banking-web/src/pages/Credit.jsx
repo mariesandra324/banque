@@ -144,8 +144,8 @@ function Credit() {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937', margin: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--heading)', margin: 0 }}>
           Crédit
         </h1>
         <button
@@ -157,19 +157,19 @@ function Credit() {
           }}
         >
           <Plus size={16} />
-          {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres'?'Nouvelle crédit' : 'Nouveau crédit'}
+          {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres' ? 'Nouvelle offre' : 'Nouveau crédit'}
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', overflowX: 'auto' }}>
         {ONGLETS.map((onglet) => (
           <button
             key={onglet.id}
             onClick={() => setOngletActif(onglet.id)}
             style={{
               padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '14px', fontWeight: '600',
-              color: ongletActif === onglet.id ? '#2563eb' : '#64748b',
+              fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0,
+              color: ongletActif === onglet.id ? '#2563eb' : 'var(--muted)',
               borderBottom: ongletActif === onglet.id ? '2px solid #2563eb' : '2px solid transparent',
               marginBottom: '-1px',
             }}
@@ -186,7 +186,7 @@ function Credit() {
       )}
 
       {chargement ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--faint)', fontSize: '14px' }}>
           Chargement...
         </div>
       ) : ongletActif === 'demandes' ? (

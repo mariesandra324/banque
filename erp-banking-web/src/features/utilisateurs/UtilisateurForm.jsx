@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../../service/api';
 import { createUtilisateur, updateUtilisateur } from '../../service/utilisateursService';
+
+const PHONE_PREFIX = '+261';
 
 function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
   const isEditing = !!utilisateur;
@@ -11,7 +14,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
     nom: '',
     prenom: '',
     email: '',
-    telephone: '',
+    telephone: 'PHONE_PREFIX',
     motDePasse: '',
     roleId: '',
     guichetId: '',
@@ -19,6 +22,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,7 +47,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
       nom: utilisateur.nom || '',
       prenom: utilisateur.prenom || '',
       email: utilisateur.email || '',
-      telephone: utilisateur.telephone || '',
+      telephone: utilisateur.telephone || PHONE_PREFIX,
       motDePasse: '',
       roleId: utilisateur.role?.id || '',
       guichetId: utilisateur.guichet?.id || '',
@@ -53,7 +57,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
       nom: '',
       prenom: '',
       email: '',
-      telephone: '',
+      telephone: PHONE_PREFIX,
       motDePasse: '',
       roleId: '',
       guichetId: ''
@@ -70,6 +74,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
   };
 
   const validate = () => {
+    
     const errors = {};
     if (!form.nom.trim()) errors.nom = 'Le nom est requis.';
     if (!form.prenom.trim()) errors.prenom = 'Le prénom est requis.';
@@ -107,10 +112,10 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
     }
   };
 
-  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#374151' };
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px' };
-  const cardStyle = { backgroundColor: 'white', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px' };
-  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: '#111827', marginBottom: '18px' };
+  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
+  const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
+  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
 
   return (
     <form onSubmit={submit}>
@@ -153,8 +158,18 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
             {!isEditing && (
               <div>
                 <label style={labelStyle}>Mot de passe <span style={{ color: '#dc2626' }}>*</span></label>
-                <input type="password" name="motDePasse" value={form.motDePasse} onChange={change} style={inputStyle} />
+                <div style={{position: 'relative'}}>
+                  <input type={showPassword? 'text': 'password'} name='motDePasse' value={form.motDePasse} onChange={change} style={{...inputStyle, paddingRight:'42px',}}/>
+                  <button type='button' onClick={()=> setShowPassword((prev)=> !prev)} 
+                    title={showPassword? 'Masquer le mot de passe':'afficher le mot de passe'}
+                    style={{ position:'absolute', right:'10px', top:'50%',transform:'translateY(-50%)',background:'none',border:'none',padding:'4px',cursor:'pointer',
+                      color:'var(--faint)',display:'flex',alignItems:'center'}}>
+                        {showPassword ? <EyeOff size={18}/>:<Eye size={18}/>}
+                  </button>
+                  
+                </div>
                 {fieldErrors.motDePasse && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.motDePasse}</div>}
+                
               </div>
             )}
           </div>
@@ -194,7 +209,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
               </div>
               )}
             </div>
-            <div style={{ marginTop: '6px', color: '#9ca3af', fontSize: '12px' }}>
+            <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
               Agence à laquelle l'utilisateur est rattaché.
             </div>
           </div>
@@ -217,7 +232,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
         >
           Annuler
         </button>

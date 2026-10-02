@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAllTransactions, getHistoriqueCompte } from '../service/transactionService';
 import TransactionForm from '../features/transaction/TransactionForm';
 import TransactionTable from '../features/transaction/TransactionTable';
+import { useAuth } from '../hooks/useAuth';
+
+// Le comptable est un rôle de consultation : il ne peut pas saisir de transaction.
+const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
 
 const Transactions = () => {
-  const [vue, setVue] = useState('form'); // 'form' = formulaire par défaut, 'liste' = historique
+  const { user } = useAuth();
+  const peutCreerTransaction = ROLES_AUTORISES_A_CREER.includes(user?.role);
+
+  const [vue, setVue] = useState('liste'); 
   const [transactions, setTransactions] = useState([]);
   const [numeroCompteFiltre, setNumeroCompteFiltre] = useState('');
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -31,6 +38,10 @@ const Transactions = () => {
     chargerHistorique(numeroCompteFiltre);
   };
 
+  useEffect(() => {
+    chargerHistorique();
+  }, []);
+
   const voirFormulaire = () => {
     setVue('form');
   };
@@ -46,22 +57,24 @@ const Transactions = () => {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '20px', margin: 0, color: '#1f2937' }}>Transactions</h1>
+        <h1 style={{ fontSize: '20px', margin: 0, color: 'var(--heading)' }}>Transactions</h1>
 
         {vue === 'form' ? (
           <button
             onClick={voirHistorique}
-            style={{ backgroundColor: 'white', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
+            style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
           >
             Voir l'historique
           </button>
         ) : (
-          <button
-            onClick={voirFormulaire}
-            style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
-          >
-            + Nouvelle transaction
-          </button>
+          peutCreerTransaction && (
+            <button
+              onClick={voirFormulaire}
+              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+            >
+              + Nouvelle transaction
+            </button>
+          )
         )}
       </div>
 
@@ -76,7 +89,7 @@ const Transactions = () => {
           )}
 
           {loadingHistory ? (
-            <div style={{ padding: '20px', color: '#64748b' }}>Chargement de l'historique...</div>
+            <div style={{ padding: '20px', color: 'var(--muted)' }}>Chargement de l'historique...</div>
           ) : (
             <TransactionTable transactions={transactions} numeroCompteActuel={numeroCompteFiltre} />
           )}

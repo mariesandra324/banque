@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+# Clé privée Firebase Admin : ne doit jamais être versionnée
+src/main/resources/firebase/service-account.json
+firebase/service-account.json
+*service-account*.json
+!src/main/resources/firebase/service-account.template.json
+application-local.properties
+application-local.yml
+

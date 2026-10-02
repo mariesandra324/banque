@@ -54,7 +54,7 @@ body {
 
     padding: 40px 24px;
 
-    background-color: #f8fafc;
+    background-color: var(--bg-primary);
 
     display: flex;
     justify-content: center;
@@ -75,6 +75,33 @@ body {
 }
 
 
+/* Voile sombre derrière le menu lorsqu'il est ouvert en mode mobile/tablette */
+.sidebar-layer {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+/* Le voile n'apparaît que sur petit écran (mode tiroir) */
+@media (max-width: 1024px) {
+    .sidebar-layer {
+        top: 0;
+    }
+
+    .sidebar-layer.open {
+        display: block;
+        opacity: 1;
+    }
+}
+
+
 /* =========================
    CONTENEUR INTERNE
 ========================= */
@@ -87,4 +114,41 @@ body {
     flex-direction: column;
 
     box-sizing: border-box;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+/* Tablettes & mobiles : le menu devient un tiroir superposé */
+@media (max-width: 1024px) {
+    .main-content,
+    .main-content.sidebar-open {
+        margin-left: 0;
+    }
+
+    .main-content {
+        padding: 24px 16px;
+    }
+}
+
+/* Petits écrans : la navbar peut passer sur 2 lignes, le corps s'adapte */
+@media (max-width: 768px) {
+    .layout-body {
+        height: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .main-content {
+        padding: 20px 12px;
+    }
+}
+
+/* Très petits écrans */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 16px 10px;
+    }
 }

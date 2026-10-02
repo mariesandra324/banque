@@ -54,22 +54,22 @@ function DemandeCreditTable({ demandes = [] }) {
   const demandesPage = demandesFiltrees.slice((pageActuelle - 1) * PAR_PAGE, pageActuelle * PAR_PAGE);
 
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
+    <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ position: 'relative', width: '260px' }}>
-          <Search size={16} color="#94a3b8" style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--muted)" style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Rechercher par client, référence..."
             value={recherche}
             onChange={(e) => { setRecherche(e.target.value); setPage(1); }}
-            style={{ width: '100%', padding: '8px 10px 8px 32px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px 8px 32px', borderRadius: '6px', border: '1px solid var(--input-border)', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
           />
         </div>
         <select
           value={statutFiltre}
           onChange={(e) => { setStatutFiltre(e.target.value); setPage(1); }}
-          style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px' }}
+          style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--input-border)', fontSize: '13px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
         >
           <option value="">Tous les statuts</option>
           {statutsDisponibles.map((s) => (
@@ -81,20 +81,20 @@ function DemandeCreditTable({ demandes = [] }) {
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Référence</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Client</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Montant demandé</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Durée</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Date demande</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Statut</th>
-              <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Actions</th>
+            <tr style={{ backgroundColor: 'var(--table-header)', borderBottom: '1px solid var(--border-color)' }}>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Référence</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Client</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Montant demandé</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Durée</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Date demande</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Statut</th>
+              <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {demandesPage.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+                <td colSpan="7" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
                   Aucune demande de crédit trouvée.
                 </td>
               </tr>
@@ -102,12 +102,12 @@ function DemandeCreditTable({ demandes = [] }) {
               demandesPage.map((d) => {
                 const badge = styleStatut(d.statut);
                 return (
-                  <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: '500', color: '#1f2937', fontSize: '14px' }}>{d.reference || `#${d.id}`}</td>
-                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{d.clientNom} {d.clientPrenom}</td>
-                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{formatMontant(d.montantDemande)}</td>
-                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{d.duree ?? d.dureeMois ?? '-'} mois</td>
-                    <td style={{ padding: '12px 16px', color: '#475569', fontSize: '14px' }}>{formatDate(d.dateDemande)}</td>
+                  <tr key={d.id} style={{ borderBottom: '1px solid var(--faint)' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: '500', color: 'var(--text-primary)', fontSize: '14px' }}>{d.reference || `#${d.id}`}</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{d.clientNom} {d.clientPrenom}</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{formatMontant(d.montantDemande)}</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{d.duree ?? d.dureeMois ?? '-'} mois</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{formatDate(d.dateDemande)}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: '600',
@@ -132,8 +132,8 @@ function DemandeCreditTable({ demandes = [] }) {
         </table>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderTop: '1px solid #e2e8f0' }}>
-        <span style={{ fontSize: '13px', color: '#64748b' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '10px' }}>
+        <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
           {demandesFiltrees.length} demande(s)
         </span>
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -142,9 +142,9 @@ function DemandeCreditTable({ demandes = [] }) {
               key={n}
               onClick={() => setPage(n)}
               style={{
-                minWidth: '28px', height: '28px', borderRadius: '6px', border: '1px solid #d1d5db',
-                backgroundColor: n === pageActuelle ? '#2563eb' : 'white',
-                color: n === pageActuelle ? 'white' : '#1f2937',
+                minWidth: '28px', height: '28px', borderRadius: '6px', border: '1px solid var(--input-border)',
+                backgroundColor: n === pageActuelle ? '#2563eb' : 'var(--card-bg)',
+                color: n === pageActuelle ? 'white' : 'var(--text-primary)',
                 cursor: 'pointer', fontSize: '13px',
               }}
             >

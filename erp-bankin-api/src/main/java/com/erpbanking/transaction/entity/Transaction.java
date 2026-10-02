@@ -1,6 +1,7 @@
 package com.erpbanking.transaction.entity;
 
 import com.erpbanking.compte.entity.Compte;
+import com.erpbanking.guichet.entity.Guichet;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -48,4 +49,10 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "compte_destination_id")
     private Compte compteDestination;
+
+    // Guichet ayant traite l'operation. NULL pour les transactions
+    // historiques et les mouvements automatiques de credit.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guichet_id")
+    private Guichet guichet;
 }

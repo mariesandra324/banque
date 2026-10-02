@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import jakarta.validation.Valid;
+
+import com.erpbanking.security.ClientUserDetails;
 import com.erpbanking.credit.dto.CreditResponse;
 import com.erpbanking.credit.dto.OffreCreditRequest;
 import com.erpbanking.credit.dto.OffreCreditResponse;
@@ -34,9 +39,9 @@ public class OffreCreditController {
      * Créer une offre de crédit
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE_CREDIT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
     public ResponseEntity<OffreCreditResponse> create(
-            @RequestBody OffreCreditRequest request) {
+            @Valid @RequestBody OffreCreditRequest request) {
 
         OffreCreditResponse response =
                 offreCreditService.create(request);
@@ -64,7 +69,7 @@ public class OffreCreditController {
      * Récupérer toutes les offres
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE_CREDIT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
     public ResponseEntity<List<OffreCreditResponse>> getAll() {
 
         return ResponseEntity.ok(
@@ -80,7 +85,7 @@ public class OffreCreditController {
             hasAnyRole(
                 'ADMIN',
                 'AGENT',
-                'GESTIONNAIRE_CREDIT',
+                'GESTIONNAIRE', 'GESTIONNAIRE',
                 'CLIENT'
             )
             """)
@@ -100,7 +105,7 @@ public class OffreCreditController {
             hasAnyRole(
                 'ADMIN',
                 'AGENT',
-                'GESTIONNAIRE_CREDIT',
+                'GESTIONNAIRE', 'GESTIONNAIRE',
                 'CLIENT'
             )
             """)
@@ -120,7 +125,7 @@ public class OffreCreditController {
             hasAnyRole(
                 'ADMIN',
                 'AGENT',
-                'GESTIONNAIRE_CREDIT',
+                'GESTIONNAIRE', 'GESTIONNAIRE',
                 'CLIENT'
             )
             """)
@@ -142,7 +147,7 @@ public class OffreCreditController {
             hasAnyRole(
                 'ADMIN',
                 'AGENT',
-                'GESTIONNAIRE_CREDIT',
+                'GESTIONNAIRE', 'GESTIONNAIRE',
                 'CLIENT'
             )
             """)
@@ -159,7 +164,7 @@ public class OffreCreditController {
      * Supprimer une offre
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE_CREDIT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id) {
 
@@ -170,12 +175,17 @@ public class OffreCreditController {
 
     
     @PutMapping("/{id}/accepter")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE_CREDIT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE', 'CLIENT')")
         public ResponseEntity<CreditResponse> accepterOffre(
-                @PathVariable Long id) {
+                @PathVariable Long id,
+                @AuthenticationPrincipal ClientUserDetails clientUserDetails) {
+
+        Long clientId = clientUserDetails != null
+                ? clientUserDetails.getClient().getId()
+                : null;
 
         return ResponseEntity.ok(
-                offreCreditService.accepterOffre(id)
+                offreCreditService.accepterOffreParClient(id, clientId)
         );
         }
 

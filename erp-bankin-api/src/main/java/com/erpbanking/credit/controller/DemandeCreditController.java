@@ -1,6 +1,8 @@
 package com.erpbanking.credit.controller;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,9 @@ import com.erpbanking.credit.entity.StatutDemandeCredit;
 import com.erpbanking.credit.service.DemandeCreditService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,6 +29,7 @@ public class DemandeCreditController {
 
     private final DemandeCreditService demandeCreditService;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
         // Créer une demande de crédit
         @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -54,6 +60,10 @@ public class DemandeCreditController {
                         DemandeCreditRequest.class
                 );
 
+        // La partie "demande" arrive en JSON brut (multipart) : @Valid ne peut pas
+        // s'appliquer automatiquement, on déclenche donc la validation à la main.
+        valider(request);
+
         System.out.println("DEMANDE CONVERTIE");
 
         return ResponseEntity.ok(
@@ -61,9 +71,25 @@ public class DemandeCreditController {
         );
         }
 
+        private void valider(DemandeCreditRequest request) {
+
+                Set<ConstraintViolation<DemandeCreditRequest>> violations =
+                        validator.validate(request);
+
+                if (violations.isEmpty()) {
+                        return;
+                }
+
+                String message = violations.stream()
+                        .map(v -> v.getPropertyPath() + " : " + v.getMessage())
+                        .collect(Collectors.joining(" ; "));
+
+                throw new IllegalArgumentException(message);
+        }
+
         // Récupérer toutes les demandes
         @GetMapping
-        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE_CREDIT')")
+        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','COMPTABLE')")
         public ResponseEntity<List<DemandeCreditResponse>> getAll() {
 
                 return ResponseEntity.ok(
@@ -73,7 +99,7 @@ public class DemandeCreditController {
 
         // Récupérer une demande par ID
         @GetMapping("/{id}")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
+        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> getById(
                 @PathVariable Long id) {
 
@@ -84,7 +110,7 @@ public class DemandeCreditController {
 
         // Récupérer les demandes d'un client
         @GetMapping("/client/{clientId}")
-        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE_CREDIT', 'CLIENT')")
+        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE', 'CLIENT')")
         public ResponseEntity<List<DemandeCreditResponse>> getByClientId(
                 @PathVariable Long clientId) {
 
@@ -95,7 +121,7 @@ public class DemandeCreditController {
 
         // Récupérer les demandes par statut
         @GetMapping("/statut/{statut}")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
+        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE')")
         public ResponseEntity<List<DemandeCreditResponse>> getByStatut(
                 @PathVariable StatutDemandeCredit statut) {
 
@@ -106,7 +132,7 @@ public class DemandeCreditController {
 
         //méttre à jour le statut d'une demande
         @PutMapping("/{id}/statut")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
+        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> updateStatut(
                 @PathVariable Long id,
                 @RequestParam StatutDemandeCredit statut,
@@ -118,7 +144,7 @@ public class DemandeCreditController {
 	}
 
         @PutMapping("/{id}/ACCEPTER")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE_CREDIT')")
+        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> accepter(
                 @PathVariable Long id) {
 

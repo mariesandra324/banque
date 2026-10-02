@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.erpbanking.client.entity.Client;
+import com.erpbanking.compte.service.MouvementCompteService;
 import com.erpbanking.credit.dto.CreditRequest;
 import com.erpbanking.credit.dto.CreditResponse;
 import com.erpbanking.credit.entity.Credit;
@@ -14,6 +15,8 @@ import com.erpbanking.credit.entity.StatutDemandeCredit;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.DemandeCreditRepository;
 import com.erpbanking.credit.repository.OffreCreditRepository;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,37 @@ public class CreditServiceImpl implements CreditService {
     private final DemandeCreditRepository demandeCreditRepository;
     private final OffreCreditRepository offreCreditRepository;
     private final EcheancierService echeancierService;
+    private final NotificationService notificationService;
+    private final MouvementCompteService mouvementCompteService;
+
+    private void crediterCompteClient(Credit credit) {
+        Long compteId = credit.getDemandeCredit() != null
+                ? credit.getDemandeCredit().getCompteId()
+                : null;
+        mouvementCompteService.crediterClient(
+                credit.getClient().getId(),
+                compteId,
+                credit.getMontant(),
+                "Déblocage du crédit " + credit.getNumeroCredit());
+    }
+
+    private void notifierCreditAccorde(Credit credit) {
+        String detail = "Crédit " + credit.getNumeroCredit()
+                + " de " + credit.getMontant() + " Ar accordé.";
+
+        notificationService.creerPourClient(
+                credit.getClient().getId(),
+                NotificationType.CREDIT_ACCORDE,
+                "Votre crédit de " + credit.getMontant() + " Ar a été accordé (n°" + credit.getNumeroCredit() + ").",
+                "credit:" + credit.getId()
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.CREDIT_A_ENREGISTRER,
+                detail,
+                "/credits"
+        );
+    }
 
     @Override
     public CreditResponse create(CreditRequest request)
@@ -71,6 +105,8 @@ public class CreditServiceImpl implements CreditService {
 
         credit = creditRepository.save(credit);
         echeancierService.genererEcheancier(credit);
+        notifierCreditAccorde(credit);
+        crediterCompteClient(credit);
         return toResponse(credit);
     }
 
@@ -212,6 +248,8 @@ public class CreditServiceImpl implements CreditService {
 
         credit = creditRepository.save(credit);
         echeancierService.genererEcheancier(credit);
+        notifierCreditAccorde(credit);
+        crediterCompteClient(credit);
         return toResponse(credit);
         }
 
@@ -267,6 +305,8 @@ public class CreditServiceImpl implements CreditService {
 
         credit = creditRepository.save(credit);
         echeancierService.genererEcheancier(credit);
+        notifierCreditAccorde(credit);
+        crediterCompteClient(credit);
         return toResponse(credit);
         }
 }

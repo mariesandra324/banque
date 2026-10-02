@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { clientService } from '../service/clientService';
 import ClientForm from '../features/client/ClientForm';
 import ClientTable from '../features/client/ClientTable';
+import ClientMobileModal from '../features/client/ClientMobileModal';
+import { useAuth } from '../hooks/useAuth';
+
+// Le comptable est un rôle de consultation : il ne peut pas créer de client.
+const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
 
 const Clients = () => {
+  const { user } = useAuth();
+  const peutCreerClient = ROLES_AUTORISES_A_CREER.includes(user?.role);
+
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,6 +19,7 @@ const Clients = () => {
 
   const [vue, setVue] = useState('liste'); // 'liste' par défaut
   const [clientEnEdition, setClientEnEdition] = useState(null);
+  const [clientMobileCible, setClientMobileCible] = useState(null);
 
   const showNotification = (message) => {
     setNotification(message);
@@ -63,6 +72,12 @@ const Clients = () => {
     loadClients();
   };
 
+  const handleMobileSuccess = () => {
+    showNotification("Accès mobile créé avec succès pour le client.");
+    setClientMobileCible(null);
+    loadClients();
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce client ?')) return;
     try {
@@ -81,19 +96,21 @@ const Clients = () => {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '20px', margin: 0, color: '#1f2937' }}>Clients</h1>
+        <h1 style={{ fontSize: '20px', margin: 0, color: 'var(--heading)' }}>Clients</h1>
 
         {vue === 'liste' ? (
-          <button
-            onClick={handleOpenAdd}
-            style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
-          >
-            + Ajouter un client
-          </button>
+          peutCreerClient && (
+            <button
+              onClick={handleOpenAdd}
+              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+            >
+              + Ajouter un client
+            </button>
+          )
         ) : (
           <button
             onClick={handleVoirListe}
-            style={{ backgroundColor: 'white', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
+            style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
           >
             Voir la liste des clients
           </button>
@@ -117,6 +134,15 @@ const Clients = () => {
           clients={clients}
           onEdit={handleOpenEdit}
           onDelete={handleDelete}
+          onCreateMobile={setClientMobileCible}
+        />
+      )}
+
+      {clientMobileCible && (
+        <ClientMobileModal
+          client={clientMobileCible}
+          onClose={() => setClientMobileCible(null)}
+          onSuccess={handleMobileSuccess}
         />
       )}
     </div>

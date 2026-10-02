@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Users, Landmark, PieChart as PieChartIcon, BarChart2, TrendingUp, ArrowLeftRight, Wallet } from 'lucide-react';
+import { Users, Landmark, PieChart as PieChartIcon, BarChart2, TrendingUp, ArrowLeftRight, Wallet, ScrollText } from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -8,15 +8,22 @@ import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import { getAllTransactions } from '../service/transactionService';
 import { getDemandesCredit, getCredits } from '../service/creditService';
+import { useAuth } from '../hooks/useAuth';
+import AuditPanel from '../features/audit/AuditPanel';
 
-// ============ Couleurs (reprises du Dashboard) ============
+// Rôles autorisés à consulter le journal d'audit (mêmes rôles que l'API).
+// L'onglet n'est pas affiché aux autres rôles : c'est une simple contrainte
+// d'affichage, la vraie autorisation reste appliquée côté backend.
+const ROLES_AUDIT = ['ADMIN', 'GESTIONNAIRE', 'GESTIONNAIRE', 'COMPTABLE'];
+
+// ============ Couleurs (variables du thème clair/sombre) ============
 const c = {
-  bg: '#f8fafc',
-  panel: '#ffffff',
-  panelBorder: '#e2e8f0',
-  text: '#1f2937',
-  textDim: '#6b7280',
-  textFaint: '#9ca3af',
+  bg: 'var(--bg-primary)',
+  panel: 'var(--card-bg)',
+  panelBorder: 'var(--border-color)',
+  text: 'var(--text-primary)',
+  textDim: 'var(--text-secondary)',
+  textFaint: 'var(--muted)',
   accentGreen: '#10b981',
   accentGold: '#f59e0b',
   accentBlue: '#3b82f6',
@@ -32,6 +39,7 @@ const ONGLETS = [
   { id: 'comptes', label: 'Comptes', icon: Landmark },
   { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
   { id: 'credits', label: 'Crédits', icon: Wallet },
+  { id: 'audit', label: 'Audit', icon: ScrollText, roles: ROLES_AUDIT },
 ];
 
 function StatCard({ label, value, sublabel, color, icon: Icon }) {
@@ -284,9 +292,24 @@ function GraphiqueLigne({ data }) {
   );
 }
 
+function AlerteSource({ statut }) {
+  if (!statut) return null;
+  return (
+    <div style={{
+      padding: '10px 14px', borderRadius: '6px', marginBottom: '20px',
+      backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px',
+    }}>
+      {statut === 403
+        ? "Vous n'avez pas les droits pour consulter ces données."
+        : `Chargement impossible pour cet onglet (erreur ${statut}).`}
+    </div>
+  );
+}
+
 // ---------- Composant principal ----------
 
 function Rapports() {
+  const { user } = useAuth();
   const [onglet, setOnglet] = useState('clients');
   const [clients, setClients] = useState([]);
   const [comptes, setComptes] = useState([]);
@@ -295,30 +318,63 @@ function Rapports() {
   const [credits, setCredits] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
+  const [sourcesErreur, setSourcesErreur] = useState({});
+
+  // Onglets visibles : tous, sauf ceux réservés à certains rôles (Audit).
+  const ongletsVisibles = useMemo(
+    () => ONGLETS.filter((o) => !o.roles || o.roles.includes(user?.role)),
+    [user?.role],
+  );
 
   useEffect(() => {
     const charger = async () => {
       setChargement(true);
-      try {
-        const [clientsData, comptesRes, transactionsData, demandesData, creditsData] = await Promise.all([
-          clientService.getAllClients(),
-          getComptes(),
-          getAllTransactions(),
-          getDemandesCredit(),
-          getCredits(),
-        ]);
-        setClients(Array.isArray(clientsData) ? clientsData : []);
-        setComptes(Array.isArray(comptesRes?.data) ? comptesRes.data : []);
-        setTransactions(Array.isArray(transactionsData) ? transactionsData : []);
-        setDemandes(Array.isArray(demandesData) ? demandesData : []);
-        setCredits(Array.isArray(creditsData) ? creditsData : []);
-        setErreur(null);
-      } catch (err) {
-        console.error('Erreur chargement rapports :', err);
-        setErreur(err.message || 'Impossible de charger les données pour le rapport.');
-      } finally {
-        setChargement(false);
-      }
+
+      // Chaque onglet a sa propre source de données. On charge en parallèle mais
+      // sans tout-or-ni : un 403 sur une seule source (ex: /demandes-credit mal
+      // autorisé) ne doit plus faire tomber toute la page en "Erreur".
+      const results = await Promise.allSettled([
+        clientService.getAllClients(),
+        getComptes(),
+        getAllTransactions(),
+        getDemandesCredit(),
+        getCredits(),
+      ]);
+
+      const valeur = (i) =>
+        results[i].status === 'fulfilled' ? results[i].value : null;
+
+      setClients(Array.isArray(valeur(0)) ? valeur(0) : []);
+      setComptes(Array.isArray(valeur(1)?.data) ? valeur(1).data : []);
+      setTransactions(Array.isArray(valeur(2)) ? valeur(2) : []);
+      setDemandes(Array.isArray(valeur(3)) ? valeur(3) : []);
+      setCredits(Array.isArray(valeur(4)) ? valeur(4) : []);
+
+      // Onglets dont la source a échoué : le contenu reste affiché mais on
+      // prévient l'utilisateur au lieu d'afficher un graphique vide trompeur.
+      const enErreur = {};
+      const SOURCES = [
+        ['clients', 0],
+        ['comptes', 1],
+        ['transactions', 2],
+        ['credits', 3],
+        ['credits', 4],
+      ];
+      SOURCES.forEach(([ongletId, i]) => {
+        if (results[i].status === 'rejected') {
+          enErreur[ongletId] = results[i].reason?.response?.status || 'erreur';
+        }
+      });
+      setSourcesErreur(enErreur);
+
+      const tousEnEchec = results.every((r) => r.status === 'rejected');
+      setErreur(
+        tousEnEchec
+          ? 'Impossible de charger les données pour le rapport.'
+          : null,
+      );
+
+      setChargement(false);
     };
     charger();
   }, []);
@@ -327,6 +383,10 @@ function Rapports() {
   const statsComptes = useMemo(() => calculerStatsComptes(comptes), [comptes]);
   const statsTransactions = useMemo(() => calculerStatsTransactions(transactions), [transactions]);
   const statsCredits = useMemo(() => calculerStatsCredits(demandes, credits), [demandes, credits]);
+
+  // Si le rôle n'a pas accès à l'onglet sélectionné, on rebascule sur Clients.
+  const ongletAutorise = ongletsVisibles.some((o) => o.id === onglet);
+  const ongletActif = ongletAutorise ? onglet : 'clients';
 
   if (chargement) {
     return <div style={{ padding: '20px' }}>Chargement des rapports...</div>;
@@ -347,9 +407,9 @@ function Rapports() {
 
         {/* Onglets */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', borderBottom: `1px solid ${c.panelBorder}`, flexWrap: 'wrap' }}>
-          {ONGLETS.map((o) => {
+          {ongletsVisibles.map((o) => {
             const Icon = o.icon;
-            const actif = onglet === o.id;
+            const actif = ongletActif === o.id;
             return (
               <button
                 key={o.id}
@@ -369,9 +429,13 @@ function Rapports() {
           })}
         </div>
 
+        {/* ===== Onglet Audit (journal d'audit) ===== */}
+        {ongletActif === 'audit' && <AuditPanel />}
+
         {/* ===== Onglet Clients ===== */}
-        {onglet === 'clients' && (
+        {ongletActif === 'clients' && (
           <>
+            <AlerteSource statut={sourcesErreur.clients} />
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <StatCard label="Total clients" value={statsClients.total} sublabel="Tous statuts confondus" color={c.accentGreen} icon={Users} />
               <StatCard label="Nouveaux ce mois-ci" value={statsClients.nouveauxCeMois} sublabel="Basé sur la date de création" color={c.accentBlue} icon={TrendingUp} />
@@ -390,8 +454,9 @@ function Rapports() {
         )}
 
         {/* ===== Onglet Comptes ===== */}
-        {onglet === 'comptes' && (
+        {ongletActif === 'comptes' && (
           <>
+            <AlerteSource statut={sourcesErreur.comptes} />
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <StatCard label="Total comptes" value={statsComptes.total} sublabel="Tous types confondus" color={c.accentGreen} icon={Landmark} />
               <StatCard label="Solde cumulé" value={formatMontant(statsComptes.soldeTotal)} sublabel="Somme de tous les comptes" color={c.accentGold} icon={TrendingUp} />
@@ -415,8 +480,9 @@ function Rapports() {
         )}
 
         {/* ===== Onglet Transactions ===== */}
-        {onglet === 'transactions' && (
+        {ongletActif === 'transactions' && (
           <>
+            <AlerteSource statut={sourcesErreur.transactions} />
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <StatCard label="Total transactions" value={statsTransactions.total} sublabel="Tous statuts confondus" color={c.accentGreen} icon={ArrowLeftRight} />
               <StatCard label="Montant total transigé" value={formatMontant(statsTransactions.montantTotal)} sublabel="Transactions réussies uniquement" color={c.accentGold} icon={TrendingUp} />
@@ -439,8 +505,9 @@ function Rapports() {
         )}
 
         {/* ===== Onglet Crédits ===== */}
-        {onglet === 'credits' && (
+        {ongletActif === 'credits' && (
           <>
+            <AlerteSource statut={sourcesErreur.credits} />
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <StatCard label="Total demandes" value={statsCredits.totalDemandes} sublabel="Toutes décisions confondues" color={c.accentBlue} icon={Wallet} />
               <StatCard label="Crédits accordés" value={statsCredits.totalCredits} sublabel="Total des crédits créés" color={c.accentGreen} icon={Landmark} />

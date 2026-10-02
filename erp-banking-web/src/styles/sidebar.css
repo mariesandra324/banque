@@ -39,3 +39,27 @@
     font-weight: 600;
     border-left: 4px solid #3b82f6; /* Indicateur d'activité bleu vif */
 }
+
+/* ====================
+   RESPONSIVE (tiroir)
+==================== */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: min(250px, 80vw);
+        top: 0;
+        height: 100vh;
+        z-index: 999;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+        animation: sidebar-slide-in 0.25s ease;
+    }
+}
+
+@keyframes sidebar-slide-in {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}

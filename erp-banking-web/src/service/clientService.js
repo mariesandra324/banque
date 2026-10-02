@@ -1,5 +1,7 @@
+import api from "./api";
 // Remplace par l'URL de ton serveur Java (ex: Spring Boot tourne souvent sur le port 8080)
 const API_URL = "http://localhost:8080/api/clients"; 
+const API_URL_MOBILE = "http://localhost:8080/api/client-mobile"; 
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
@@ -90,5 +92,52 @@ export const clientService = {
       throw new Error("Erreur lors de la recherche des clients");
     }
     return response.json();
+  },
+
+
+  getClientById: async (id) => {
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  },
+
+  // 6. Créer l'accès mobile d'un client (POST /api/client-mobile/client/{clientId})
+  createAccesMobile: async (clientId, data) => {
+    const response = await fetch(`${API_URL_MOBILE}/client/${clientId}`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(await extraireMessageErreur(response, "Erreur lors de la création de l'accès mobile"));
+    }
+    return response.json();
+  },
+
+  // 7. Lister tous les accès mobiles (GET /api/client-mobile)
+  getAllAccesMobile: async () => {
+    const response = await fetch(API_URL_MOBILE, {
+      method: "GET",
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(await extraireMessageErreur(response, "Erreur lors de la récupération des accès mobiles"));
+    }
+    return response.json();
+  },
+
+  // 8. Modifier le statut d'un accès mobile (PATCH /api/client-mobile/{id}/statut/{statut})
+  updateStatutAccesMobile: async (id, statut) => {
+    const response = await fetch(`${API_URL_MOBILE}/${id}/statut/${statut}`, {
+      method: "PATCH",
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(await extraireMessageErreur(response, "Erreur lors de la modification du statut"));
+    }
+    return response.json();
   }
+  
 };

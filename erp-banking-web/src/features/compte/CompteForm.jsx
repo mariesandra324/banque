@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { previewNumero } from '../../service/compteService';
 
-const TYPES_COMPTE = ['Courant', 'Epargne', 'A terme', 'Devises'];
+const TYPES_COMPTE = ['Courant', 'Epargne'];
 
 // Banque fictive du projet (fixes, non modifiables depuis le formulaire)
 const CODE_BANQUE = '00090';
@@ -21,6 +21,21 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
     clientId: '',
   });
   const [fieldErrors, setFieldErrors] = useState({});
+
+  const [hasCard, setHasCard] = useState(false);
+
+const [cardData, setCardData] = useState({
+  typeCarte: 'VISA',
+});
+
+const handleCardChange = (e) => {
+  const { name, value } = e.target;
+
+  setCardData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
 
   useEffect(() => {
     if (compte) {
@@ -79,27 +94,41 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
-    console.log("Code guichet envoyé :", formData.codeGuichet);
-    const errors = validate();
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
-    }
+  e.preventDefault();
 
-    onSubmit({
-      typeCompte: formData.typeCompte.trim(),
-      solde: Number(formData.solde.replace(',', '.')),
-      statut: formData.statut.trim(),
-      clientId: Number(formData.clientId),
-    });
+  console.log(formData);
+  console.log("Code guichet envoyé :", formData.codeGuichet);
+
+  const errors = validate();
+
+  if (Object.keys(errors).length > 0) {
+    setFieldErrors(errors);
+    return;
+  }
+
+  const compteData = {
+    typeCompte: formData.typeCompte.trim(),
+    solde: Number(formData.solde.replace(',', '.')),
+    statut: formData.statut.trim(),
+    clientId: Number(formData.clientId),
+
+    // ===== CARTE =====
+    hasCard: hasCard,
+    ...(hasCard && {
+      typeCarte: cardData.typeCarte,
+    }),
   };
 
-  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#374151' };
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px' };
-  const cardStyle = { backgroundColor: 'white', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px' };
-  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: '#111827', marginBottom: '18px' };
+  console.log("Données envoyées :", compteData);
+
+  onSubmit(compteData);
+};
+
+  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
+  const disabledStyle = { backgroundColor: 'var(--table-header)', color: 'var(--muted)' };
+  const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
+  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -117,10 +146,10 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                 value={formData.numeroCompte}
                 disabled
                 placeholder={isEditing ? '' : 'Généré après sélection client/type'}
-                style={{ ...inputStyle, backgroundColor: '#f3f4f6', color: '#6b7280' }}
+                style={{ ...inputStyle, ...disabledStyle }}
               />
               {!isEditing && !formData.numeroCompte && (
-                <div style={{ marginTop: '6px', color: '#9ca3af', fontSize: '12px' }}>
+                <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
                   Sélectionnez un client et un type pour générer le numéro.
                 </div>
               )}
@@ -135,7 +164,7 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                 value={formData.typeCompte}
                 onChange={handleInputChange}
                 required
-                style={{ ...inputStyle, backgroundColor: 'white' }}
+                style={{ ...inputStyle, backgroundColor: 'var(--card-bg)' }}
               >
                 <option value="">Sélectionnez un type</option>
                 {TYPES_COMPTE.map((type) => (
@@ -198,7 +227,7 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                 type="text"
                 value={CODE_BANQUE}
                 disabled
-                style={{ ...inputStyle, backgroundColor: '#f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}
+                style={{ ...inputStyle, ...disabledStyle, fontFamily: 'monospace' }}
               />
             </div>
 
@@ -208,11 +237,11 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                 type="text"
                 value={codeGuichet || ""}
                 disabled
-                style={{ ...inputStyle, backgroundColor: '#f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}
+                style={{ ...inputStyle, ...disabledStyle, fontFamily: 'monospace' }}
               />
             </div>
 
-            <div style={{ marginTop: '6px', color: '#9ca3af', fontSize: '12px' }}>
+            <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
               Fixes pour tous les comptes de la banque.
             </div>
           </div>
@@ -226,7 +255,7 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                   type="text"
                   value={compte.cleRib || '-'}
                   disabled
-                  style={{ ...inputStyle, backgroundColor: '#f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}
+                  style={{ ...inputStyle, ...disabledStyle, fontFamily: 'monospace' }}
                 />
               </div>
               <div>
@@ -235,7 +264,7 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
                   type="text"
                   value={compte.iban || '-'}
                   disabled
-                  style={{ ...inputStyle, backgroundColor: '#f3f4f6', color: '#6b7280', fontFamily: 'monospace', fontSize: '12px' }}
+                  style={{ ...inputStyle, ...disabledStyle, fontFamily: 'monospace', fontSize: '12px' }}
                 />
               </div>
             </div>
@@ -254,11 +283,108 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
         >
           Annuler
         </button>
       </div>
+
+      {/* ===== CARTE BANCAIRE ===== */}
+<div
+  style={{
+    ...cardStyle,
+    marginTop: '24px',
+  }}
+>
+  {/* En-tête avec case à cocher */}
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: hasCard ? '20px' : '0',
+    }}
+  >
+    <div style={cardTitleStyle}>
+      Carte bancaire
+    </div>
+
+    <label
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        color: 'var(--text-primary)',
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={hasCard}
+        onChange={(e) => setHasCard(e.target.checked)}
+        style={{
+          width: '16px',
+          height: '16px',
+          cursor: 'pointer',
+        }}
+      />
+
+      Ce compte possède une carte bancaire
+    </label>
+  </div>
+
+  {/* ===== FORMULAIRE CARTE ===== */}
+  {hasCard && (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '16px',
+        paddingTop: '4px',
+      }}
+    >
+      {/* Type de carte */}
+      <div>
+        <label style={labelStyle}>
+          Type de carte
+        </label>
+
+        <select
+          name="typeCarte"
+          value={cardData.typeCarte}
+          onChange={handleCardChange}
+          style={{
+            ...inputStyle,
+            backgroundColor: 'var(--card-bg)',
+          }}
+        >
+          <option value="VISA">VISA</option>
+          <option value="MASTERCARD">Mastercard</option>
+        </select>
+      </div>
+
+      {/* Compte associé */}
+      <div>
+        <label style={labelStyle}>
+          Compte associé
+        </label>
+
+        <input
+          type="text"
+          value={formData.numeroCompte || '-'}
+          disabled
+          style={{
+            ...inputStyle,
+            ...disabledStyle,
+            fontFamily: 'monospace',
+          }}
+        />
+      </div>
+    </div>
+  )}
+</div>
     </form>
   );
 }

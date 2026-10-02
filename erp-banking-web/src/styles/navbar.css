@@ -1,12 +1,5 @@
-/* Variables de couleurs globales adaptées à une appli bancaire (Ardoise/Bleu nuit) */
-:root {
-  --primary-color: #0f172a; /* Slate 900 */
-  --border-color: #e2e8f0;   /* Slate 200 */
-  --text-main: #334155;      /* Slate 700 */
-  --text-muted: #64748b;     /* Slate 500 */
-  --bg-hover: #f1f5f9;       /* Slate 100 */
-  --danger-color: #ef4444;   /* Red 500 */
-}
+/* Variables : recyclées depuis index.css (thème clair/sombre) */
+/* --border-color, --text-primary, --text-secondary, --hover-bg, --danger-color */
 
 /* Container de la Navbar */
 .navbar {
@@ -15,11 +8,11 @@
   justify-content: space-between;
   height: 70px;
   padding: 0 24px;
-  background-color: #ffffff;
+  background-color: var(--card-bg);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 /* --- SECTION GAUCHE --- */
@@ -38,18 +31,18 @@
   justify-content: center;
   padding: 8px;
   border-radius: 50%;
-  color: var(--text-main);
+  color: var(--text-primary);
   transition: background-color 0.2s ease;
 }
 
 .menu-toggle-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .navbar-brand {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--heading);
   margin: 0;
 }
 
@@ -60,38 +53,6 @@
   margin: 0 24px 0 auto;
   display: flex;
   justify-content: flex-end;
-}
-
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 280px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px 12px 10px 40px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: #f8fafc;
-  color: var(--text-main);
-  font-size: 0.9rem;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.search-box input:focus {
-  border-color: #3b82f6; /* Focus bleu */
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* --- SECTION DROITE (Notifications, Profil, Logout) --- */
@@ -116,18 +77,18 @@
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease;
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 .notification:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .notification .badge {
   position: absolute;
   top: 4px;
   right: 4px;
-  background-color: var(--danger-color);
+  background-color: #ef4444;
   color: #ffffff;
   font-size: 10px;
   font-weight: bold;
@@ -162,11 +123,11 @@
 }
 
 .user-profile:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .avatar-icon {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 /* Bouton Déconnexion */
@@ -179,7 +140,7 @@
   justify-content: center;
   padding: 8px;
   border-radius: 50%;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 
@@ -192,5 +153,156 @@
 }
 
 .logout-btn:hover .logout-icon {
-  color: var(--danger-color); /* Icône devient rouge au survol */
+  color: #ef4444; /* Icône devient rouge au survol */
+}
+/* Exemple pour la Navbar */
+.navbar {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Exemple pour les Cartes (Dashboard, Dossier Client...) */
+.client-info-card, 
+.stat-card, 
+.account-card {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+/* Exemple pour les Tableaux */
+.transactions-table th {
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+}
+
+.transactions-table td {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* ====================
+   RESPONSIVE
+==================== */
+
+/* Tablettes : la recherche se centre dans l'espace restant */
+@media (max-width: 1024px) {
+  .navbar-center {
+    max-width: 340px;
+    margin: 0 auto;
+    justify-content: center;
+  }
+}
+
+/* Mobile : la barre passe sur 2 rangées — logo + actions en haut, recherche en dessous */
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 12px 12px;
+    gap: 8px 12px;
+  }
+
+  .navbar-left {
+    flex: 1 0 auto;
+    justify-content: flex-start;
+  }
+
+  .navbar-right {
+    flex: 1 0 auto;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .navbar-center {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: 100%;
+    margin: 0;
+    justify-content: center;
+  }
+
+  .global-search {
+    max-width: 100%;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  /* Icônes : taille réduite pour gagner de la place */
+  .navbar button {
+    padding: 6px;
+  }
+}
+
+/* Téléphones */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 8px 10px 10px;
+  }
+
+  .navbar-brand {
+    font-size: 1.05rem;
+  }
+
+  .navbar-left {
+    gap: 8px;
+  }
+
+  .navbar-right {
+    gap: 4px;
+  }
+
+  .navbar-right button {
+    padding: 5px;
+  }
+
+  .action-icons {
+    gap: 4px;
+  }
+}
+
+.theme-toggle-btn {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    outline: none;
+    background: transparent;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 50%;
+    cursor: pointer;
+
+    color: #cbd5e1;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* Au survol */
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+/* Petit effet au clic */
+.theme-toggle-btn:active {
+    transform: scale(0.92);
+}
+
+/* Icône */
+.theme-icon {
+    display: block;
 }

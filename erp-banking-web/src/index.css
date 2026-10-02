@@ -6,7 +6,7 @@
 }
 
 body{
-    background:#f4f7fb;
+    background:var(--bg-primary);
 }
 
 /* ==========================================================================
@@ -24,8 +24,15 @@ body{
   --hover-bg: #f1f5f9;
   --icon-bg: #eff6ff;
   --border-color: #e2e8f0;
+  --input-border: #d1d5db;
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
+  --heading: #1e293b;
+  --muted: #64748b;
+  --faint: #9ca3af;
+  --row-alt: #f8fafc;
+  --table-header: #f1f5f9;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme='dark'] {
@@ -37,6 +44,163 @@ body{
   --hover-bg: #242835;
   --icon-bg: #1e293b;
   --border-color: #2c303c;
+  --input-border: #334155;
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
+  --heading: #f1f5f9;
+  --muted: #94a3b8;
+  --faint: #7c8599;
+  --row-alt: #14171f;
+  --table-header: #1e222d;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* --- ADAPTATION GLOBALE DU MODE SOMBRE (filet de sécurité) ---
+   La classe .dark-mode (posée sur <body>, voir useTheme.jsx) applique
+   les variables du thème à tous les surfaces, y compris les éléments
+   dont les couleurs seraient encore codées en dur quelque part. */
+
+body.dark-mode {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .main-content,
+body.dark-mode .client-dossier,
+body.dark-mode .dossier-page {
+  background-color: var(--bg-primary) !important;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .settings-container,
+body.dark-mode .settings-card,
+body.dark-mode .settings-content,
+body.dark-mode .settings-sidebar,
+body.dark-mode .param-card,
+body.dark-mode .card,
+body.dark-mode div[class*="card"]:not([class*="bank-card"]):not([class*="statut"]),
+body.dark-mode div[class*="panel"]:not(.offre-preview-panel):not(.offre-a4),
+body.dark-mode div[class*="table-wrapper"],
+body.dark-mode .dossier-sidebar,
+body.dark-mode .credit-item,
+body.dark-mode .account-card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode div[class*="content"] {
+  background-color: var(--card-bg) !important;
+}
+
+body.dark-mode .navbar-brand,
+body.dark-mode .navbar .icon,
+body.dark-mode .navbar button,
+body.dark-mode .theme-option,
+body.dark-mode button[class*="theme"],
+body.dark-mode .appearance-option {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .theme-option,
+body.dark-mode button[class*="theme"],
+body.dark-mode .appearance-option {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .theme-option:hover,
+body.dark-mode .appearance-option:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+body.dark-mode p,
+body.dark-mode label,
+body.dark-mode .settings-description,
+body.dark-mode .text-muted {
+  color: var(--muted) !important;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5 {
+  color: var(--heading) !important;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+body.dark-mode table th,
+body.dark-mode thead th {
+  background-color: var(--table-header) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode table td,
+body.dark-mode tbody td {
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode table tbody tr:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+body.dark-mode .search-result-item,
+body.dark-mode .search-message {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .search-result-item:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+body.dark-mode [class*="pagination"] button,
+body.dark-mode .pagination-btn,
+body.dark-mode [class*="filter"],
+body.dark-mode [class*="tab"] {
+  background-color: var(--card-bg) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode [class*="pagination"] button:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* --- TABLEAUX ÉLÉGANTS -------------------------------------------------
+   Supprime les bordures de séparation lignes (trop lourdes en noir).
+   Utilise des lignes alternées grises + hover subtil à la place.
+   -------------------------------------------------------------------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table thead tr {
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+table tbody tr {
+  border-bottom: none !important;
+  transition: background-color 0.15s ease;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: var(--row-alt);
+}
+
+table tbody tr:hover {
+  background-color: var(--hover-bg);
 }

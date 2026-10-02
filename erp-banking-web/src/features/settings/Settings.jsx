@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   User,
   Palette,
@@ -6,9 +6,12 @@ import {
   Lock,
   Globe,
   ChevronRight,
+  Mail,
+  Smartphone,
 } from "lucide-react";
 
 import { useTheme } from "../../hooks/useTheme";
+import notificationService from "../../service/notificationService";
 import "../../styles/settings.css";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -300,15 +303,71 @@ const Apparence = () => {
    NOTIFICATIONS
 ========================= */
 
-const Notifications = () => {
+const ROLE_LABELS = {
+  ADMIN: "Administration",
+  AGENT: "Agents",
+  GESTIONNAIRE: "Gestionnaires crédit",
+  COMPTABLE: "Comptable",
+  CLIENT: "Clients",
+};
 
-  const [notifications, setNotifications] = useState(true);
+const ROLE_ORDER = [
+  "ADMIN",
+  "AGENT",
+  "GESTIONNAIRE",
+  "COMPTABLE",
+  "CLIENT",
+];
+
+const Switch = ({ on, onClick }) => (
+  <button
+    className={`switch ${on ? "on" : ""}`}
+    onClick={onClick}
+    aria-pressed={on}
+  >
+    <span />
+  </button>
+);
+
+const Notifications = () => {
+  const [preferences, setPreferences] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    notificationService
+      .getPreferences()
+      .then((data) => {
+        if (active) setPreferences(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const toggle = (type, field, value) => {
+    const next = preferences.map((p) =>
+      p.type === type ? { ...p, [field]: value } : p
+    );
+    setPreferences(next);
+    notificationService.savePreferences(next).catch(() => {});
+  };
+
+  const groups = ROLE_ORDER.map((role) => ({
+    role,
+    label: ROLE_LABELS[role] || role,
+    items: preferences.filter((p) => p.roleCible === role),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <div>
-
       <div className="settings-section-header">
-
         <div className="settings-icon">
           <Bell size={22} />
         </div>
@@ -316,32 +375,58 @@ const Notifications = () => {
         <div>
           <h2>Notifications</h2>
           <p>
-            Gérez vos préférences de notifications
+            Choisissez comment vous souhaitez être notifié :
+            email et/ou notification mobile
           </p>
         </div>
-
       </div>
 
-      <div className="setting-row">
+      {loading ? (
+        <p className="profile-loading">Chargement des préférences…</p>
+      ) : (
+        groups.map((group) => (
+          <div key={group.role} className="notification-group">
+            <h3 className="notification-group-title">{group.label}</h3>
 
-        <div>
-          <strong>Notifications</strong>
-          <p>
-            Recevoir les notifications de l'application
-          </p>
-        </div>
+            {group.items.map((pref) => (
+              <div key={pref.type} className="setting-row">
+                <div>
+                  <strong>
+                    {pref.emoji} {pref.libelle}
+                  </strong>
+                  <p>
+                    Notifier lorsque ce type d'événement se produit
+                  </p>
+                </div>
 
-        <button
-          className={`switch ${
-            notifications ? "on" : ""
-          }`}
-          onClick={() => setNotifications(!notifications)}
-        >
-          <span />
-        </button>
+                <div className="notification-toggles">
+                  <label className="notification-toggle">
+                    <Mail size={15} />
+                    Email
+                    <Switch
+                      on={pref.emailActive}
+                      onClick={() =>
+                        toggle(pref.type, "emailActive", !pref.emailActive)
+                      }
+                    />
+                  </label>
 
-      </div>
-
+                  <label className="notification-toggle">
+                    <Smartphone size={15} />
+                    Push
+                    <Switch
+                      on={pref.pushActive}
+                      onClick={() =>
+                        toggle(pref.type, "pushActive", !pref.pushActive)
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
     </div>
   );
 };

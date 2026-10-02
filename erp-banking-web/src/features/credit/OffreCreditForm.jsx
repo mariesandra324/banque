@@ -10,6 +10,8 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
   const location = useLocation();
 
   const [demandes, setDemandes] = useState([]);
+  const [chargementDemandes, setChargementDemandes] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState('');
   const [envoi, setEnvoi] = useState(false);
 
   const [donnees, setDonnees] = useState({
@@ -41,6 +43,9 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
 
   useEffect(() => {
     const chargerDemandes = async () => {
+      setChargementDemandes(true);
+      setErreurChargement('');
+
       try {
         const data = await demandeCreditService.getByStatut('ACCEPTER');
         setDemandes(Array.isArray(data) ? data : []);
@@ -50,6 +55,14 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
           err.response?.data || err.message
         );
         setDemandes([]);
+        setErreurChargement(
+          err.response?.status === 403
+            ? "Vous n'avez pas les droits pour consulter les demandes de crédit."
+            : err.response?.data?.message ||
+              'Impossible de charger les demandes de crédit.'
+        );
+      } finally {
+        setChargementDemandes(false);
       }
     };
 
@@ -231,7 +244,7 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
                   e.target.value
                 )
               }
-              disabled={!!demandeCreditId}
+              disabled={!!demandeCreditId || chargementDemandes}
               className={`credit-form-input ${
                 erreurs.demandeCreditId
                   ? 'credit-input-error'
@@ -239,8 +252,16 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
               }`}
             >
               <option value="">
-                Sélectionner une demande
+                {chargementDemandes
+                  ? 'Chargement des demandes...'
+                  : 'Sélectionner une demande'}
               </option>
+
+              {!chargementDemandes && demandes.length === 0 && (
+                <option value="" disabled>
+                  Aucune demande de crédit validée
+                </option>
+              )}
 
               {demandes.map((d) => (
                 <option
@@ -261,6 +282,12 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
                 </option>
               ))}
             </select>
+
+            {erreurChargement && (
+              <span className="credit-field-error">
+                {erreurChargement}
+              </span>
+            )}
 
             {erreurs.demandeCreditId && (
               <span className="credit-field-error">

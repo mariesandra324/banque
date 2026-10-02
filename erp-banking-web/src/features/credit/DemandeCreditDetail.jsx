@@ -75,7 +75,7 @@ function DemandeCreditDetail() {
   };
 
   if (chargement) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>Chargement...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--faint)', fontSize: '14px' }}>Chargement...</div>;
   }
 
   if (erreur || !demande) {
@@ -94,24 +94,24 @@ function DemandeCreditDetail() {
     <div style={{ padding: '24px', maxWidth: '640px' }}>
       <button
         onClick={() => navigate(-1)}
-        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '13px', fontWeight: '500', marginBottom: '18px', padding: 0 }}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', marginBottom: '18px', padding: 0 }}
       >
         <ArrowLeft size={16} /> Retour
       </button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937', margin: 0 }}>
+        <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--heading)', margin: 0 }}>
           Demande {demande.reference || `#${demande.id}`}
         </h1>
         <span style={{
           padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '600',
-          backgroundColor: '#f1f5f9', color: '#475569',
+          backgroundColor: 'var(--table-header)', color: 'var(--text-secondary)',
         }}>
           {demande.statut}
         </span>
       </div>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '20px' }}>
+      <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', marginBottom: '20px' }}>
         {[
           ['Client', `${demande.clientNom || ''} ${demande.clientPrenom || ''}`],
           ['Montant demandé', formatMontant(demande.montantDemande)],
@@ -126,14 +126,14 @@ function DemandeCreditDetail() {
           ['Date de décision', formatDate(demande.dateDecision)],
           ['Motif de rejet', demande.motifRejet || '-'],
         ].map(([label, valeur]) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #f1f5f9', fontSize: '13px' }}>
-            <span style={{ color: '#64748b' }}>{label}</span>
-            <span style={{ color: '#1f2937', fontWeight: '500', textAlign: 'right' }}>{valeur}</span>
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--faint)', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: '500', textAlign: 'right' }}>{valeur}</span>
           </div>
         ))}
 
-        <div style={{ paddingTop: '14px', borderTop: '1px solid #f1f5f9', marginTop: '12px' }}>
-          <div style={{ color: '#64748b', fontSize: '13px', marginBottom: '10px', fontWeight: '600' }}>
+        <div style={{ paddingTop: '14px', borderTop: '1px solid var(--faint)', marginTop: '12px' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '10px', fontWeight: '600' }}>
             Pièces jointes
           </div>
 
@@ -147,13 +147,13 @@ function DemandeCreditDetail() {
                 return (
                   <div key={`${piece.id}-${index}`} style={{
                     padding: '10px',
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: 'var(--table-header)',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid var(--border-color)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <FileText size={18} color='#64748b' />
-                      <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
+                      <FileText size={18} color='var(--text-secondary)' />
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
                         {piece.nomFichier}
                       </span>
                       <a
@@ -183,7 +183,7 @@ function DemandeCreditDetail() {
                         marginTop: '10px',
                         display: 'flex',
                         justifyContent: 'center',
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--card-bg)',
                         padding: '8px',
                         borderRadius: '6px',
                       }}>
@@ -206,9 +206,9 @@ function DemandeCreditDetail() {
                       <div style={{
                         marginTop: '10px',
                         fontSize: '12px',
-                        color: '#64748b',
+                        color: 'var(--text-secondary)',
                         padding: '8px',
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--card-bg)',
                         borderRadius: '6px',
                         textAlign: 'center',
                       }}>
@@ -220,7 +220,7 @@ function DemandeCreditDetail() {
               })}
             </div>
           ) : (
-            <div style={{ color: '#94a3b8', fontSize: '13px' }}>Aucune pièce jointe</div>
+            <div style={{ color: 'var(--muted)', fontSize: '13px' }}>Aucune pièce jointe</div>
           )}
         </div>
       </div>
@@ -241,7 +241,7 @@ function DemandeCreditDetail() {
             onClick={() => { setRejetOuvert(true); setMotifRejet(''); setErreurMotif(''); }}
             disabled={action}
             style={{
-              padding: '10px 18px', borderRadius: '8px', border: '1px solid #dc2626', backgroundColor: 'white', color: '#dc2626',
+              padding: '10px 18px', borderRadius: '8px', border: '1px solid #dc2626', backgroundColor: 'var(--card-bg)', color: '#dc2626',
               fontSize: '13px', fontWeight: '600', cursor: action ? 'not-allowed' : 'pointer', opacity: action ? 0.7 : 1,
             }}
           >
@@ -255,8 +255,8 @@ function DemandeCreditDetail() {
           position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
         }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '380px', maxWidth: '90vw', padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1f2937', marginTop: 0, marginBottom: '12px' }}>
+          <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', width: '380px', maxWidth: '90vw', padding: '20px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginTop: 0, marginBottom: '12px' }}>
               Motif du rejet
             </h3>
             <textarea
@@ -266,7 +266,8 @@ function DemandeCreditDetail() {
               placeholder="Expliquez la raison du rejet..."
               style={{
                 width: '100%', padding: '9px 10px', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box',
-                border: erreurMotif ? '1px solid #dc2626' : '1px solid #d1d5db', resize: 'vertical', marginBottom: '4px',
+                border: erreurMotif ? '1px solid #dc2626' : '1px solid var(--input-border)', resize: 'vertical', marginBottom: '4px',
+                backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)',
               }}
             />
             {erreurMotif && <div style={{ color: '#dc2626', fontSize: '12px', marginBottom: '10px' }}>{erreurMotif}</div>}
@@ -274,7 +275,7 @@ function DemandeCreditDetail() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px' }}>
               <button
                 onClick={() => setRejetOuvert(false)}
-                style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
               >
                 Annuler
               </button>

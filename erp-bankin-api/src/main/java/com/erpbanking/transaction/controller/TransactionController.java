@@ -2,13 +2,16 @@ package com.erpbanking.transaction.controller;
 
 import com.erpbanking.transaction.dto.TransactionRequest;
 import com.erpbanking.transaction.dto.TransactionResponse;
+import com.erpbanking.guichet.entity.Guichet;
 import com.erpbanking.security.AuthorizationService;
 import com.erpbanking.transaction.service.TransactionService;
+import com.erpbanking.utilisateur.entity.Utilisateur;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +28,14 @@ public class TransactionController {
     // Effectuer une transaction (Dépôt, Retrait ou Virement)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENT') or hasRole('AGENT') or hasRole('COMPTABLE')")
-    public ResponseEntity<TransactionResponse> effectuerTransaction(@Valid @RequestBody TransactionRequest request) {
-        TransactionResponse response = transactionService.effectuerTransaction(request);
+    public ResponseEntity<TransactionResponse> effectuerTransaction(
+            @Valid @RequestBody TransactionRequest request,
+            @AuthenticationPrincipal Utilisateur utilisateur) {
+
+        // Rattache la transaction au guichet de l'agent, pour le rapport de guichet.
+        Guichet guichet = utilisateur != null ? utilisateur.getGuichet() : null;
+
+        TransactionResponse response = transactionService.effectuerTransaction(request, guichet);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

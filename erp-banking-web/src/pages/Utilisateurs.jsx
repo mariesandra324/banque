@@ -92,7 +92,7 @@ const Utilisateurs = () => {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '20px', margin: 0, color: '#1f2937' }}>Utilisateurs</h1>
+        <h1 style={{ fontSize: '20px', margin: 0, color: 'var(--heading)' }}>Utilisateurs</h1>
 
         {/* Bouton toujours visible, quelle que soit la vue */}
         {vue === 'liste' ? (
@@ -105,7 +105,7 @@ const Utilisateurs = () => {
         ) : (
           <button
             onClick={handleVoirListe}
-            style={{ backgroundColor: 'white', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
+            style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
           >
             Voir la liste des utilisateurs
           </button>

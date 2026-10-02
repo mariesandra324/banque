@@ -1,23 +1,28 @@
-import { useEffect, useState } from 'react';
-import { Users, Wallet, ArrowLeftRight, Landmark, TrendingUp} from 'lucide-react';
-import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,CartesianGrid,} from 'recharts';
+import { useEffect, useMemo, useState } from 'react';
+import { Users, Wallet, ArrowLeftRight, Landmark, TrendingUp, PieChart as PieChartIcon, AlertTriangle } from 'lucide-react';
+import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,CartesianGrid, PieChart, Pie, Cell,} from 'recharts';
 import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import demandeCreditService from '../service/demandeCreditService';
+import { getCredits } from '../service/creditService';
+import { repartitionTypeComptes } from '../utils/typeCompte';
 
-// ============ Couleurs ============
+// ============ Couleurs (variables du thème clair/sombre) ============
 const c = {
-  bg: '#f8fafc',
-  panel: '#ffffff',
-  panelBorder: '#e2e8f0',
-  text: '#1f2937',
-  textDim: '#6b7280',
-  textFaint: '#9ca3af',
+  bg: 'var(--bg-primary)',
+  panel: 'var(--card-bg)',
+  panelBorder: 'var(--border-color)',
+  text: 'var(--text-primary)',
+  textDim: 'var(--text-secondary)',
+  textFaint: 'var(--muted)',
   accentGreen: '#10b981',
   accentGold: '#f59e0b',
   accentBlue: '#3b82f6',
   accentRed: '#ef4444',
+  accentPurple: '#8b5cf6',
 };
+
+const PIE_COLORS = [c.accentBlue, c.accentGreen, c.accentGold, c.accentRed, c.accentPurple];
 
 function StatCard({ label, value, delta, sparkColor, icon: Icon }) {
   return (
@@ -47,6 +52,8 @@ function Dashboard() {
     totalDemandes: 0,
   });
   const [creditsParStatut, setCreditsParStatut] = useState([]);
+  const [comptes, setComptes] = useState([]);
+  const [sourcesErreur, setSourcesErreur] = useState({});
   const [chargement, setChargement] = useState(true);
 
   // Format montant en Ar
@@ -59,52 +66,74 @@ function Dashboard() {
   useEffect(() => {
     const chargerStats = async () => {
       setChargement(true);
-      try {
-        // Récupérer les clients
-        const clientsRes = await clientService.getAllClients();
-        const clients = clientsRes?.data || clientsRes || [];
-        
-        // Récupérer les comptes
-        const comptesRes = await getComptes();
-        const comptes = comptesRes?.data || comptesRes || [];
-        
-        // Récupérer les demandes de crédit
-        const demandes = await demandeCreditService.getAll();
-        
-        // Calculer les statistiques par statut
-        const statuts = {};
-        (demandes || []).forEach(d => {
-          const s = d.statut || 'INCONNU';
-          statuts[s] = (statuts[s] || 0) + 1;
-        });
 
-        const statsArray = Object.keys(statuts).map(s => ({
-          statut: s,
-          valeur: statuts[s],
-        }));
+      // Chargement par source : un 403 sur /credits ne doit plus masquer les
+      // clients et les comptes, et inversement.
+      const results = await Promise.allSettled([
+        clientService.getAllClients(),
+        getComptes(),
+        demandeCreditService.getAll(),
+        getCredits(),
+      ]);
 
-        // Calculer l'encours de crédit
-        const encours = (demandes || [])
-          .filter(d => d.statut === 'ACCEPTER' || d.statut === 'EN_COURS')
-          .reduce((sum, d) => sum + (d.montantDemande || 0), 0);
+      const valeur = (i) => (results[i].status === 'fulfilled' ? results[i].value : null);
 
-        setStats({
-          totalClients: (Array.isArray(clients) ? clients : []).length,
-          totalComptes: (Array.isArray(comptes) ? comptes : []).length,
-          encoursCredit: encours,
-          totalDemandes: (demandes || []).length,
-        });
+      const clients = valeur(0)?.data || valeur(0) || [];
+      const comptesData = valeur(1)?.data || valeur(1) || [];
+      const demandes = valeur(2)?.data || valeur(2) || [];
+      const credits = valeur(3)?.data || valeur(3) || [];
 
-        setCreditsParStatut(statsArray);
-      } catch (err) {
-        console.error('Erreur chargement stats:', err);
-      } finally {
-        setChargement(false);
-      }
+      setComptes(Array.isArray(comptesData) ? comptesData : []);
+
+      const enErreur = {};
+      const SOURCES = [
+        ['clients', 0],
+        ['comptes', 1],
+        ['demandes', 2],
+        ['credits', 3],
+      ];
+      SOURCES.forEach(([source, i]) => {
+        if (results[i].status === 'rejected') {
+          enErreur[source] = results[i].reason?.response?.status || 'erreur';
+        }
+      });
+      setSourcesErreur(enErreur);
+
+      // Calculer les statistiques par statut
+      const statuts = {};
+      (demandes || []).forEach(d => {
+        const s = d.statut || 'INCONNU';
+        statuts[s] = (statuts[s] || 0) + 1;
+      });
+
+      const statsArray = Object.keys(statuts).map(s => ({
+        statut: s,
+        valeur: statuts[s],
+      }));
+
+      // Encours = capital restant des crédits actifs / en cours.
+      // On ne peut pas se fier au statut des DEMANDES : StatutDemandeCredit
+      // n'a pas de EN_COURS, et une demande ACCEPTEE ne porte pas le capital
+      // restant réellement décaissé.
+      const encours = (credits || [])
+        .filter(cr => cr.statut === 'ACTIF' || cr.statut === 'EN_COURS')
+        .reduce((sum, cr) => sum + (Number(cr.capitalRestant) || 0), 0);
+
+      setStats({
+        totalClients: (Array.isArray(clients) ? clients : []).length,
+        totalComptes: (Array.isArray(comptesData) ? comptesData : []).length,
+        encoursCredit: encours,
+        totalDemandes: (demandes || []).length,
+      });
+
+      setCreditsParStatut(statsArray);
+      setChargement(false);
     };
 
     chargerStats();
   }, []);
+
+  const repartitionComptes = useMemo(() => repartitionTypeComptes(comptes), [comptes]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: c.bg, fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -117,6 +146,19 @@ function Dashboard() {
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: c.text, margin: '0 0 8px' }}>Tableau de bord</h1>
           <p style={{ fontSize: '13px', color: c.textDim, margin: 0 }}>Bienvenue dans votre espace de gestion bancaire</p>
         </div>
+
+        {/* Sources en échec : sans ça, l'utilisateur voit des « — » et zéro
+            graphique sans comprendre pourquoi. */}
+        {!chargement && Object.keys(sourcesErreur).length > 0 && (
+          <div style={{
+            padding: '10px 14px', borderRadius: '6px', marginBottom: '20px',
+            backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '12px',
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}>
+            <AlertTriangle size={14} />
+            Chargement partiel : {Object.keys(sourcesErreur).map(s => `${s} (${sourcesErreur[s]})`).join(', ')}
+          </div>
+        )}
 
         {/* Stat cards */}
         {!chargement && (
@@ -138,7 +180,7 @@ function Dashboard() {
             <StatCard 
               label="Encours de crédit" 
               value={formatMontant(stats.encoursCredit)}
-              delta="Crédits acceptés"
+              delta="Capital restant"
               sparkColor={c.accentGold}
               icon={Wallet}
             />
@@ -191,12 +233,58 @@ function Dashboard() {
             )}
           </div>
 
-          {/* Placeholder for second chart */}
+          {/* Pie Chart - Répartition des comptes par type */}
           <div style={{ backgroundColor: c.panel, border: `1px solid ${c.panelBorder}`, borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: c.text, marginBottom: '20px' }}>Répartition des comptes</div>
-            <div style={{ textAlign: 'center', color: c.textFaint, fontSize: '12px', padding: '40px 20px' }}>
-              Données en cours de synchronisation...
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <PieChartIcon size={18} color={c.accentBlue} />
+              <span style={{ fontSize: '14px', fontWeight: '600', color: c.text }}>Répartition des comptes</span>
             </div>
+            {chargement ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: c.textFaint, fontSize: '12px' }}>
+                Chargement...
+              </div>
+            ) : sourcesErreur.comptes ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: c.textFaint, fontSize: '12px' }}>
+                {sourcesErreur.comptes === 403
+                  ? "Vous n'avez pas les droits pour consulter les comptes."
+                  : `Répartition indisponible (erreur ${sourcesErreur.comptes}).`}
+              </div>
+            ) : repartitionComptes.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={repartitionComptes}
+                      dataKey="valeur"
+                      nameKey="type"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                    >
+                      {repartitionComptes.map((_, i) => (
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: c.panel, border: `1px solid ${c.panelBorder}`, borderRadius: '6px', fontSize: '12px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 16px', marginTop: '8px' }}>
+                  {repartitionComptes.map((item, i) => (
+                    <div key={item.type} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: c.textDim }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <span>{item.type}</span>
+                      <span style={{ fontWeight: '600', color: c.text }}>{item.valeur}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center', color: c.textFaint, fontSize: '12px' }}>
+                Aucun compte enregistré
+              </div>
+            )}
           </div>
         </div>
       </main>

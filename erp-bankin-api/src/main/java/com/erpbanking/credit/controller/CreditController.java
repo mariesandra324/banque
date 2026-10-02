@@ -4,13 +4,16 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.erpbanking.credit.dto.CreditRequest;
 import com.erpbanking.credit.dto.CreditResponse;
 import com.erpbanking.credit.dto.EcheanceResponse;
+import com.erpbanking.credit.dto.EcheancierGlobalResponse;
 import com.erpbanking.credit.dto.RemboursementResponse;
 import com.erpbanking.credit.entity.StatutCredit;
+import com.erpbanking.credit.entity.StatutEcheance;
 import com.erpbanking.credit.service.CreditService;
 import com.erpbanking.credit.service.EcheancierService;
 import com.erpbanking.credit.service.RemboursementService;
@@ -72,6 +75,18 @@ public class CreditController {
 
         return ResponseEntity.ok(
                 creditService.getByClientId(clientId)
+        );
+    }
+
+    // Échéancier global de tous les crédits, avec client et montant.
+    // Réservé à l'administrateur et au comptable (page Comptabilité).
+    @GetMapping("/echeancier")
+    @PreAuthorize("hasAnyRole('ADMIN','COMPTABLE')")
+    public ResponseEntity<List<EcheancierGlobalResponse>> getEcheancierGlobal(
+            @RequestParam(required = false) StatutEcheance statut) {
+
+        return ResponseEntity.ok(
+                echeancierService.getEcheancierGlobal(statut)
         );
     }
 

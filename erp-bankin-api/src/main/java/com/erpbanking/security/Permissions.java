@@ -24,4 +24,7 @@ public final class Permissions {
     public static final String TRANSACTION_VALIDATE = "TRANSACTION_VALIDATE";
 
     public static final String REPORT_VIEW = "REPORT_VIEW";
+
+    public static final String AUDIT_VIEW = "AUDIT_VIEW";
+    public static final String AUDIT_EXPORT = "AUDIT_EXPORT";
 }

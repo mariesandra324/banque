@@ -27,6 +27,14 @@ public class ClientRequest {
     private String adresse;
     private LocalDate dateNaissance;
 
+    // ===== Accès mobile (création client) =====
+
+    private Boolean creerAccesMobile;
+
+    private String identifiantMobile;
+
+    private String codePersonnel;
+
     // Getters et Setters
     public String getNom() {
         return nom;
@@ -82,5 +90,29 @@ public class ClientRequest {
 
     public void setDateNaissance(LocalDate dateNaissance) {
         this.dateNaissance = dateNaissance;
+    }
+
+    public Boolean getCreerAccesMobile() {
+        return creerAccesMobile;
+    }
+
+    public void setCreerAccesMobile(Boolean creerAccesMobile) {
+        this.creerAccesMobile = creerAccesMobile;
+    }
+
+    public String getIdentifiantMobile() {
+        return identifiantMobile;
+    }
+
+    public void setIdentifiantMobile(String identifiantMobile) {
+        this.identifiantMobile = identifiantMobile;
+    }
+
+    public String getCodePersonnel() {
+        return codePersonnel;
+    }
+
+    public void setCodePersonnel(String codePersonnel) {
+        this.codePersonnel = codePersonnel;
     }
 }

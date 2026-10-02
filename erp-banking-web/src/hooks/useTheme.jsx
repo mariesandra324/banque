@@ -17,6 +17,9 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    // Classe .dark-mode sur <body> : les règles CSS d'adaptation
+    // (voir index.css) s'appliquent à toute l'application.
+    document.body.classList.toggle('dark-mode', theme === 'dark');
     localStorage.setItem(CLE_STOCKAGE, theme);
   }, [theme]);
 

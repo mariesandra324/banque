@@ -1,0 +1,49 @@
+/* ==========================================================================
+   RESPONSIVE GLOBAL
+   Surcharges adaptatives pour tablettes et mobiles.
+
+   Le projet utilise de nombreux styles inline (styles attributs).
+   Ces règles ciblent les motifs inline les plus courants pour les
+   rendre fluides sur petits écrans sans modifier chaque composant.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   GRANDES SURFACES : les grilles inline (formulaires 2 colonnes,
+   graphiques Dashboard / Rapports) passent en une seule colonne.
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  main [style*="grid-template-columns"],
+  form [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Écrans de contenu des pages principales (padding réduit) */
+  main[style*="padding: 28px 32px"] {
+    padding: 24px 16px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   TABLETTES & MOBILES : barres d'outils des tableaux (recherche + filtres).
+   La recherche passe en pleine largeur et les filtres passent à la ligne.
+   -------------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  div[style*="justify-content: flex-end"] {
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
+
+  div[style*="width: 260px"],
+  div[style*="width: 280px"] {
+    width: 100% !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   TRÈS PETITS ÉCRANS
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  main[style*="padding: 28px 32px"] {
+    padding: 16px 10px !important;
+  }
+}

@@ -22,4 +22,5 @@ public class TransactionResponse {
     private StatutTransaction statut;
     private String numeroCompteSource;
     private String numeroCompteDestination;
+    private String codeGuichet;
 }

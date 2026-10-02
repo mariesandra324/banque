@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.erpbanking.compte.service.MouvementCompteService;
 import com.erpbanking.credit.dto.RemboursementResponse;
 import com.erpbanking.credit.entity.Credit;
 import com.erpbanking.credit.entity.Echeance;
@@ -17,6 +18,8 @@ import com.erpbanking.credit.entity.StatutEcheance;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.EcheanceRepository;
 import com.erpbanking.credit.repository.RemboursementRepository;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +30,8 @@ public class RemboursementService {
     private final CreditRepository creditRepository;
     private final EcheanceRepository echeanceRepository;
     private final RemboursementRepository remboursementRepository;
+    private final NotificationService notificationService;
+    private final MouvementCompteService mouvementCompteService;
 
     /**
      * Effectuer le remboursement complet d'une échéance.
@@ -104,6 +109,33 @@ public class RemboursementService {
         // 10. Enregistrer le remboursement
         Remboursement saved =
                 remboursementRepository.save(remboursement);
+
+        String detail = "Remboursement " + saved.getNumeroRemboursement()
+                + " de " + saved.getMontant() + " Ar pour le crédit "
+                + credit.getNumeroCredit() + ".";
+
+        // 11. Débiter le compte du client du montant de l'échéance remboursée
+        // (échoue et annule l'opération si le solde est insuffisant)
+        mouvementCompteService.debiterClient(
+                credit.getClient().getId(),
+                credit.getDemandeCredit() != null
+                        ? credit.getDemandeCredit().getCompteId()
+                        : null,
+                echeance.getMontant(),
+                "Remboursement échéance " + echeance.getNumeroEcheance()
+                        + " - crédit " + credit.getNumeroCredit());
+
+        notificationService.creerPourRole(
+                NotificationType.REMBOURSEMENT_RECU,
+                detail,
+                "/credits"
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.REMBOURSEMENT_ENREGISTRE,
+                detail,
+                "/credits"
+        );
 
         return RemboursementResponse.builder()
                 .id(saved.getId())

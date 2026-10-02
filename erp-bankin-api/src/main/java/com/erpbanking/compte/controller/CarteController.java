@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.erpbanking.compte.dto.CarteRequest;
 import com.erpbanking.compte.dto.CarteResponse;
+import com.erpbanking.compte.dto.VerificationPinRequest;
+import com.erpbanking.compte.dto.VerificationPinResponse;
 import com.erpbanking.compte.service.CarteService;
+import com.erpbanking.security.ClientUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +29,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CarteController {
     private final CarteService carteService;
+
+    @PostMapping("/verifier-pin")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<VerificationPinResponse> verifierPin(
+            @AuthenticationPrincipal ClientUserDetails clientUserDetails,
+            @RequestBody VerificationPinRequest request
+    ) {
+
+        Long clientId = clientUserDetails != null
+                ? clientUserDetails.getClient().getId()
+                : null;
+
+        return ResponseEntity.ok(
+                carteService.verifierPin(clientId, request)
+        );
+    }
 
     @PostMapping
     public ResponseEntity<CarteResponse> create(

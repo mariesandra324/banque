@@ -52,10 +52,10 @@ const TransactionForm = ({ onTransactionSuccess }) => {
     }
   };
 
-  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#374151' };
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px' };
-  const cardStyle = { backgroundColor: 'white', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px' };
-  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: '#111827', marginBottom: '18px' };
+  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
+  const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
+  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -79,7 +79,7 @@ const TransactionForm = ({ onTransactionSuccess }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={labelStyle}>Type de transaction <span style={{ color: '#dc2626' }}>*</span></label>
-              <select name="type" value={formData.type} onChange={handleChange} style={inputStyle}>
+              <select name="type" value={formData.type} onChange={handleChange} style={{ ...inputStyle, backgroundColor: 'var(--card-bg)' }}>
                 {TYPES_TRANSACTION.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
@@ -161,7 +161,7 @@ const TransactionForm = ({ onTransactionSuccess }) => {
           >
             {TYPES_TRANSACTION.find((t) => t.value === formData.type)?.label}
           </div>
-          <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.5', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
             {DESCRIPTIONS_TYPE[formData.type]}
           </p>
         </div>

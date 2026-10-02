@@ -23,7 +23,7 @@ const authService = {
     try {
       const response = await api.get('/auth/me');
       return response.data;
-    } catch (error) {
+    } catch {
       return {
         email: localStorage.getItem('email'),
         role: localStorage.getItem('role')

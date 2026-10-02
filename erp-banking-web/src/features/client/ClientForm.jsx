@@ -15,6 +15,11 @@ function ClientForm({ client, onSuccess, onCancel }) {
     adresse: '',
     dateNaissance: '',
   });
+  const [accesMobile, setAccesMobile] = useState({
+    creerAccesMobile: true,
+    identifiantMobile: '',
+    codePersonnel: '000000',
+  });
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,6 +69,14 @@ function ClientForm({ client, onSuccess, onCancel }) {
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
+  const handleAccesMobileChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setAccesMobile((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
   const validate = () => {
     const phoneRegex = /^\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}$|^\+261(32|33|34|37|38)\d{7}$/;
     const errors = {};
@@ -100,7 +113,12 @@ function ClientForm({ client, onSuccess, onCancel }) {
       if (isEditing) {
         await clientService.updateClient(client.id, formData);
       } else {
-        await clientService.createClient(formData);
+        await clientService.createClient({
+          ...formData,
+          creerAccesMobile: accesMobile.creerAccesMobile,
+          identifiantMobile: accesMobile.identifiantMobile.trim() || (formData.email || '').trim(),
+          codePersonnel: accesMobile.codePersonnel.trim() || '000000',
+        });
       }
       onSuccess();
     } catch (err) {
@@ -110,10 +128,10 @@ function ClientForm({ client, onSuccess, onCancel }) {
     }
   };
 
-  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#374151' };
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px' };
-  const cardStyle = { backgroundColor: 'white', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px' };
-  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: '#111827', marginBottom: '18px' };
+  const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
+  const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
+  const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -192,6 +210,60 @@ function ClientForm({ client, onSuccess, onCancel }) {
         </div>
       </div>
 
+      {/* ===== Client mobile (ajout uniquement) ===== */}
+      {!isEditing && (
+        <div style={{ ...cardStyle, marginTop: '20px' }}>
+          <div style={cardTitleStyle}>Client mobile</div>
+          <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Créez en même temps l'accès mobile du client. Le code personnel est
+            <strong> 000000</strong> par défaut : le client le changera selon ses choix
+            depuis l'application mobile.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <input
+              type="checkbox"
+              name="creerAccesMobile"
+              checked={accesMobile.creerAccesMobile}
+              onChange={handleAccesMobileChange}
+              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            <label style={{ fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)', cursor: 'pointer' }}>
+              Créer l'accès mobile pour ce client
+            </label>
+          </div>
+
+          {accesMobile.creerAccesMobile && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Identifiant mobile</label>
+                <input
+                  name="identifiantMobile"
+                  value={accesMobile.identifiantMobile || formData.email || ''}
+                  onChange={handleAccesMobileChange}
+                  placeholder="ex : 0341234567"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Code personnel</label>
+                <input
+                  name="codePersonnel"
+                  value={accesMobile.codePersonnel}
+                  onChange={handleAccesMobileChange}
+                  placeholder="000000"
+                  style={{ ...inputStyle, fontFamily: 'monospace' }}
+                />
+                <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Le client pourra le modifier selon ses choix.
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== Actions ===== */}
       <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
         <button
@@ -208,7 +280,7 @@ function ClientForm({ client, onSuccess, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+          style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
         >
           Annuler
         </button>

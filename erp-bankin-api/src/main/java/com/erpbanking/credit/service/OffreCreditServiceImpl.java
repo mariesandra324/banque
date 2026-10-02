@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.credit.dto.CreditResponse;
 import com.erpbanking.credit.dto.OffreCreditRequest;
 import com.erpbanking.credit.dto.OffreCreditResponse;
@@ -32,10 +34,19 @@ public class OffreCreditServiceImpl implements OffreCreditService {
     private final CreditRepository creditRepository;
     private final EmailService emailService;
     private final OffrePdfService offrePdfService;
+    private final NotificationService notificationService;
     
 
     @Override
     public OffreCreditResponse create(OffreCreditRequest request) {
+
+        // 0. Garde-fou : le contrôleur applique déjà @NotNull, mais ce service
+        //    peut être appelé directement (tests, imports, jobs).
+        if (request.getDemandeCreditId() == null) {
+            throw new IllegalArgumentException(
+                    "La demande de crédit est requise pour créer une offre."
+            );
+        }
 
         // 1. Vérifier la demande
         DemandeCredit demandeCredit = demandeCreditRepository
@@ -47,12 +58,35 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                         )
                 );
 
-        // 2. Vérifier qu'une offre n'existe pas déjà
-        if (offreCreditRepository.existsByDemandeCreditId(
-                request.getDemandeCreditId())) {
+        // 2. Vérifier qu'aucune offre encore active n'existe déjà pour cette demande.
+        //    Une offre REFUSEE ou EXPIREE ne bloque plus : le gestionnaire peut
+        //    soumettre une nouvelle proposition sur le même dossier.
+        List<String> statutsBloquants = List.of("EN_ATTENTE", "ACCEPTEE");
+
+        if (offreCreditRepository.existsByDemandeCreditIdAndStatutIn(
+                request.getDemandeCreditId(),
+                statutsBloquants)) {
+
+            OffreCredit offreActive = offreCreditRepository
+                    .findByDemandeCreditId(request.getDemandeCreditId())
+                    .stream()
+                    .filter(o -> statutsBloquants.stream().anyMatch(
+                            s -> s.equalsIgnoreCase(o.getStatut())))
+                    .findFirst()
+                    .orElse(null);
+
+            String libelleStatut = offreActive != null
+                    && "ACCEPTEE".equalsIgnoreCase(offreActive.getStatut())
+                    ? "déjà acceptée"
+                    : "en attente";
 
             throw new IllegalArgumentException(
-                    "Une offre existe déjà pour cette demande de crédit."
+                    "Une offre " + libelleStatut
+                            + (offreActive != null
+                                ? " (n°" + offreActive.getNumeroOffre() + ")"
+                                : "")
+                            + " existe déjà pour cette demande de crédit."
+                            + " Supprimez-la avant d'en créer une nouvelle."
             );
         }
 
@@ -90,14 +124,25 @@ public class OffreCreditServiceImpl implements OffreCreditService {
         // 7. Sauvegarder
         OffreCredit saved = offreCreditRepository.save(offre);
 
-        // 8. Envoyer automatiquement le PDF par email au client
+        // 8. Notifier le client (cloche mobile + push) qu'il a reçu une offre
+        notificationService.creerPourClient(
+                client.getId(),
+                NotificationType.OFFRE_CREDIT_RECUE,
+                "Vous avez reçu une offre de crédit n°" + saved.getNumeroOffre()
+                        + " de " + saved.getMontantPropose()
+                        + " Ar. Consultez-la et répondez-y avant le "
+                        + saved.getDateExpiration() + ".",
+                "offre-credit:" + saved.getId()
+        );
+
+        // 9. Envoyer automatiquement le PDF par email au client
         if (client.getEmail() != null && !client.getEmail().isBlank()) {
 
         String nomClient =
                 (client.getNom() != null ? client.getNom() : "") + " " +
                 (client.getPrenom() != null ? client.getPrenom() : "");
 
-        System.out.println("9. Envoi email à : " + client.getEmail());
+        System.out.println("10. Envoi email à : " + client.getEmail());
 
         try {
 
@@ -109,7 +154,7 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                     saved.getToken()
             );
 
-            System.out.println("10. EMAIL ENVOYE !");
+            System.out.println("11. EMAIL ENVOYE !");
 
         } catch (Exception e) {
 
@@ -124,10 +169,10 @@ public class OffreCreditServiceImpl implements OffreCreditService {
 
     } else {
 
-        System.out.println("9. Aucun email client, email non envoyé.");
+        System.out.println("10. Aucun email client, email non envoyé.");
     }
 
-    System.out.println("11. Retour de la réponse");
+    System.out.println("12. Retour de la réponse");
 
     return toResponse(saved);
     }
@@ -311,6 +356,14 @@ public class OffreCreditServiceImpl implements OffreCreditService {
         // 6. Envoyer l'email de confirmation
         Client client = offre.getClient();
 
+        notificationService.creerPourRole(
+                NotificationType.OFFRE_ACCEPTEE,
+                "Le client " + (client != null && client.getPrenom() != null ? client.getPrenom() : "")
+                        + " " + (client != null && client.getNom() != null ? client.getNom() : "")
+                        + " a accepté l'offre n°" + offre.getNumeroOffre() + ".",
+                "/credits/offres/" + offreId
+        );
+
         if (client != null
                 && client.getEmail() != null
                 && !client.getEmail().isBlank()) {
@@ -355,6 +408,26 @@ public class OffreCreditServiceImpl implements OffreCreditService {
         }
 
         @Override
+public CreditResponse accepterOffreParClient(Long offreId, Long clientId) {
+
+    OffreCredit offre = offreCreditRepository
+            .findById(offreId)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Offre de crédit introuvable : " + offreId
+                    )
+            );
+
+    if (clientId != null && !offre.getClient().getId().equals(clientId)) {
+        throw new IllegalArgumentException(
+                "Cette offre ne vous appartient pas."
+        );
+    }
+
+    return accepterOffre(offreId);
+}
+
+        @Override
 public OffreCreditResponse refuserOffre(Long offreId) {
 
     // 1. Chercher l'offre
@@ -377,24 +450,46 @@ public OffreCreditResponse refuserOffre(Long offreId) {
     offre.setStatut("REFUSEE");
     OffreCredit saved = offreCreditRepository.save(offre);
 
-    // 4. Confirmer par email
     Client client = offre.getClient();
 
+    // 4. Prévenir la banque : sans cela le gestionnaire ne voit le refus
+    //    qu'en ouvrant la page offres.
+    notificationService.creerPourRole(
+            NotificationType.OFFRE_REFUSEE,
+            "Le client " + nomComplet(client)
+                    + " a refusé l'offre n°" + offre.getNumeroOffre()
+                    + " (" + offre.getMontantPropose() + " Ar sur "
+                    + offre.getDuree() + " mois).",
+            "/credits/offres/" + offreId
+    );
+
+    // 5. Confirmer par email
     if (client != null && client.getEmail() != null && !client.getEmail().isBlank()) {
 
-        String nomClient =
-                (client.getNom() != null ? client.getNom() : "") + " " +
-                (client.getPrenom() != null ? client.getPrenom() : "");
+        String nomClient = nomComplet(client);
 
-        emailService.envoyerConfirmationOffreRefusee(
-                client.getEmail(),
-                nomClient.trim(),
-                offre.getNumeroOffre()
-        );
+        try {
+            emailService.envoyerConfirmationOffreRefusee(
+                    client.getEmail(),
+                    nomClient,
+                    offre.getNumeroOffre()
+            );
+        } catch (Exception e) {
+            // L'email ne doit pas faire échouer le refus déjà enregistré.
+            System.err.println("ERREUR ENVOI EMAIL REFUS : " + e.getMessage());
+        }
     }
 
     return toResponse(saved);
-}
+    }
+
+    private String nomComplet(Client client) {
+        if (client == null) {
+            return "";
+        }
+        return ((client.getNom() != null ? client.getNom() : "") + " "
+                + (client.getPrenom() != null ? client.getPrenom() : "")).trim();
+    }
 
 private OffreCredit getOffreParTokenValide(String token) {
 

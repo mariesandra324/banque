@@ -3,10 +3,10 @@ import { ArrowLeft, Paperclip, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clientService } from '../../service/clientService';
 
-const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#374151' };
-const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', boxSizing: 'border-box', fontSize: '14px' };
-const cardStyle = { backgroundColor: 'white', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px' };
-const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: '#111827', marginBottom: '18px' };
+const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
+const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
+const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
+const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
 const errorStyle = { marginTop: '6px', color: '#dc2626', fontSize: '12px' };
 
 function DemandeCreditForm({ onSubmit, onClose }) {
@@ -133,11 +133,11 @@ function DemandeCreditForm({ onSubmit, onClose }) {
     <div style={{ padding: '24px', maxWidth: '1100px' }}>
       <button
         onClick={handleClose}
-        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '13px', fontWeight: '500', marginBottom: '18px', padding: 0 }}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', marginBottom: '18px', padding: 0 }}
       >
         <ArrowLeft size={16} /> Retour
       </button>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937', marginBottom: '20px' }}>Nouvelle demande de crédit</h2>
+      <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--heading)', marginBottom: '20px' }}>Nouvelle demande de crédit</h2>
 
       {erreurs.global && (
         <div style={{ padding: '10px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '6px', marginBottom: '14px', fontSize: '13px' }}>
@@ -295,8 +295,8 @@ function DemandeCreditForm({ onSubmit, onClose }) {
             htmlFor="fichiers-input"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              border: '1px dashed #d1d5db', borderRadius: '8px', padding: '14px',
-              cursor: 'pointer', color: '#64748b', fontSize: '13px', backgroundColor: '#f9fafb',
+              border: '1px dashed var(--input-border)', borderRadius: '8px', padding: '14px',
+              cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', backgroundColor: 'var(--table-header)',
             }}
           >
             <Paperclip size={16} />
@@ -311,7 +311,7 @@ function DemandeCreditForm({ onSubmit, onClose }) {
           />
 
           {fichiers.length === 0 ? (
-            <div style={{ marginTop: '10px', color: '#9ca3af', fontSize: '12px' }}>
+            <div style={{ marginTop: '10px', color: 'var(--faint)', fontSize: '12px' }}>
               Aucun fichier sélectionné.
             </div>
           ) : (
@@ -321,13 +321,13 @@ function DemandeCreditForm({ onSubmit, onClose }) {
                   key={`${f.name}-${i}`}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '8px 10px', backgroundColor: '#f1f5f9', borderRadius: '6px', fontSize: '12px',
+                    padding: '8px 10px', backgroundColor: 'var(--table-header)', borderRadius: '6px', fontSize: '12px',
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
-                    <FileText size={14} color="#64748b" />
+                    <FileText size={14} color="var(--text-secondary)" />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-                    <span style={{ color: '#94a3b8', flexShrink: 0 }}>({formaterTaille(f.size)})</span>
+                    <span style={{ color: 'var(--muted)', flexShrink: 0 }}>({formaterTaille(f.size)})</span>
                   </span>
                   <button
                     type="button"
@@ -357,7 +357,7 @@ function DemandeCreditForm({ onSubmit, onClose }) {
           <button
             type="button"
             onClick={handleClose}
-            style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+            style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
           >
             Annuler
           </button>

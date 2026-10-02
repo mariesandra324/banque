@@ -1,6 +1,8 @@
 package com.erpbanking.client.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import com.erpbanking.client.entity.StatutMobile;
 import lombok.*;
 
 @Getter
@@ -26,4 +28,10 @@ public class ClientResponse {
     private LocalDate dateNaissance;
 
     private LocalDate dateCreation;
+
+    private StatutMobile mobileStatut;
+
+    private String mobileIdentifiant;
+
+    private LocalDateTime mobileDateInscription;
 }

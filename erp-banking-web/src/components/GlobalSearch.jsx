@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Landmark, ArrowLeftRight, Wallet, Loader2 } from 'lucide-react';
+import { Search, Hash, Loader2 } from 'lucide-react';
 import { clientService } from '../service/clientService';
-import { getComptes } from '../service/compteService';
-import { getAllTransactions } from '../service/transactionService';
-import { getDemandesCredit, getCredits } from '../service/creditService';
 
-const LIMITE_PAR_CATEGORIE = 5;
+const LIMITE_SUGGESTIONS = 6;
 
 function GlobalSearch() {
   const navigate = useNavigate();
@@ -15,9 +12,8 @@ function GlobalSearch() {
   const [requete, setRequete] = useState('');
   const [ouvert, setOuvert] = useState(false);
   const [chargement, setChargement] = useState(false);
-  const [resultats, setResultats] = useState({ clients: [], comptes: [], transactions: [], credits: [] });
+  const [clients, setClients] = useState([]);
 
-  // Fermer le menu déroulant au clic en dehors
   useEffect(() => {
     const gererClicExterieur = (e) => {
       if (conteneurRef.current && !conteneurRef.current.contains(e.target)) {
@@ -28,210 +24,156 @@ function GlobalSearch() {
     return () => document.removeEventListener('mousedown', gererClicExterieur);
   }, []);
 
-  // Recherche avec un léger anti-rebond (debounce)
   useEffect(() => {
     const texte = requete.trim();
+    if (texte.length < 2) return;
 
-    if (texte.length < 2) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResultats({ clients: [], comptes: [], transactions: [], credits: [] });
-      setChargement(false);
-      return;
-    }
-
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChargement(true);
     const minuteur = setTimeout(async () => {
       try {
-        const texteLower = texte.toLowerCase();
-
-        const [clients, comptesRes, transactions, demandes, credits] = await Promise.all([
-          clientService.searchClients(texte).catch(() => []),
-          getComptes().catch(() => ({ data: [] })),
-          getAllTransactions().catch(() => []),
-          getDemandesCredit().catch(() => []),
-          getCredits().catch(() => []),
-        ]);
-
-        const comptesFiltres = (Array.isArray(comptesRes?.data) ? comptesRes.data : [])
-          .filter((c) =>
-            c.numeroCompte?.toLowerCase().includes(texteLower) ||
-            c.typeCompte?.toLowerCase().includes(texteLower) ||
-            c.iban?.toLowerCase().includes(texteLower)
-          )
-          .slice(0, LIMITE_PAR_CATEGORIE);
-
-        const transactionsFiltrees = (Array.isArray(transactions) ? transactions : [])
-          .filter((t) =>
-            t.reference?.toLowerCase().includes(texteLower) ||
-            String(t.type ?? '').toLowerCase().includes(texteLower) ||
-            t.numeroCompteSource?.toLowerCase().includes(texteLower) ||
-            t.numeroCompteDestination?.toLowerCase().includes(texteLower) ||
-            String(t.montant ?? '').includes(texteLower)
-          )
-          .slice(0, LIMITE_PAR_CATEGORIE);
-
-        const demandesFiltrees = (Array.isArray(demandes) ? demandes : [])
-          .filter((d) =>
-            d.clientNom?.toLowerCase().includes(texteLower) ||
-            d.clientPrenom?.toLowerCase().includes(texteLower) ||
-            d.motif?.toLowerCase().includes(texteLower) ||
-            String(d.statut ?? '').toLowerCase().includes(texteLower)
-          );
-
-        const creditsFiltres = (Array.isArray(credits) ? credits : [])
-          .filter((c) =>
-            c.numeroCredit?.toLowerCase?.().includes(texteLower) ||
-            c.clientNom?.toLowerCase().includes(texteLower) ||
-            c.clientPrenom?.toLowerCase().includes(texteLower) ||
-            String(c.statut ?? '').toLowerCase().includes(texteLower)
-          );
-
-        const creditsCombines = [
-          ...demandesFiltrees.map((d) => ({ ...d, _type: 'demande' })),
-          ...creditsFiltres.map((c) => ({ ...c, _type: 'credit' })),
-        ].slice(0, LIMITE_PAR_CATEGORIE);
-
-        setResultats({
-          clients: (Array.isArray(clients) ? clients : []).slice(0, LIMITE_PAR_CATEGORIE),
-          comptes: comptesFiltres,
-          transactions: transactionsFiltrees,
-          credits: creditsCombines,
-        });
-      } catch (err) {
-        console.error('Erreur recherche globale :', err);
+        const res = await clientService.searchClients(texte);
+        setClients((Array.isArray(res) ? res : []).slice(0, LIMITE_SUGGESTIONS));
+      } catch {
+        setClients([]);
       } finally {
         setChargement(false);
       }
     }, 300);
-
     return () => clearTimeout(minuteur);
   }, [requete]);
 
-  const total = resultats.clients.length + resultats.comptes.length + resultats.transactions.length + resultats.credits.length;
-  const rechercheEnCours = requete.trim().length >= 2;
+  const surSaisie = (e) => {
+    const valeur = e.target.value;
+    setRequete(valeur);
+    if (valeur.trim().length < 2) {
+      setClients([]);
+      setChargement(false);
+    }
+  };
 
-  const allerA = (chemin) => {
+  const allerAuDossier = (client) => {
     setOuvert(false);
-    setRequete('');
-    navigate(chemin);
+    if (client?.id) navigate(`/clients/${client.id}`);
+  };
+
+  const surEntree = (e) => {
+    if (e.key === 'Enter' && clients.length > 0 && !chargement) {
+      allerAuDossier(clients[0]);
+    }
+  };
+
+  const rechercheActive = requete.trim().length >= 2;
+  const total = clients.length;
+
+  const styles = {
+    conteneur: {
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      width: '280px',
+      backgroundColor: 'var(--card-bg, #1e293b)',
+      borderRadius: '8px',
+      border: '1px solid var(--border-color, #334155)',
+      padding: '0 12px',
+    },
+    icone: {
+      color: 'var(--text-secondary, #94a3b8)',
+      marginRight: '8px',
+      flexShrink: 0,
+    },
+    input: {
+      width: '100%',
+      background: 'transparent',
+      border: 'none',
+      outline: 'none',
+      padding: '8px 0',
+      color: 'var(--text-primary, #f8fafc)',
+      fontSize: '13px',
+    },
+    dropdown: {
+      position: 'absolute',
+      top: 'calc(100% + 8px)',
+      left: 0,
+      right: 0,
+      backgroundColor: 'var(--card-bg, #1e293b)',
+      border: '1px solid var(--border-color, #334155)',
+      borderRadius: '10px',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+      maxHeight: '420px',
+      overflowY: 'auto',
+      zIndex: 100,
+      textAlign: 'left',
+    },
+    ligne: {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '10px 14px',
+      borderBottom: '1px solid var(--border-color, #334155)',
+    },
+    ligneDerniere: { borderBottom: 'none' },
+    titre: { fontSize: '13px', fontWeight: '600', color: 'var(--text-primary, #f8fafc)' },
+    sousTitre: { fontSize: '12px', color: 'var(--text-secondary, #94a3b8)', marginTop: '2px' },
   };
 
   return (
-    <div className="search-box" ref={conteneurRef} style={{ position: 'relative' }}>
-      <Search size={18} className="search-icon" />
+    <div ref={conteneurRef} style={styles.conteneur}>
+      <Search size={16} style={styles.icone} />
       <input
         type="text"
-        placeholder="Rechercher un client, un compte, une transaction..."
+        placeholder="Rechercher un client..."
         value={requete}
-        onChange={(e) => setRequete(e.target.value)}
+        onChange={surSaisie}
         onFocus={() => setOuvert(true)}
+        onKeyDown={surEntree}
+        style={styles.input}
       />
 
-      {ouvert && rechercheEnCours && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
-          backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: '420px', overflowY: 'auto',
-          zIndex: 100, textAlign: 'left',
-        }}>
+      {ouvert && rechercheActive && (
+        <div style={styles.dropdown}>
           {chargement && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', color: '#6b7280', fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', color: 'var(--text-secondary, #94a3b8)', fontSize: '13px' }}>
               <Loader2 size={14} className="spin" /> Recherche en cours...
             </div>
           )}
 
           {!chargement && total === 0 && (
-            <div style={{ padding: '16px', color: '#9ca3af', fontSize: '13px', textAlign: 'center' }}>
+            <div style={{ padding: '16px', color: 'var(--text-secondary, #94a3b8)', fontSize: '13px', textAlign: 'center' }}>
               Aucun résultat pour « {requete} »
             </div>
           )}
 
-          {!chargement && resultats.clients.length > 0 && (
-            <SectionResultats titre="Clients" icon={User}>
-              {resultats.clients.map((c) => (
-                <LigneResultat
+          {!chargement && clients.length > 0 && (
+            <div>
+              {clients.map((c, i) => (
+                <button
                   key={`client-${c.id}`}
-                  titre={`${c.prenom ?? ''} ${c.nom ?? ''}`.trim()}
-                  sousTitre={c.email}
-                  onClick={() => allerA('/clients')}
-                />
+                  onClick={() => allerAuDossier(c)}
+                  style={{
+                    ...styles.ligne,
+                    ...(i === clients.length - 1 && styles.ligneDerniere),
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--hover-bg, #334155)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <div style={styles.titre}>
+                    {`${c.prenom ?? ''} ${c.nom ?? ''}`.trim()}
+                  </div>
+                  <div style={styles.sousTitre}>
+                    <Hash size={11} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                    CIN : {c.cin || '-'}
+                  </div>
+                </button>
               ))}
-            </SectionResultats>
-          )}
-
-          {!chargement && resultats.comptes.length > 0 && (
-            <SectionResultats titre="Comptes" icon={Landmark}>
-              {resultats.comptes.map((c) => (
-                <LigneResultat
-                  key={`compte-${c.id}`}
-                  titre={c.numeroCompte}
-                  sousTitre={c.typeCompte}
-                  onClick={() => allerA('/comptes')}
-                />
-              ))}
-            </SectionResultats>
-          )}
-
-          {!chargement && resultats.transactions.length > 0 && (
-            <SectionResultats titre="Transactions" icon={ArrowLeftRight}>
-              {resultats.transactions.map((t) => (
-                <LigneResultat
-                  key={`transaction-${t.id}`}
-                  titre={t.reference || `Transaction #${t.id}`}
-                  sousTitre={t.type}
-                  onClick={() => allerA('/transactions')}
-                />
-              ))}
-            </SectionResultats>
-          )}
-
-          {!chargement && resultats.credits.length > 0 && (
-            <SectionResultats titre="Crédits" icon={Wallet}>
-              {resultats.credits.map((c) => (
-                <LigneResultat
-                  key={`credit-${c._type}-${c.id}`}
-                  titre={c._type === 'demande' ? `${c.clientPrenom ?? ''} ${c.clientNom ?? ''}`.trim() : (c.numeroCredit || `#${c.id}`)}
-                  sousTitre={c._type === 'demande' ? `Demande — ${c.statut}` : c.statut}
-                  onClick={() => allerA(c._type === 'demande' ? `/credits/demandes/${c.id}` : '/credits')}
-                />
-              ))}
-            </SectionResultats>
+            </div>
           )}
         </div>
       )}
     </div>
-  );
-}
-
-function SectionResultats({ titre, icon: Icon, children }) {
-  return (
-    <div style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '4px 14px', fontSize: '11px', fontWeight: '700',
-        color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.03em',
-      }}>
-        <Icon size={12} /> {titre}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function LigneResultat({ titre, sousTitre, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none',
-        cursor: 'pointer', padding: '8px 14px',
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-    >
-      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1f2937' }}>{titre || '—'}</div>
-      {sousTitre && <div style={{ fontSize: '12px', color: '#6b7280' }}>{sousTitre}</div>}
-    </button>
   );
 }
 

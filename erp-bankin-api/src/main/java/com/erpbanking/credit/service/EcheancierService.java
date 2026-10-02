@@ -8,7 +8,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.erpbanking.client.entity.Client;
 import com.erpbanking.credit.dto.EcheanceResponse;
+import com.erpbanking.credit.dto.EcheancierGlobalResponse;
 import com.erpbanking.credit.entity.Credit;
 import com.erpbanking.credit.entity.Echeance;
 import com.erpbanking.credit.entity.StatutEcheance;
@@ -124,6 +126,43 @@ public class EcheancierService {
                 .interet(echeance.getInteret())
                 .capitalRestant(echeance.getCapitalRestant())
                 .statut(echeance.getStatut())
+                .build();
+    }
+
+    /**
+     * Échéancier global de tous les crédits, utilisé par la page
+     * Comptabilité. Un statut nul ou "TOUS" renvoie toutes les échéances.
+     */
+    @Transactional(readOnly = true)
+    public List<EcheancierGlobalResponse> getEcheancierGlobal(StatutEcheance statut) {
+
+        List<Echeance> echeances = (statut == null)
+                ? echeanceRepository.findAllAvecCreditClient()
+                : echeanceRepository.findTousAvecCreditClientParStatut(statut);
+
+        return echeances.stream()
+                .map(this::toGlobalResponse)
+                .toList();
+    }
+
+    private EcheancierGlobalResponse toGlobalResponse(Echeance echeance) {
+        Credit credit = echeance.getCredit();
+        Client client = credit != null ? credit.getClient() : null;
+
+        return EcheancierGlobalResponse.builder()
+                .id(echeance.getId())
+                .numeroEcheance(echeance.getNumeroEcheance())
+                .dateEcheance(echeance.getDateEcheance())
+                .montant(echeance.getMontant())
+                .capital(echeance.getCapital())
+                .interet(echeance.getInteret())
+                .capitalRestant(echeance.getCapitalRestant())
+                .statut(echeance.getStatut())
+                .creditId(credit != null ? credit.getId() : null)
+                .numeroCredit(credit != null ? credit.getNumeroCredit() : null)
+                .clientId(client != null ? client.getId() : null)
+                .clientNom(client != null ? client.getNom() : null)
+                .clientPrenom(client != null ? client.getPrenom() : null)
                 .build();
     }
 }

@@ -16,6 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.client.repository.ClientRepository;
 import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
+import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.credit.dto.DemandeCreditRequest;
 import com.erpbanking.credit.dto.DemandeCreditResponse;
 import com.erpbanking.credit.dto.PieceJointeResponse;
@@ -38,6 +43,8 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
     private final ClientRepository clientRepository;
     private final CreditService creditService;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
 
         @Override
         public DemandeCreditResponse creer(DemandeCreditRequest request, List<MultipartFile> fichiers) {
@@ -58,6 +65,7 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
                 .typeContrat(request.getTypeContrat())
                 .revenuMensuel(request.getRevenuMensuel())
                 .chargesMensuelles(request.getChargesMensuelles())
+                .compteId(request.getCompteId())
                 .client(client)
                 .dateDemande(LocalDateTime.now())
                 .statut(StatutDemandeCredit.EN_ATTENTE)
@@ -108,24 +116,59 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
                 }
         }
 
-        // 4. Notification par email
+        // 4. Notification par email + cloche mobile
         if (client.getEmail() != null && !client.getEmail().isBlank()) {
                 String nomClient = (client.getNom() != null ? client.getNom() : "") + " " +
                                 (client.getPrenom() != null ? client.getPrenom() : "");
 
                 try {
-                emailService.envoyerConfirmationDemandeCredit(
-                        client.getEmail(),
-                        nomClient.trim(),
-                        demande.getId().toString(),
-                        demande.getMontantDemande().toString(),
-                        demande.getDuree()
-                );
-                System.out.println("EMAIL CONFIRMATION DEMANDE ENVOYE A : " + client.getEmail());
+                        if (notificationService.emailActivePourClient(client.getId(), NotificationType.DEMANDE_CREDIT_SOUMISE)) {
+                                emailService.envoyerConfirmationDemandeCredit(
+                                        client.getEmail(),
+                                        nomClient.trim(),
+                                        demande.getId().toString(),
+                                        demande.getMontantDemande().toString(),
+                                        demande.getDuree()
+                                );
+                                System.out.println("EMAIL CONFIRMATION DEMANDE ENVOYE A : " + client.getEmail());
+                        }
                 } catch (Exception e) {
-                System.err.println("ERREUR ENVOI EMAIL DEMANDE : " + e.getMessage());
+                        System.err.println("ERREUR ENVOI EMAIL DEMANDE : " + e.getMessage());
                 }
         }
+
+        notificationService.creerPourClient(
+                client.getId(),
+                NotificationType.DEMANDE_CREDIT_SOUMISE,
+                "Votre demande de crédit de " + demande.getMontantDemande()
+                        + " Ar sur " + demande.getDuree() + " mois a été envoyée.",
+                "demande-credit:" + demande.getId()
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.DEMANDE_CREDIT_A_TRAITER,
+                (client.getPrenom() != null ? client.getPrenom() : "")
+                        + " " + (client.getNom() != null ? client.getNom() : "")
+                        + " a soumis une demande de crédit de "
+                        + demande.getMontantDemande() + " Ar.",
+                "/credits/demandes/" + demande.getId()
+        );
+
+        if (fichiers != null && !fichiers.isEmpty()) {
+        notificationService.creerPourRole(
+                NotificationType.PIECE_JOINTE_AJOUTEE,
+                "De nouvelles pièces jointes ont été ajoutées à la demande n°"
+                        + demande.getId() + ".",
+                "/credits/demandes/" + demande.getId()
+        );
+        }
+
+        auditService.journaliser(
+                AuditAction.CREATION,
+                AuditModule.CREDITS,
+                "Demande #"+demande.getId(),
+                "Soumission d'une demande de crédit de "+demande.getMontantDemande()+" Ar sur "+demande.getDuree()+" mois."
+        );
 
         // 5. Retour de la réponse
         return toResponse(demande);
@@ -210,6 +253,7 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
                 .clientId(demande.getClient().getId())
                 .clientNom(demande.getClient().getNom())
                 .clientPrenom(demande.getClient().getPrenom())
+                .compteId(demande.getCompteId())
                 .piecesJointes(piecesJointes)
                 .build();
     }
@@ -243,6 +287,28 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
 
         demande = demandeCreditRepository.save(demande);
 
+        if (statut == StatutDemandeCredit.REJETER) {
+                notificationService.creerPourClient(
+                        demande.getClient().getId(),
+                        NotificationType.DEMANDE_CREDIT_DECIDEE,
+                        "Votre demande de crédit n°" + demande.getId() + " a été refusée.",
+                        "demande-credit:" + demande.getId()
+                );
+                auditService.journaliser(
+                        AuditAction.REFUS,
+                        AuditModule.CREDITS,
+                        "Demande #" + demande.getId(),
+                        "Refus de la demande de crédit n°" + demande.getId() + (demande.getMotifRejet() != null ? " - " + demande.getMotifRejet() : "")
+                );
+        }else if (statut == StatutDemandeCredit.ACCEPTER){
+                auditService.journaliser(
+                        AuditAction.VALIDATION,
+                        AuditModule.CREDITS,
+                        "Demande #" + demande.getId(),
+                        "Acceptation de la demande de crédit n°" + demande.getId() + "."
+                );
+        }
+
         return toResponse(demande);
                 }
 
@@ -271,6 +337,20 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
 
         // Création automatique du crédit
         creditService.createFromDemande(demande.getId());
+
+        notificationService.creerPourClient(
+                demande.getClient().getId(),
+                NotificationType.DEMANDE_CREDIT_DECIDEE,
+                "Votre demande de crédit n°" + demande.getId() + " a été acceptée.",
+                "demande-credit:" + demande.getId()
+        );
+
+        auditService.journaliser(
+                AuditAction.VALIDATION,
+                AuditModule.CREDITS,
+                "Demande #" + demande.getId(),
+                "Acceptation de la demande de crédit n°" + demande.getId() + "."
+        );
 
         return toResponse(demande);
         }

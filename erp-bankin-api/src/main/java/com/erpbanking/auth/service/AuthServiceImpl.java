@@ -5,11 +5,14 @@ import com.erpbanking.auth.dto.LoginResponse;
 import com.erpbanking.auth.dto.MobileLoginRequest;
 import com.erpbanking.auth.dto.MobileLoginResponse;
 import com.erpbanking.client.entity.Client;
+import com.erpbanking.client.entity.ClientMobile;
+import com.erpbanking.client.entity.StatutMobile;
+import com.erpbanking.client.repository.ClientMobileRepository;
+import com.erpbanking.client.repository.ClientRepository;
 import com.erpbanking.compte.entity.Carte;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.security.ClientUserDetails;
 import com.erpbanking.security.JwtService;
-import com.erpbanking.security.ClientUserDetails;
 import com.erpbanking.utilisateur.entity.Utilisateur;
 import com.erpbanking.utilisateur.repository.UtilisateurRepository;
 
@@ -23,6 +26,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -33,6 +40,8 @@ public class AuthServiceImpl implements AuthService {
     private final UtilisateurRepository utilisateurRepository; 
     private final PasswordEncoder passwordEncoder;
     private final CompteRepository compteRepository;
+    private final ClientRepository clientRepository;
+    private final ClientMobileRepository clientMobileRepository;
 
     @Override
 public LoginResponse login(LoginRequest request) {
@@ -77,115 +86,132 @@ public LoginResponse login(LoginRequest request) {
 }
 
 public MobileLoginResponse mobileLogin (MobileLoginRequest request) {
- String numeroCarte = request.getNumero().trim();
+    String nomComplet = request.getNomComplet().trim();
 
     // =====================================================
-    // 1. RECHERCHER LA CARTE
+    // 1. RECHERCHER LE CLIENT PAR NOM COMPLET
     // =====================================================
 
-    Carte carte = carteRepository
-            .findByNumeroCarte(numeroCarte)
+    Client client = findByNomComplet(nomComplet);
+
+    if (client == null) {
+        throw new RuntimeException(
+                "Nom complet incorrect."
+        );
+    }
+
+    // =====================================================
+    // 2. VÉRIFIER LE MOT DE PASSE (CODE PERSONNEL)
+    // =====================================================
+
+    if (client.getCodePersonnelHash() == null
+            || !passwordEncoder.matches(
+                    request.getMotDePasse(),
+                    client.getCodePersonnelHash()
+            )) {
+
+        throw new RuntimeException(
+                "Mot de passe incorrect."
+        );
+    }
+
+    // =====================================================
+    // 3. VÉRIFIER LE STATUT DE L'ACCÈS MOBILE
+    // =====================================================
+
+    ClientMobile accesMobile = clientMobileRepository
+            .findByClientId(client.getId())
             .orElseThrow(() ->
-                    new RuntimeException(
-                            "Numéro de carte incorrect."
-                    )
+                new RuntimeException(
+                    "Aucune demande d'accès mobile trouvée. "
+                    + "Veuillez vous inscrire depuis l'application."
+                )
             );
 
-    System.out.println("===== MOBILE LOGIN =====");
-    System.out.println("Carte : " + carte.getNumeroCarte());
-    System.out.println("Statut carte : [" + carte.getStatut() + "]");
-
-
-    // =====================================================
-    // 2. VÉRIFIER QUE LA CARTE EST ACTIVE
-    // =====================================================
-
-    if (!"ACTIF".equalsIgnoreCase(carte.getStatut())) {
-
+    if (accesMobile.getStatut() == StatutMobile.EN_ATTENTE) {
         throw new RuntimeException(
-                "Cette carte n'est pas active."
+                "Votre demande d'accès mobile est en attente "
+                + "de validation par l'administration."
         );
     }
 
-
-    // =====================================================
-    // 3. VÉRIFIER LE PIN
-    // =====================================================
-
-    boolean pinCorrect = passwordEncoder.matches(
-            request.getPin(),
-            carte.getPinHash()
-    );
-
-    if (!pinCorrect) {
-
+    if (accesMobile.getStatut() == StatutMobile.REFUSEE) {
         throw new RuntimeException(
-                "Code PIN incorrect."
+                "Votre demande d'accès mobile a été refusée "
+                + "par l'administration."
         );
     }
 
-
-    // =====================================================
-    // 4. RÉCUPÉRER LE COMPTE
-    // =====================================================
-
-    Compte compte = carte.getCompte();
-
-    if (compte == null) {
-
+    if (accesMobile.getStatut() == StatutMobile.BLOQUEE) {
         throw new RuntimeException(
-                "Aucun compte associé à cette carte."
+                "Votre accès mobile est bloqué. Contactez votre banque."
         );
     }
 
-    System.out.println(
-            "Compte : " + compte.getNumeroCompte()
-    );
-
-    System.out.println(
-            "Statut compte : [" + compte.getStatut() + "]"
-    );
-
+    accesMobile.setDerniereConnexion(LocalDateTime.now());
+    clientMobileRepository.save(accesMobile);
 
     // =====================================================
-    // 5. VÉRIFIER QUE LE COMPTE EST ACTIF
+    // 4. GÉNÉRER LE TOKEN
     // =====================================================
 
-    if (!"ACTIF".equalsIgnoreCase(compte.getStatut())) {
-
-        throw new RuntimeException(
-                "Ce compte n'est pas actif."
-        );
-    }
-    Client client = compte.getClient();
-
-if (client == null) {
-    throw new RuntimeException(
-            "Aucun client associé à ce compte."
-    );
-}
     ClientUserDetails clientUserDetails = new ClientUserDetails(client);
-    String token = jwtService.generateMobileToken( clientUserDetails, client.getId() );
+    String token = jwtService.generateMobileToken(clientUserDetails, client.getId());
 
     // =====================================================
-    // 6. VÉRIFIER LE CLIENT
+    // 5. COMPLÉTER LA RÉPONSE AVEC COMPTE / CARTE (SI EXISTE)
     // =====================================================
 
-    if (compte.getClient() == null) {
+    Compte compte = premierCompte(client.getId());
+    Carte carte = null;
 
-        throw new RuntimeException(
-                "Aucun client associé à ce compte."
-        );
+    if (compte != null) {
+        carte = carteRepository.findByCompteId(compte.getId())
+                .orElse(null);
     }
+
     return MobileLoginResponse.builder()
             .token(token)
             .clientId(client.getId())
             .nom(client.getNom())
             .prenom(client.getPrenom())
-            .numeroCompte(compte.getNumeroCompte())
-            .numeroCarte(carte.getNumeroCarte())
-            .typeCompte(compte.getTypeCompte())
-            .solde(compte.getSolde())
+            .numeroCompte(
+                compte != null ? compte.getNumeroCompte() : null
+            )
+            .numeroCarte(
+                carte != null ? carte.getNumeroCarte() : null
+            )
+            .typeCompte(
+                compte != null ? compte.getTypeCompte() : null
+            )
+            .solde(
+                compte != null ? compte.getSolde() : null
+            )
             .build();
+}
+
+private Client findByNomComplet(String nomComplet) {
+
+    String recherche = nomComplet.trim()
+            .toLowerCase(Locale.ROOT)
+            .replaceAll("\\s+", " ");
+
+    List<Client> clients = clientRepository.findByNomComplet(recherche);
+
+    if (clients.isEmpty()) {
+        return null;
+    }
+
+    return clients.get(0);
+}
+
+private Compte premierCompte(Long clientId) {
+
+    List<Compte> comptes = compteRepository.findByClientId(clientId);
+
+    return comptes.stream()
+            .filter(c -> "ACTIF".equalsIgnoreCase(c.getStatut()))
+            .findFirst()
+            .orElse(comptes.isEmpty() ? null : comptes.get(0));
 }
 }

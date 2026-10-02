@@ -6,7 +6,9 @@ import {
   ArrowLeftRight,
   Landmark,
   FileText,
-  Settings,UserCog
+  Settings,UserCog,
+  Smartphone,
+  Calculator
 } from "lucide-react";
 import "../styles/sidebar.css";
 import { useAuth } from "../hooks/useAuth";
@@ -40,6 +42,13 @@ function Sidebar() {
         </NavLink>
       )}
 
+      {hasAccess(["ADMIN", "GESTIONNAIRE"]) && (
+        <NavLink to="/acces-mobile" className={({ isActive }) => isActive ? "active" : ""}>
+          <Smartphone size={18} />
+          Accès mobiles
+        </NavLink>
+      )}
+
       <NavLink to="/comptes">
         <CreditCard size={18} />
         Comptes
@@ -50,10 +59,19 @@ function Sidebar() {
         Transactions
       </NavLink>
 
+      {hasAccess(["ADMIN", "GESTIONNAIRE"]) && (
       <NavLink to="/credits">
         <Landmark size={18} />
         Crédits
-      </NavLink>
+      </NavLink>)}
+
+      {/* Module Comptabilité : réservé au comptable et à l'administrateur */}
+      {hasAccess(["ADMIN", "COMPTABLE"]) && (
+        <NavLink to="/comptabilite" className={({ isActive }) => isActive ? "active" : ""}>
+          <Calculator size={18} />
+          Comptabilité
+        </NavLink>
+      )}
 
       {/* Seuls les ADMINS ou COMPTABLES accèdent aux rapports financiers */}
       {hasAccess(["ADMIN", "COMPTABLE"]) && (

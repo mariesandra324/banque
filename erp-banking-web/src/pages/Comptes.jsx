@@ -3,16 +3,22 @@ import { getComptes, createCompte, updateCompte, deleteCompte } from '../service
 import { clientService } from '../service/clientService';
 import CompteForm from '../features/compte/CompteForm';
 import CompteTable from '../features/compte/CompteTable';
+import carteService from '../service/carteService';
+import { useAuth } from '../hooks/useAuth';
+
+// Le comptable est un rôle de consultation : il ne peut pas ouvrir de compte.
+const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
 
 const Comptes = () => {
+  const { user } = useAuth();
+  const peutCreerCompte = ROLES_AUTORISES_A_CREER.includes(user?.role);
+
   const [comptes, setComptes] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
-
-  // 'form' = formulaire affiché en premier (par défaut), 'liste' = tableau des comptes
-  const [vue, setVue] = useState('form');
+  const [vue, setVue] = useState('liste');
   const [compteEnEdition, setCompteEnEdition] = useState(null); // null = création, sinon = compte à éditer
 
   const showNotification = (message) => {
@@ -71,22 +77,67 @@ const Comptes = () => {
   };
 
   const handleSubmit = async (payload) => {
-    try {
-      if (compteEnEdition) {
-        await updateCompte(compteEnEdition.id, payload);
-        showNotification('Compte modifié avec succès.');
+  try {
+    if (compteEnEdition) {
+      // ===== MODIFICATION DU COMPTE =====
+      await updateCompte(compteEnEdition.id, {
+        typeCompte: payload.typeCompte,
+        solde: payload.solde,
+        statut: payload.statut,
+        clientId: payload.clientId,
+      });
+
+      showNotification('Compte modifié avec succès.');
+
+    } else {
+      // ===== CRÉATION DU COMPTE =====
+      const response = await createCompte({
+        typeCompte: payload.typeCompte,
+        solde: payload.solde,
+        statut: payload.statut,
+        clientId: payload.clientId,
+      });
+
+      const compteCree = response.data;
+
+      console.log('Compte créé :', compteCree);
+
+      // ===== CRÉATION DE LA CARTE SI COCHÉE =====
+      if (payload.hasCard) {
+        await carteService.create({
+          compteId: compteCree.id,
+          typeCarte: payload.typeCarte,
+        });
+
+        console.log(
+          'Carte créée pour le compte :',
+          compteCree.id
+        );
+
+        showNotification(
+          'Compte et carte créés avec succès.'
+        );
       } else {
-        await createCompte(payload);
-        showNotification('Compte créé avec succès.');
+        showNotification(
+          'Compte créé avec succès, sans carte.'
+        );
       }
-      setCompteEnEdition(null);
-      setVue('liste');
-      loadComptes();
-    } catch (err) {
-      console.error('Erreur sauvegarde compte :', err);
-      setError(err.message || 'Impossible de sauvegarder le compte.');
     }
-  };
+
+    setCompteEnEdition(null);
+    setVue('liste');
+    loadComptes();
+
+  } catch (err) {
+    console.error('Erreur sauvegarde compte :', err);
+
+    setError(
+      err.response?.data?.message ||
+      err.message ||
+      'Impossible de sauvegarder le compte.'
+    );
+  }
+};
 
   const handleDelete = async (id) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce compte ?')) return;
@@ -111,22 +162,24 @@ const Comptes = () => {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '20px', margin: 0, color: '#1f2937' }}>Comptes</h1>
+        <h1 style={{ fontSize: '20px', margin: 0, color: 'var(--heading)' }}>Comptes</h1>
 
         {vue === 'form' ? (
           <button
             onClick={voirListe}
-            style={{ backgroundColor: 'white', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
+            style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
           >
             Voir la liste des comptes
           </button>
         ) : (
-          <button
-            onClick={voirFormulaireAjout}
-            style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
-          >
-            + Ajouter un compte
-          </button>
+          peutCreerCompte && (
+            <button
+              onClick={voirFormulaireAjout}
+              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+            >
+              + Ajouter un compte
+            </button>
+          )
         )}
       </div>
 

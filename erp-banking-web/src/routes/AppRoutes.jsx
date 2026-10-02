@@ -5,6 +5,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from '../pages/Dashboard';
 import Login from '../features/auth/Login';
 import Clients from '../pages/Clients';
+import AccesMobile from '../pages/AccesMobile';
 import Comptes from '../pages/Comptes';
 import Credit from '../pages/Credit';
 import Transactions from '../pages/Transactions';
@@ -15,6 +16,8 @@ import CreditForm from '../features/credit/CreditForm';
 import OffreCreditDetail from "../features/credit/OffreCreditDetail";
 import Rapports from '../pages/Rapports';
 import Settings from '../features/settings/Settings';
+import ClientDossier from '../pages/ClientDossier';
+import Comptabilite from '../pages/Comptabilite';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -67,7 +70,16 @@ const AppRoutes = () => {
                 </RoleRoute>
               }
             />
+            <Route path="/clients/:id" element={<ClientDossier />} />
             <Route path="comptes" element={<Comptes />} />
+            <Route
+              path="acces-mobile"
+              element={
+                <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]}>
+                  <AccesMobile />
+                </RoleRoute>
+              }
+            />
             <Route path="transactions" element={<Transactions />} />
             <Route path="utilisateurs" element={<Utilisateurs />} />
             <Route path="credits" element={<Credit />} />
@@ -75,6 +87,14 @@ const AppRoutes = () => {
             <Route path="credits/demandes/nouvelle" element={<DemandeCreditForm />} />
             <Route path="credits/nouveau" element={<CreditForm />} />
             <Route path="/credits/offres/:id" element={<OffreCreditDetail />}/>
+            <Route
+              path="comptabilite"
+              element={
+                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE"]}>
+                  <Comptabilite />
+                </RoleRoute>
+              }
+            />
             <Route path="/rapports" element={<Rapports />}/>
             <Route path="/parametres" element={<Settings />} />
       </Route>

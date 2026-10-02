@@ -34,5 +34,7 @@ public class DemandeCreditResponse {
     private String clientNom;
     private String clientPrenom;
 
+    private Long compteId;
+
     private List<PieceJointeResponse> piecesJointes;
 }

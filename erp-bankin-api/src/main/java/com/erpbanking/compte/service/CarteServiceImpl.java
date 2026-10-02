@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import com.erpbanking.client.entity.Client;
 import com.erpbanking.compte.dto.CarteRequest;
 import com.erpbanking.compte.dto.CarteResponse;
+import com.erpbanking.compte.dto.VerificationPinRequest;
+import com.erpbanking.compte.dto.VerificationPinResponse;
 import com.erpbanking.compte.entity.Carte;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.mapper.CarteMapper;
@@ -197,6 +199,54 @@ System.out.println("DESTINATAIRE = [" + emailClient + "]");
         }
 
         carteRepository.deleteById(id);
+    }
+
+
+    @Override
+    public VerificationPinResponse verifierPin(
+            Long clientId,
+            VerificationPinRequest request
+    ) {
+
+        // 1. Vérifier que le compte existe
+        Compte compte = compteRepository.findById(request.getCompteId())
+                .orElseThrow(() ->
+                        new RuntimeException("Compte introuvable")
+                );
+
+        // 2. Vérifier que le compte appartient au client connecté
+        if (clientId == null
+                || compte.getClient() == null
+                || !compte.getClient().getId().equals(clientId)) {
+            throw new RuntimeException(
+                    "Ce compte ne vous appartient pas."
+            );
+        }
+
+        // 3. Récupérer la carte associée au compte
+        Carte carte = carteRepository
+                .findByCompteId(compte.getId())
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Aucune carte associée à ce compte."
+                        )
+                );
+
+        // 4. Vérifier le PIN avec le hash BCrypt existant
+        boolean valide = carte.getPinHash() != null
+                && passwordEncoder.matches(
+                        request.getPin() == null ? "" : request.getPin(),
+                        carte.getPinHash()
+                );
+
+        if (!valide) {
+            throw new RuntimeException("PIN incorrect.");
+        }
+
+        return VerificationPinResponse.builder()
+                .valide(true)
+                .message("PIN correct.")
+                .build();
     }
 
 
