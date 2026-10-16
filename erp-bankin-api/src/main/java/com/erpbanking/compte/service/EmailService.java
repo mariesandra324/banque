@@ -355,10 +355,11 @@ public void envoyerNotificationTransaction(
 
 
             // -------------------------------------------------
-            // Destinataire
+            // Destinataire / Expéditeur
             // -------------------------------------------------
 
             helper.setTo(emailClient);
+            helper.setFrom(mailUsername);
 
 
             // -------------------------------------------------
@@ -366,110 +367,152 @@ public void envoyerNotificationTransaction(
             // -------------------------------------------------
 
             helper.setSubject(
-                    "Votre offre de crédit " + numeroOffre
+                    "Votre offre de crédit n° " + numeroOffre
             );
 
 
             // -------------------------------------------------
-            // Contenu HTML
+            // Contenu HTML (courrier formel)
             // -------------------------------------------------
 
-            String html =
+            String html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
 
-                    "<!DOCTYPE html>" +
-                    "<html>" +
-                    "<head>" +
-                    "<meta charset='UTF-8'>" +
-                    "</head>" +
+                    <body style="margin:0;padding:0;background-color:#f1f5f9;
+                        font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
 
-                    "<body style='font-family:Arial,sans-serif;" +
-                    "font-size:15px;color:#333;" +
-                    "line-height:1.6;'>" +
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                            style="background-color:#f1f5f9;padding:24px 0;">
+                            <tr>
+                                <td align="center">
 
-                    "<div style='max-width:650px;margin:auto;'>" +
+                                    <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                                        style="background-color:#ffffff;border-radius:10px;
+                                        overflow:hidden;border:1px solid #e2e8f0;">
 
-                    "<h2 style='color:#1e3a8a;'>" +
-                    "Votre offre de crédit" +
-                    "</h2>" +
+                                        <tr>
+                                            <td style="background-color:#1e3a8a;padding:24px 32px;">
+                                                <div style="color:#ffffff;font-size:18px;
+                                                    font-weight:bold;letter-spacing:1px;">
+                                                    BANQUE ERP BANKING
+                                                </div>
+                                                <div style="color:#c7d2fe;font-size:12px;margin-top:4px;">
+                                                    Service Crédits
+                                                </div>
+                                            </td>
+                                        </tr>
 
-                    "<p>Bonjour <strong>" +
-                    nomClient +
-                    "</strong>,</p>" +
+                                        <tr>
+                                            <td style="padding:32px;">
 
-                    "<p>" +
-                    "Nous avons le plaisir de vous transmettre " +
-                    "votre offre de crédit." +
-                    "</p>" +
+                                                <h1 style="font-size:18px;color:#1e3a8a;
+                                                    margin:0 0 20px 0;">
+                                                    Votre offre de crédit
+                                                </h1>
 
-                    "<p>" +
-                    "Veuillez trouver votre offre " +
-                    "en pièce jointe de cet email." +
-                    "</p>" +
+                                                <p style="font-size:15px;line-height:1.6;margin:0 0 14px 0;">
+                                                    Madame, Monsieur <strong>{{nomClient}}</strong>,
+                                                </p>
 
-                    "<div style='background:#f8fafc;" +
-                    "padding:18px;" +
-                    "border-radius:8px;" +
-                    "margin:20px 0;'>" +
+                                                <p style="font-size:15px;line-height:1.6;margin:0 0 14px 0;">
+                                                    Nous avons l'honneur de vous adresser l'offre de crédit
+                                                    établie par nos services, dont vous trouverez le détail
+                                                    complet dans le document PDF joint à la présente.
+                                                </p>
 
-                    "<strong>Numéro de l'offre :</strong> " +
-                    numeroOffre +
+                                                <table role="presentation" width="100%" cellpadding="0"
+                                                    cellspacing="0" style="background-color:#f8fafc;
+                                                    border:1px solid #e2e8f0;border-radius:8px;margin:20px 0;">
+                                                    <tr>
+                                                        <td style="padding:16px 20px;">
+                                                            <div style="font-size:12px;color:#64748b;
+                                                                text-transform:uppercase;letter-spacing:0.5px;">
+                                                                Référence de l'offre
+                                                            </div>
+                                                            <div style="font-size:16px;font-weight:bold;
+                                                                color:#1f2937;margin-top:4px;">
+                                                                {{numeroOffre}}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
 
-                    "</div>" +
+                                                <p style="font-size:15px;line-height:1.6;margin:0 0 14px 0;">
+                                                    Nous vous invitons à prendre connaissance de l'ensemble des
+                                                    conditions qui y figurent, puis à nous faire part de votre
+                                                    décision au moyen des options ci-dessous.
+                                                </p>
 
-                    "<p>" +
-                    "Après avoir consulté votre offre, " +
-                    "vous pouvez choisir l'une des deux options :" +
-                    "</p>" +
+                                                <table role="presentation" cellpadding="0" cellspacing="0"
+                                                    style="margin:26px 0;">
+                                                    <tr>
+                                                        <td style="padding-right:12px;">
+                                                            <a href="{{lienAccepter}}"
+                                                                style="display:inline-block;background-color:#16a34a;
+                                                                color:#ffffff;text-decoration:none;font-size:14px;
+                                                                font-weight:bold;padding:14px 26px;border-radius:6px;">
+                                                                Accepter l'offre
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{lienRefuser}}"
+                                                                style="display:inline-block;background-color:#dc2626;
+                                                                color:#ffffff;text-decoration:none;font-size:14px;
+                                                                font-weight:bold;padding:14px 26px;border-radius:6px;">
+                                                                Refuser l'offre
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
 
-                    "<div style='margin:30px 0;'>" +
+                                                <p style="font-size:13px;line-height:1.6;color:#64748b;
+                                                    margin:0 0 14px 0;">
+                                                    Ces liens sont strictement personnels et confidentiels.
+                                                    Nous vous remercions de ne les communiquer à aucune tierce
+                                                    personne.
+                                                </p>
 
-                    "<a href='" +
-                    lienAccepter +
-                    "' " +
+                                                <p style="font-size:15px;line-height:1.6;margin:24px 0 0 0;">
+                                                    Veuillez agréer, Madame, Monsieur, l'expression de nos
+                                                    salutations distinguées.
+                                                </p>
 
-                    "style='background:#16a34a;" +
-                    "color:white;" +
-                    "padding:14px 25px;" +
-                    "text-decoration:none;" +
-                    "border-radius:6px;" +
-                    "display:inline-block;" +
-                    "margin-right:10px;'>" +
+                                                <p style="font-size:15px;line-height:1.6;margin:18px 0 0 0;">
+                                                    <strong>Le Service Crédits</strong><br>
+                                                    Banque ERP Banking
+                                                </p>
 
-                    "✅ Accepter l'offre" +
+                                            </td>
+                                        </tr>
 
-                    "</a>" +
+                                        <tr>
+                                            <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;
+                                                padding:18px 32px;">
+                                                <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
+                                                    Ce message est un courriel automatique émis par le système
+                                                    d'information de la Banque ERP Banking. Merci de ne pas y
+                                                    répondre directement.
+                                                </div>
+                                            </td>
+                                        </tr>
 
-                    "<a href='" +
-                    lienRefuser +
-                    "' " +
+                                    </table>
 
-                    "style='background:#dc2626;" +
-                    "color:white;" +
-                    "padding:14px 25px;" +
-                    "text-decoration:none;" +
-                    "border-radius:6px;" +
-                    "display:inline-block;'>" +
+                                </td>
+                            </tr>
+                        </table>
 
-                    "❌ Refuser l'offre" +
-
-                    "</a>" +
-
-                    "</div>" +
-
-                    "<p style='font-size:13px;color:#777;'>" +
-                    "Ces liens sont personnels et confidentiels. " +
-                    "Ne les partagez avec personne." +
-                    "</p>" +
-
-                    "<p>" +
-                    "Cordialement,<br>" +
-                    "<strong>L'équipe de votre banque</strong>" +
-                    "</p>" +
-
-                    "</div>" +
-
-                    "</body>" +
-                    "</html>";
+                    </body>
+                    </html>
+                    """
+                    .replace("{{nomClient}}", nomClient == null ? "" : nomClient)
+                    .replace("{{numeroOffre}}", numeroOffre == null ? "" : numeroOffre)
+                    .replace("{{lienAccepter}}", lienAccepter)
+                    .replace("{{lienRefuser}}", lienRefuser);
 
 
             // -------------------------------------------------
