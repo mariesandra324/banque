@@ -29,6 +29,7 @@ public enum NotificationType {
     OFFRE_CREDIT_RECUE("CLIENT", "\uD83D\uDCB3", "Nouvelle offre de crédit disponible"),
     CREDIT_ACCORDE("CLIENT", "\uD83D\uDCB3", "Votre crédit a été accordé"),
     ECHEANCE_PROCHAINE("CLIENT", "\u23F0", "Votre échéance de crédit approche"),
+    ECHEANCE_EN_RETARD("CLIENT", "\u26A0\uFE0F", "Votre échéance de crédit est en retard"),
 
     // ============ GESTIONNAIRE ============
     DEMANDE_CREDIT_A_TRAITER("GESTIONNAIRE", "\uD83D\uDD14", "Nouvelle demande de crédit à traiter"),
@@ -37,6 +38,7 @@ public enum NotificationType {
     OFFRE_ACCEPTEE("GESTIONNAIRE", "\uD83D\uDD14", "Offre de crédit acceptée"),
     OFFRE_REFUSEE("GESTIONNAIRE", "❌", "Offre de crédit refusée par le client"),
     REMBOURSEMENT_RECU("GESTIONNAIRE", "\uD83D\uDCB0", "Remboursement reçu"),
+    CREDIT_EN_RETARD("GESTIONNAIRE", "\u26A0\uFE0F", "Un crédit est en retard de paiement"),
 
     // ============ COMPTABLE ============
     TRANSACTION_A_COMPTABILISER("COMPTABLE", "\uD83D\uDD14", "Nouvelle transaction à comptabiliser"),
