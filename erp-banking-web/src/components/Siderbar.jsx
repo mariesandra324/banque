@@ -8,7 +8,8 @@ import {
   FileText,
   Settings,UserCog,
   Smartphone,
-  Calculator
+  Calculator,
+  ScrollText
 } from "lucide-react";
 import "../styles/sidebar.css";
 import { useAuth } from "../hooks/useAuth";
@@ -78,6 +79,14 @@ function Sidebar() {
         <NavLink to="/rapports">
           <FileText size={18} />
           Rapports
+        </NavLink>
+      )}
+
+      {/* Journal d'audit : réservé au comptable et à l'administrateur */}
+      {hasAccess(["ADMIN", "COMPTABLE"]) && (
+        <NavLink to="/audit" className={({ isActive }) => isActive ? "active" : ""}>
+          <ScrollText size={18} />
+          Audit
         </NavLink>
       )}
 

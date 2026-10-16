@@ -15,6 +15,7 @@ import DemandeCreditForm from '../features/credit/DemandeCreditForm';
 import CreditForm from '../features/credit/CreditForm';
 import OffreCreditDetail from "../features/credit/OffreCreditDetail";
 import Rapports from '../pages/Rapports';
+import Audit from '../pages/Audit';
 import Settings from '../features/settings/Settings';
 import ClientDossier from '../pages/ClientDossier';
 import Comptabilite from '../pages/Comptabilite';
@@ -96,6 +97,14 @@ const AppRoutes = () => {
               }
             />
             <Route path="/rapports" element={<Rapports />}/>
+            <Route
+              path="/audit"
+              element={
+                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE"]}>
+                  <Audit />
+                </RoleRoute>
+              }
+            />
             <Route path="/parametres" element={<Settings />} />
       </Route>
 

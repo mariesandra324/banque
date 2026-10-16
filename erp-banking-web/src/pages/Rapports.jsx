@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Users, Landmark, PieChart as PieChartIcon, BarChart2, TrendingUp, ArrowLeftRight, Wallet, ScrollText } from 'lucide-react';
+import { Users, Landmark, PieChart as PieChartIcon, BarChart2, TrendingUp, ArrowLeftRight, Wallet } from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -8,13 +8,6 @@ import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import { getAllTransactions } from '../service/transactionService';
 import { getDemandesCredit, getCredits } from '../service/creditService';
-import { useAuth } from '../hooks/useAuth';
-import AuditPanel from '../features/audit/AuditPanel';
-
-// Rôles autorisés à consulter le journal d'audit (mêmes rôles que l'API).
-// L'onglet n'est pas affiché aux autres rôles : c'est une simple contrainte
-// d'affichage, la vraie autorisation reste appliquée côté backend.
-const ROLES_AUDIT = ['ADMIN', 'GESTIONNAIRE', 'GESTIONNAIRE', 'COMPTABLE'];
 
 // ============ Couleurs (variables du thème clair/sombre) ============
 const c = {
@@ -39,7 +32,6 @@ const ONGLETS = [
   { id: 'comptes', label: 'Comptes', icon: Landmark },
   { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
   { id: 'credits', label: 'Crédits', icon: Wallet },
-  { id: 'audit', label: 'Audit', icon: ScrollText, roles: ROLES_AUDIT },
 ];
 
 function StatCard({ label, value, sublabel, color, icon: Icon }) {
@@ -309,7 +301,6 @@ function AlerteSource({ statut }) {
 // ---------- Composant principal ----------
 
 function Rapports() {
-  const { user } = useAuth();
   const [onglet, setOnglet] = useState('clients');
   const [clients, setClients] = useState([]);
   const [comptes, setComptes] = useState([]);
@@ -319,12 +310,6 @@ function Rapports() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [sourcesErreur, setSourcesErreur] = useState({});
-
-  // Onglets visibles : tous, sauf ceux réservés à certains rôles (Audit).
-  const ongletsVisibles = useMemo(
-    () => ONGLETS.filter((o) => !o.roles || o.roles.includes(user?.role)),
-    [user?.role],
-  );
 
   useEffect(() => {
     const charger = async () => {
@@ -385,7 +370,7 @@ function Rapports() {
   const statsCredits = useMemo(() => calculerStatsCredits(demandes, credits), [demandes, credits]);
 
   // Si le rôle n'a pas accès à l'onglet sélectionné, on rebascule sur Clients.
-  const ongletAutorise = ongletsVisibles.some((o) => o.id === onglet);
+  const ongletAutorise = ONGLETS.some((o) => o.id === onglet);
   const ongletActif = ongletAutorise ? onglet : 'clients';
 
   if (chargement) {
@@ -407,7 +392,7 @@ function Rapports() {
 
         {/* Onglets */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', borderBottom: `1px solid ${c.panelBorder}`, flexWrap: 'wrap' }}>
-          {ongletsVisibles.map((o) => {
+          {ONGLETS.map((o) => {
             const Icon = o.icon;
             const actif = ongletActif === o.id;
             return (
@@ -428,9 +413,6 @@ function Rapports() {
             );
           })}
         </div>
-
-        {/* ===== Onglet Audit (journal d'audit) ===== */}
-        {ongletActif === 'audit' && <AuditPanel />}
 
         {/* ===== Onglet Clients ===== */}
         {ongletActif === 'clients' && (
