@@ -5,6 +5,31 @@ import demandeCreditService from '../../service/demandeCreditService';
 import offreCreditService from '../../service/offreCreditService';
 import '../../styles/offres-credit.css';
 
+const formatMontant = (montant) =>
+  new Intl.NumberFormat('fr-FR').format(montant || 0) + ' Ar';
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('fr-FR');
+};
+
+const calculerMensualite = (montant, taux, duree) => {
+  const m = Number(montant);
+  const t = Number(taux);
+  const d = Number(duree);
+
+  if (m > 0 && t > 0 && d > 0) {
+    const tauxMensuel = t / 100 / 12;
+    const valeur =
+      (m * tauxMensuel * Math.pow(1 + tauxMensuel, d)) /
+      (Math.pow(1 + tauxMensuel, d) - 1);
+    return valeur.toFixed(2);
+  }
+
+  return '';
+};
+
 function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -13,6 +38,8 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
   const [chargementDemandes, setChargementDemandes] = useState(true);
   const [erreurChargement, setErreurChargement] = useState('');
   const [envoi, setEnvoi] = useState(false);
+  const [demandeInfo, setDemandeInfo] = useState(null);
+  const [chargementDemande, setChargementDemande] = useState(false);
 
   const [donnees, setDonnees] = useState({
     demandeCreditId: demandeCreditId || '',
@@ -69,6 +96,53 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
     chargerDemandes();
   }, []);
 
+  useEffect(() => {
+    const idDemande = donnees.demandeCreditId;
+    let annule = false;
+
+    const chargerDemande = async () => {
+      if (!idDemande) {
+        setDemandeInfo(null);
+        return;
+      }
+
+      setChargementDemande(true);
+
+      try {
+        const data = await demandeCreditService.getById(idDemande);
+        if (annule) return;
+
+        setDemandeInfo(data);
+
+        const montant = data.montantDemande != null ? String(data.montantDemande) : '';
+        const taux = data.tauxInteret != null ? String(data.tauxInteret) : '';
+        const duree = data.duree != null ? String(data.duree) : '';
+
+        setDonnees((d) => ({
+          ...d,
+          montantPropose: montant,
+          tauxInteret: taux,
+          duree: duree,
+          mensualite: calculerMensualite(montant, taux, duree),
+        }));
+      } catch (err) {
+        console.error(
+          'Erreur chargement demande :',
+          err.response?.data || err.message
+        );
+        if (!annule) setDemandeInfo(null);
+      } finally {
+        if (!annule) setChargementDemande(false);
+      }
+    };
+
+    chargerDemande();
+
+    return () => {
+      annule = true;
+    };
+  }, [donnees.demandeCreditId]);
+
   const majChamp = (champ, valeur) => {
     setDonnees((d) => ({
       ...d,
@@ -82,21 +156,15 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
     }));
   };
 
-  const calculerMensualite = () => {
-    const montant = Number(donnees.montantPropose);
-    const taux = Number(donnees.tauxInteret);
-    const duree = Number(donnees.duree);
+  const calculerMensualiteChamp = () => {
+    const valeur = calculerMensualite(
+      donnees.montantPropose,
+      donnees.tauxInteret,
+      donnees.duree
+    );
 
-    if (montant > 0 && taux > 0 && duree > 0) {
-      const tauxMensuel = taux / 100 / 12;
-
-      const mensualite =
-        montant *
-        tauxMensuel *
-        Math.pow(1 + tauxMensuel, duree) /
-        (Math.pow(1 + tauxMensuel, duree) - 1);
-
-      majChamp('mensualite', mensualite.toFixed(2));
+    if (valeur) {
+      majChamp('mensualite', valeur);
     }
   };
 
@@ -205,7 +273,7 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
   };
 
   return (
-    <div className="credit-form-page">
+    <div className="credit-form-page offre-form-page">
 
       <button
         onClick={handleClose}
@@ -228,6 +296,10 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
         )}
 
         <form onSubmit={handleSubmit}>
+
+          <div className="offre-form-layout">
+
+          <div className="offre-form-col offre-form-col-info">
 
           {/* DEMANDE */}
           <div className="credit-form-group">
@@ -296,6 +368,56 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
             )}
 
           </div>
+
+          {/* INFORMATIONS DE LA DEMANDE */}
+          {chargementDemande && (
+            <div className="demande-info-panel">
+              Chargement des informations de la demande...
+            </div>
+          )}
+
+          {demandeInfo && !chargementDemande && (
+            <div className="demande-info-panel">
+
+              <div className="demande-info-titre">
+                Informations de la demande
+                {demandeInfo.reference
+                  ? ` ${demandeInfo.reference}`
+                  : ` #${demandeInfo.id}`}
+              </div>
+
+              <div className="demande-info-grid">
+
+                {[
+                  ['Client', `${demandeInfo.clientNom || ''} ${demandeInfo.clientPrenom || ''}`.trim() || '-'],
+                  ['Compte', demandeInfo.compteId ? `#${demandeInfo.compteId}` : '-'],
+                  ['Montant demandé', formatMontant(demandeInfo.montantDemande)],
+                  ['Durée', `${demandeInfo.duree ?? '-'} mois`],
+                  ["Taux d'intérêt", demandeInfo.tauxInteret != null ? `${demandeInfo.tauxInteret} %` : '-'],
+                  ['Motif', demandeInfo.motif || '-'],
+                  ['Profession', demandeInfo.profession || '-'],
+                  ['Type de contrat', demandeInfo.typeContrat || '-'],
+                  ['Revenu mensuel', demandeInfo.revenuMensuel != null ? formatMontant(demandeInfo.revenuMensuel) : '-'],
+                  ['Charges mensuelles', demandeInfo.chargesMensuelles != null ? formatMontant(demandeInfo.chargesMensuelles) : '-'],
+                  ['Date de la demande', formatDate(demandeInfo.dateDemande)],
+                  ['Date de décision', formatDate(demandeInfo.dateDecision)],
+                  ['Statut', demandeInfo.statut || '-'],
+                  ['Pièces jointes', `${Array.isArray(demandeInfo.piecesJointes) ? demandeInfo.piecesJointes.length : 0}`],
+                ].map(([label, valeur]) => (
+                  <div key={label} className="demande-info-item">
+                    <span className="demande-info-label">{label}</span>
+                    <span className="demande-info-valeur">{valeur}</span>
+                  </div>
+                ))}
+
+              </div>
+
+            </div>
+          )}
+
+          </div>
+
+          <div className="offre-form-col offre-form-col-champs">
 
           {/* MONTANT */}
           <div className="credit-form-group">
@@ -426,7 +548,7 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
 
               <button
                 type="button"
-                onClick={calculerMensualite}
+                onClick={calculerMensualiteChamp}
                 className="credit-calculate-button"
               >
                 Calculer
@@ -492,6 +614,10 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
               placeholder="Ex : Remboursement mensuel pendant 36 mois..."
               className="credit-form-input credit-textarea"
             />
+
+          </div>
+
+          </div>
 
           </div>
 

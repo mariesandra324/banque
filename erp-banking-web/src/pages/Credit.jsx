@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import DemandeCreditTable from '../features/credit/DemandeCreditTable';
 import CreditTable from '../features/credit/CreditTable';
 import DemandeCreditForm from '../features/credit/DemandeCreditForm';
@@ -20,12 +21,16 @@ const ONGLETS = [
 ];
 
 function Credit() {
-  const [ongletActif, setOngletActif] = useState('demandes');
+  const [searchParams] = useSearchParams();
+  const demandeCreditId = searchParams.get('demandeCreditId') || '';
+  const [ongletActif, setOngletActif] = useState(
+    demandeCreditId ? 'offres' : 'demandes'
+  );
   const [demandes, setDemandes] = useState([]);
   const [credits, setCredits] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
-  const [formOuvert, setFormOuvert] = useState(false);
+  const [formOuvert, setFormOuvert] = useState(!!demandeCreditId);
   const [offres, setOffres] = useState([]);
 
   const chargerDonnees = async () => {
@@ -107,6 +112,7 @@ function Credit() {
     <OffreCreditForm
       onClose={fermerFormulaire}
       onSubmit={handleCreerOffre}
+      demandeCreditId={demandeCreditId}
     />
   );
 }

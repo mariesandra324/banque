@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
 import demandeCreditService from '../../service/demandeCreditService';
+
+const BASE_URL = 'http://localhost:8080';
 
 const formatMontant = (montant) =>
   new Intl.NumberFormat('fr-FR').format(montant || 0) + ' Ar';
@@ -25,12 +27,30 @@ function DemandeCreditDetail() {
   const [motifRejet, setMotifRejet] = useState('');
   const [erreurMotif, setErreurMotif] = useState('');
 
+  const [pieceActive, setPieceActive] = useState(0);
+  const [imagesErreur, setImagesErreur] = useState({});
+  const galerieRef = useRef(null);
+
+  const onGalerieScroll = () => {
+    const el = galerieRef.current;
+    if (!el || el.clientWidth === 0) return;
+    setPieceActive(Math.round(el.scrollLeft / el.clientWidth));
+  };
+
+  const allerA = (index) => {
+    const el = galerieRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' });
+  };
+
   const charger = async () => {
     setChargement(true);
     setErreur(null);
     try {
       const data = await demandeCreditService.getById(id);
       setDemande(data);
+      setPieceActive(0);
+      setImagesErreur({});
     } catch (err) {
       console.error(err);
       setErreur("Impossible de charger cette demande de crédit.");
@@ -49,10 +69,10 @@ function DemandeCreditDetail() {
     setAction(true);
     try {
       await demandeCreditService.updateStatut(id, 'ACCEPTER');
-      await charger();
+      // Demande acceptée : ouverture automatique du formulaire de nouvelle offre
+      navigate(`/credits?demandeCreditId=${id}`);
     } catch (err) {
       console.error('Erreur approbation:', err.response?.data || err.message);
-    } finally {
       setAction(false);
     }
   };
@@ -89,9 +109,10 @@ function DemandeCreditDetail() {
   }
 
   const estEnAttente = (demande.statut || '').toUpperCase().includes('ATTENTE');
+  const pieces = Array.isArray(demande.piecesJointes) ? demande.piecesJointes : [];
 
   return (
-    <div style={{ padding: '24px', maxWidth: '640px' }}>
+    <div style={{ padding: '24px', maxWidth: '1100px' }}>
       <button
         onClick={() => navigate(-1)}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', marginBottom: '18px', padding: 0 }}
@@ -111,7 +132,10 @@ function DemandeCreditDetail() {
         </span>
       </div>
 
-      <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+      {/* ===================== COLONNE GAUCHE : INFOS ===================== */}
+      <div style={{ flex: '1 1 460px', minWidth: '320px', backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', boxSizing: 'border-box' }}>
         {[
           ['Client', `${demande.clientNom || ''} ${demande.clientPrenom || ''}`],
           ['Montant demandé', formatMontant(demande.montantDemande)],
@@ -132,97 +156,157 @@ function DemandeCreditDetail() {
           </div>
         ))}
 
-        <div style={{ paddingTop: '14px', borderTop: '1px solid var(--faint)', marginTop: '12px' }}>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '10px', fontWeight: '600' }}>
+      </div>
+
+      {/* ===================== COLONNE DROITE : PIECES JOINTES ===================== */}
+      <div style={{ width: '420px', maxWidth: '100%', backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>
             Pièces jointes
           </div>
+          <span style={{
+            backgroundColor: 'var(--table-header)', color: 'var(--text-secondary)',
+            borderRadius: '999px', padding: '2px 10px', fontSize: '12px', fontWeight: '600',
+          }}>
+            {pieces.length}
+          </span>
+        </div>
 
-          {Array.isArray(demande.piecesJointes) && demande.piecesJointes.length > 0 ? (
-            <div style={{ display: 'grid', gap: '12px' }}>
-              {demande.piecesJointes.map((piece, index) => {
+        {pieces.length > 0 ? (
+          <>
+            <div
+              ref={galerieRef}
+              onScroll={onGalerieScroll}
+              style={{
+                display: 'flex',
+                overflowX: 'auto',
+                scrollSnapType: 'x mandatory',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--table-header)',
+              }}
+            >
+              {pieces.map((piece, index) => {
                 const isImage = piece.typeFichier?.startsWith('image/');
                 const isPdf = piece.typeFichier === 'application/pdf';
-                const urlFichier = `http://localhost:8080/uploads/credits/${piece.cheminFichier.split('/').pop()}`;
+                const nomFichierDisque = piece.cheminFichier?.split('/').pop() || '';
+                const urlFichier = `${BASE_URL}/uploads/credits/${encodeURIComponent(nomFichierDisque)}`;
+                const imageErreur = imagesErreur[piece.id];
 
                 return (
-                  <div key={`${piece.id}-${index}`} style={{
-                    padding: '10px',
-                    backgroundColor: 'var(--table-header)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <FileText size={18} color='var(--text-secondary)' />
-                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                  <div
+                    key={`${piece.id}-${index}`}
+                    style={{
+                      flex: '0 0 100%',
+                      scrollSnapAlign: 'start',
+                      padding: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      minHeight: '340px',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {isImage && !imageErreur ? (
+                      <img
+                        src={urlFichier}
+                        alt={piece.nomFichier}
+                        onError={() => setImagesErreur((prev) => ({ ...prev, [piece.id]: true }))}
+                        style={{
+                          width: '100%',
+                          height: '260px',
+                          objectFit: 'contain',
+                          borderRadius: '6px',
+                          backgroundColor: 'var(--card-bg)',
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '260px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        backgroundColor: 'var(--card-bg)',
+                        borderRadius: '6px',
+                        color: 'var(--text-secondary)',
+                      }}>
+                        <FileText size={40} />
+                        <span style={{ fontSize: '12px' }}>
+                          {isImage
+                            ? 'Image indisponible'
+                            : isPdf
+                              ? 'Document PDF'
+                              : 'Fichier'}
+                        </span>
+                      </div>
+                    )}
+
+                    <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+                      <span
+                        title={piece.nomFichier}
+                        style={{
+                          flex: 1, minWidth: 0, fontSize: '12px', fontWeight: '500',
+                          color: 'var(--text-primary)', overflow: 'hidden',
+                          textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}
+                      >
                         {piece.nomFichier}
                       </span>
                       <a
                         href={urlFichier}
                         download={piece.nomFichier}
                         style={{
-                          marginLeft: 'auto',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '6px 10px',
-                          backgroundColor: '#2563eb',
-                          color: 'white',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          textDecoration: 'none',
-                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          padding: '6px 10px', backgroundColor: '#2563eb', color: 'white',
+                          borderRadius: '4px', fontSize: '12px', fontWeight: '600',
+                          textDecoration: 'none', cursor: 'pointer', flexShrink: 0,
                         }}
                       >
                         <Download size={12} /> Télécharger
                       </a>
                     </div>
-
-                    {isImage && (
-                      <div style={{
-                        marginTop: '10px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        backgroundColor: 'var(--card-bg)',
-                        padding: '8px',
-                        borderRadius: '6px',
-                      }}>
-                        <img
-                          src={urlFichier}
-                          alt={piece.nomFichier}
-                          style={{
-                            maxWidth: '200px',
-                            maxHeight: '200px',
-                            borderRadius: '4px',
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {isPdf && (
-                      <div style={{
-                        marginTop: '10px',
-                        fontSize: '12px',
-                        color: 'var(--text-secondary)',
-                        padding: '8px',
-                        backgroundColor: 'var(--card-bg)',
-                        borderRadius: '6px',
-                        textAlign: 'center',
-                      }}>
-                        📄 Document PDF - Cliquez sur "Télécharger" pour voir
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <div style={{ color: 'var(--muted)', fontSize: '13px' }}>Aucune pièce jointe</div>
-          )}
-        </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                {Math.min(pieceActive, pieces.length - 1) + 1} / {pieces.length}
+              </span>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {pieces.map((piece, index) => (
+                  <button
+                    key={piece.id}
+                    onClick={() => allerA(index)}
+                    aria-label={`Pièce ${index + 1}`}
+                    style={{
+                      width: index === Math.min(pieceActive, pieces.length - 1) ? '16px' : '8px',
+                      height: '8px',
+                      borderRadius: '999px',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      backgroundColor: index === Math.min(pieceActive, pieces.length - 1) ? '#2563eb' : 'var(--border-color)',
+                      transition: 'width 0.2s, background-color 0.2s',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--muted)', textAlign: 'center' }}>
+              Faites glisser horizontalement pour parcourir les fichiers
+            </div>
+          </>
+        ) : (
+          <div style={{ color: 'var(--muted)', fontSize: '13px' }}>Aucune pièce jointe</div>
+        )}
+      </div>
+
       </div>
 
       {estEnAttente && (

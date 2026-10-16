@@ -248,6 +248,10 @@
   max-width: 680px;
 }
 
+.offre-form-page {
+  max-width: 1120px;
+}
+
 .credit-back-button {
   display: flex;
   align-items: center;
@@ -291,6 +295,67 @@
 
 .credit-form-group {
   margin-bottom: 14px;
+}
+
+.demande-info-panel {
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background-color: var(--secondary-bg);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.offre-form-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.offre-form-col {
+  min-width: 0;
+}
+
+.offre-form-col-info {
+  flex: 1 1 420px;
+}
+
+.offre-form-col-champs {
+  flex: 1 1 380px;
+}
+
+.demande-info-titre {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 12px;
+}
+
+.demande-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+}
+
+.demande-info-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--faint);
+}
+
+.demande-info-label {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.demande-info-valeur {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-word;
 }
 
 .credit-form-label {
@@ -428,6 +493,14 @@
   .credit-form-row {
     flex-direction: column;
     gap: 0;
+  }
+
+  .offre-form-layout {
+    flex-direction: column;
+  }
+
+  .demande-info-grid {
+    grid-template-columns: 1fr;
   }
 
   .credit-form-half {
