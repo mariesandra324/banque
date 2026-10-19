@@ -33,6 +33,20 @@ const authService = {
 
   getToken: () => {
     return localStorage.getItem('token');
+  },
+
+  updateProfil: async ({ nom, prenom }) => {
+    const response = await api.put('/utilisateurs/me/profil', { nom, prenom });
+    return response.data;
+  },
+
+  changePassword: async ({ ancienMotDePasse, nouveauMotDePasse, confirmationMotDePasse }) => {
+    const response = await api.put('/utilisateurs/me/mot-de-passe', {
+      ancienMotDePasse,
+      nouveauMotDePasse,
+      confirmationMotDePasse,
+    });
+    return response.data;
   }
 };
 

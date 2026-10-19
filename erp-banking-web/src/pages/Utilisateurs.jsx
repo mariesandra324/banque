@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUtilisateurs, deleteUtilisateur } from '../service/utilisateursService';
+import { getUtilisateurs, bloquerUtilisateur, debloquerUtilisateur } from '../service/utilisateursService';
 import UtilisateurForm from '../features/utilisateurs/UtilisateurForm';
 import UtilisateurTable from '../features/utilisateurs/UtilisateursTable';
 
@@ -69,15 +69,27 @@ const Utilisateurs = () => {
     loadUtilisateurs();
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
+  const handleBloquer = async (utilisateur) => {
+    if (!window.confirm(`Voulez-vous vraiment bloquer ${utilisateur.prenom} ${utilisateur.nom} ? Son guichet sera libéré.`)) return;
     try {
-      await deleteUtilisateur(id);
-      setUtilisateurs((prev) => prev.filter((u) => u.id !== id));
-      showNotification('Utilisateur supprimé avec succès.');
+      await bloquerUtilisateur(utilisateur.id);
+      showNotification('Utilisateur bloqué et guichet libéré.');
+      loadUtilisateurs();
     } catch (err) {
-      console.error('Erreur suppression utilisateur :', err);
-      setError(err.message || "Impossible de supprimer l'utilisateur.");
+      console.error('Erreur blocage utilisateur :', err);
+      setError(err.message || "Impossible de bloquer l'utilisateur.");
+    }
+  };
+
+  const handleDebloquer = async (utilisateur) => {
+    if (!window.confirm(`Voulez-vous vraiment débloquer ${utilisateur.prenom} ${utilisateur.nom} ?`)) return;
+    try {
+      await debloquerUtilisateur(utilisateur.id);
+      showNotification('Utilisateur débloqué avec succès.');
+      loadUtilisateurs();
+    } catch (err) {
+      console.error('Erreur déblocage utilisateur :', err);
+      setError(err.message || "Impossible de débloquer l'utilisateur.");
     }
   };
 
@@ -128,7 +140,8 @@ const Utilisateurs = () => {
         <UtilisateurTable
           utilisateurs={utilisateurs}
           onEdit={handleOpenEdit}
-          onDelete={handleDelete}
+          onBloquer={handleBloquer}
+          onDebloquer={handleDebloquer}
         />
       )}
     </div>

@@ -12,6 +12,8 @@ import {
 
 import { useTheme } from "../../hooks/useTheme";
 import notificationService from "../../service/notificationService";
+import authService from "../../service/authService";
+import ChangePasswordForm from "./ChangePasswordForm";
 import "../../styles/settings.css";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -125,7 +127,13 @@ const Settings = () => {
 ========================= */
 
 const Profil = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const [modeEdition, setModeEdition] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ nom: "", prenom: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   if (!user) {
     return (
@@ -143,6 +151,60 @@ const Profil = () => {
 
   // Initiales pour l'avatar
   const initiales = `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase();
+
+  const debutEdition = () => {
+    setForm({ nom, prenom });
+    setFieldErrors({});
+    setSubmitError("");
+    setSuccessMessage("");
+    setModeEdition(true);
+  };
+
+  const annulerEdition = () => {
+    setModeEdition(false);
+    setFieldErrors({});
+    setSubmitError("");
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const valider = () => {
+    const errors = {};
+    if (!form.nom.trim()) errors.nom = "Le nom est obligatoire.";
+    if (!form.prenom.trim()) errors.prenom = "Le prénom est obligatoire.";
+    return errors;
+  };
+
+  const enregistrer = async (e) => {
+    e.preventDefault();
+    const errors = valider();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setLoading(true);
+    setSubmitError("");
+    try {
+      const data = await authService.updateProfil({
+        nom: form.nom.trim(),
+        prenom: form.prenom.trim(),
+      });
+      setUser((prev) => ({ ...prev, nom: data.nom, prenom: data.prenom }));
+      setModeEdition(false);
+      setSuccessMessage("Profil modifié avec succès.");
+    } catch (err) {
+      setSubmitError(
+        err.response?.data?.message || "Impossible de modifier le profil."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -194,9 +256,16 @@ const Profil = () => {
 
           <input
             type="text"
-            value={nom}
-            readOnly
+            name="nom"
+            value={modeEdition ? form.nom : nom}
+            onChange={handleChange}
+            readOnly={!modeEdition}
           />
+          {modeEdition && fieldErrors.nom && (
+            <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>
+              {fieldErrors.nom}
+            </div>
+          )}
         </div>
 
 
@@ -205,9 +274,16 @@ const Profil = () => {
 
           <input
             type="text"
-            value={prenom}
-            readOnly
+            name="prenom"
+            value={modeEdition ? form.prenom : prenom}
+            onChange={handleChange}
+            readOnly={!modeEdition}
           />
+          {modeEdition && fieldErrors.prenom && (
+            <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>
+              {fieldErrors.prenom}
+            </div>
+          )}
         </div>
 
 
@@ -234,9 +310,39 @@ const Profil = () => {
 
       </div>
 
-      <button className="btn-primary">
-        Modifier le profil
-      </button>
+      {successMessage && (
+        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '13px' }}>
+          {successMessage}
+        </div>
+      )}
+
+      {submitError && (
+        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '13px' }}>
+          {submitError}
+        </div>
+      )}
+
+      {modeEdition ? (
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-primary" onClick={enregistrer} disabled={loading}>
+            {loading ? "Enregistrement..." : "Enregistrer"}
+          </button>
+
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={annulerEdition}
+            disabled={loading}
+            style={{ backgroundColor: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--input-border)' }}
+          >
+            Annuler
+          </button>
+        </div>
+      ) : (
+        <button className="btn-primary" onClick={debutEdition}>
+          Modifier le profil
+        </button>
+      )}
 
     </div>
   );
@@ -437,6 +543,8 @@ const Notifications = () => {
 ========================= */
 
 const Securite = () => {
+  const [modeEdition, setModeEdition] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   return (
     <div>
@@ -456,20 +564,45 @@ const Securite = () => {
 
       </div>
 
-      <div className="security-card">
+      {successMessage && (
+        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '13px' }}>
+          {successMessage}
+        </div>
+      )}
 
-        <h3>Mot de passe</h3>
+      {modeEdition ? (
+        <div style={{ padding: '24px', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--heading)', margin: '0 0 4px' }}>
+            Changer le mot de passe
+          </h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 18px' }}>
+            Renseignez votre mot de passe actuel puis choisissez un nouveau mot de passe sécurisé.
+          </p>
 
-        <p>
-          Il est recommandé de modifier régulièrement
-          votre mot de passe.
-        </p>
+          <ChangePasswordForm
+            onCancel={() => setModeEdition(false)}
+            onSuccess={() => {
+              setModeEdition(false);
+              setSuccessMessage("Mot de passe modifié avec succès.");
+            }}
+          />
+        </div>
+      ) : (
+        <div className="security-card">
 
-        <button className="btn-primary">
-          Changer le mot de passe
-        </button>
+          <h3>Mot de passe</h3>
 
-      </div>
+          <p>
+            Il est recommandé de modifier régulièrement
+            votre mot de passe.
+          </p>
+
+          <button className="btn-primary" onClick={() => { setSuccessMessage(""); setModeEdition(true); }}>
+            Changer le mot de passe
+          </button>
+
+        </div>
+      )}
 
     </div>
   );

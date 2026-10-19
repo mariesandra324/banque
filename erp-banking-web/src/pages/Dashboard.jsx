@@ -116,7 +116,7 @@ function Dashboard() {
       // n'a pas de EN_COURS, et une demande ACCEPTEE ne porte pas le capital
       // restant réellement décaissé.
       const encours = (credits || [])
-        .filter(cr => cr.statut === 'ACTIF' || cr.statut === 'EN_COURS')
+        .filter(cr => cr.statut === 'ACTIF' || cr.statut === 'EN_COURS' || cr.statut === 'EN_RETARD')
         .reduce((sum, cr) => sum + (Number(cr.capitalRestant) || 0), 0);
 
       setStats({

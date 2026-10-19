@@ -12,6 +12,7 @@ import com.erpbanking.credit.entity.Credit;
 import com.erpbanking.credit.entity.Echeance;
 import com.erpbanking.credit.entity.StatutCredit;
 import com.erpbanking.credit.entity.StatutEcheance;
+import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.EcheanceRepository;
 import com.erpbanking.notification.entity.NotificationType;
 
@@ -36,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class EcheanceRetardJob {
 
     private final EcheanceRepository echeanceRepository;
+    private final CreditRepository creditRepository;
     private final NotificationService notificationService;
 
     @Scheduled(cron = "0 0 7 * * *")
@@ -48,13 +50,20 @@ public class EcheanceRetardJob {
         for (Echeance echeance : echeances) {
 
             Credit credit = echeance.getCredit();
-            if (credit == null || credit.getStatut() != StatutCredit.ACTIF) {
+            if (credit == null || estCloture(credit.getStatut())) {
                 continue;
             }
 
             // 1. Bascule de l'échéance au statut "en retard"
             echeance.setStatut(StatutEcheance.EN_RETARD);
             echeanceRepository.save(echeance);
+
+            // 2. Le crédit passe aussi "en retard" (sauf s'il l'est déjà) :
+            //    un crédit peut cumuler plusieurs échéances impayées.
+            if (credit.getStatut() != StatutCredit.EN_RETARD) {
+                credit.setStatut(StatutCredit.EN_RETARD);
+                creditRepository.save(credit);
+            }
 
             Client client = credit.getClient();
             if (client == null) {
@@ -87,5 +96,12 @@ public class EcheanceRetardJob {
                     "/credits"
             );
         }
+    }
+
+    /** Un crédit clôturé (soldé, terminé ou annulé) ne peut plus être en retard. */
+    private boolean estCloture(StatutCredit statut) {
+        return statut == StatutCredit.SOLDE
+                || statut == StatutCredit.TERMINE
+                || statut == StatutCredit.ANNULE;
     }
 }

@@ -21,5 +21,11 @@ export const updateUtilisateur = (id, data) =>
 export const deleteUtilisateur = (id) =>
     axios.delete(`${API_URL}/${id}`, authHeader());
 
+export const bloquerUtilisateur = (id) =>
+    axios.patch(`${API_URL}/${id}/bloquer`, {}, authHeader());
+
+export const debloquerUtilisateur = (id) =>
+    axios.patch(`${API_URL}/${id}/debloquer`, {}, authHeader());
+
 export const getUtilisateurById = (id) =>
     axios.get(`${API_URL}/${id}`, authHeader());

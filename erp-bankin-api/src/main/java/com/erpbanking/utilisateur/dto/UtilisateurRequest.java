@@ -18,8 +18,10 @@ public class UtilisateurRequest {
     @Email(message = "Format d'email invalide.")
     private String email;
 
-    @NotBlank(message = "Le mot de passe est obligatoire.")
-    @Size(min = 8, max = 100, message = "Le mot de passe doit contenir au moins 8 caractères.")
+    // Obligatoire à la création uniquement : en modification, un mot de passe
+    // vide signifie "conserver le mot de passe actuel".
+    @NotBlank(groups = OnCreate.class, message = "Le mot de passe est obligatoire.")
+    @Size(min = 8, max = 100, groups = OnCreate.class, message = "Le mot de passe doit contenir au moins 8 caractères.")
     private String motDePasse;
 
     private String telephone;

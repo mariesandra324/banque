@@ -98,10 +98,15 @@ public class RemboursementService {
 
         credit.setCapitalRestant(nouveauCapitalRestant);
 
-        // 9. Si le capital restant est à zéro,
-        // le crédit est soldé
+        // 9. Si le capital restant est à zéro, le crédit est soldé.
+        // Sinon, s'il était marqué en retard et qu'il ne reste plus aucune
+        // échéance impayée, il redevient actif (fin de la période de retard).
         if (nouveauCapitalRestant.compareTo(BigDecimal.ZERO) == 0) {
             credit.setStatut(StatutCredit.SOLDE);
+        } else if (credit.getStatut() == StatutCredit.EN_RETARD
+                && !echeanceRepository.existsByCreditIdAndStatut(
+                        credit.getId(), StatutEcheance.EN_RETARD)) {
+            credit.setStatut(StatutCredit.ACTIF);
         }
 
         creditRepository.save(credit);

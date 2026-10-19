@@ -49,8 +49,8 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
       email: utilisateur.email || '',
       telephone: utilisateur.telephone || PHONE_PREFIX,
       motDePasse: '',
-      roleId: utilisateur.role?.id || '',
-      guichetId: utilisateur.guichet?.id || '',
+      roleId: utilisateur.roleId != null ? String(utilisateur.roleId) : (utilisateur.role?.id != null ? String(utilisateur.role.id) : ''),
+      guichetId: utilisateur.guichetId != null ? String(utilisateur.guichetId) : (utilisateur.guichet?.id != null ? String(utilisateur.guichet.id) : ''),
     });
   } else {
     setForm({
@@ -83,7 +83,11 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
     } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
       errors.email = 'Email invalide.';
     }
-    if (!isEditing && !form.motDePasse.trim()) errors.motDePasse = 'Le mot de passe est requis.';
+    if (!isEditing && !form.motDePasse.trim()) {
+      errors.motDePasse = 'Le mot de passe est requis.';
+    } else if (form.motDePasse && form.motDePasse.length < 8) {
+      errors.motDePasse = 'Le mot de passe doit contenir au moins 8 caractères.';
+    }
     if (!form.roleId) errors.roleId = 'Le rôle est requis.';
     return errors;
   };
@@ -116,6 +120,14 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
   const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
   const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
+
+  // En modification, le guichet actuellement affecté n'apparaît pas dans la
+  // liste des guichets disponibles : on l'ajoute pour pouvoir le conserver.
+  const guichetsOptions = isEditing
+    && utilisateur?.guichetId != null
+    && !guichets.some((g) => String(g.id) === String(utilisateur.guichetId))
+    ? [{ id: utilisateur.guichetId, codeGuichet: utilisateur.codeGuichet || `#${utilisateur.guichetId}` }, ...guichets]
+    : guichets;
 
   return (
     <form onSubmit={submit}>
@@ -155,23 +167,35 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
               <input name="telephone" value={form.telephone} onChange={change} style={inputStyle} />
             </div>
 
-            {!isEditing && (
-              <div>
-                <label style={labelStyle}>Mot de passe <span style={{ color: '#dc2626' }}>*</span></label>
-                <div style={{position: 'relative'}}>
-                  <input type={showPassword? 'text': 'password'} name='motDePasse' value={form.motDePasse} onChange={change} style={{...inputStyle, paddingRight:'42px',}}/>
-                  <button type='button' onClick={()=> setShowPassword((prev)=> !prev)} 
-                    title={showPassword? 'Masquer le mot de passe':'afficher le mot de passe'}
-                    style={{ position:'absolute', right:'10px', top:'50%',transform:'translateY(-50%)',background:'none',border:'none',padding:'4px',cursor:'pointer',
-                      color:'var(--faint)',display:'flex',alignItems:'center'}}>
-                        {showPassword ? <EyeOff size={18}/>:<Eye size={18}/>}
-                  </button>
-                  
-                </div>
-                {fieldErrors.motDePasse && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.motDePasse}</div>}
+            <div>
+              <label style={labelStyle}>
+                {isEditing ? 'Nouveau mot de passe' : 'Mot de passe'}{' '}
+                {!isEditing && <span style={{ color: '#dc2626' }}>*</span>}
+              </label>
+              <div style={{position: 'relative'}}>
+                <input
+                  type={showPassword? 'text': 'password'}
+                  name='motDePasse'
+                  value={form.motDePasse}
+                  onChange={change}
+                  placeholder={isEditing ? 'Laisser vide pour conserver' : ''}
+                  style={{...inputStyle, paddingRight:'42px',}}
+                />
+                <button type='button' onClick={()=> setShowPassword((prev)=> !prev)} 
+                  title={showPassword? 'Masquer le mot de passe':'afficher le mot de passe'}
+                  style={{ position:'absolute', right:'10px', top:'50%',transform:'translateY(-50%)',background:'none',border:'none',padding:'4px',cursor:'pointer',
+                    color:'var(--faint)',display:'flex',alignItems:'center'}}>
+                      {showPassword ? <EyeOff size={18}/>:<Eye size={18}/>}
+                </button>
                 
               </div>
-            )}
+              {fieldErrors.motDePasse && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.motDePasse}</div>}
+              {isEditing && (
+                <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
+                  Laissez vide pour conserver le mot de passe actuel.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -198,7 +222,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
 
             <select name="guichetId" value={form.guichetId}onChange={change}style={{...inputStyle,fontFamily: 'monospace'}}>
               <option value="">Choisir un guichet disponible</option>
-              {guichets.map((guichet) => (
+              {guichetsOptions.map((guichet) => (
                 <option key={guichet.id} value={guichet.id}>{guichet.codeGuichet}</option>
               ))}
             </select>

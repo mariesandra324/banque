@@ -214,7 +214,7 @@ function calculerStatsCredits(demandes, credits) {
 
   // Encours = capital restant des crédits encore actifs / en cours
   const encoursTotal = credits
-    .filter((cr) => cr.statut === 'ACTIF' || cr.statut === 'EN_COURS')
+    .filter((cr) => cr.statut === 'ACTIF' || cr.statut === 'EN_COURS' || cr.statut === 'EN_RETARD')
     .reduce((sum, cr) => sum + (Number(cr.capitalRestant) || 0), 0);
 
   const demandesTraitees = demandes.filter((d) => d.statut === 'ACCEPTER' || d.statut === 'REJETER');

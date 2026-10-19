@@ -1,6 +1,7 @@
 package com.erpbanking.client.dto;
 
 import java.time.LocalDate;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -19,6 +20,8 @@ public class ClientRequest {
     @Pattern(regexp = "\\d{12}", message = "Le CIN doit contenir uniquement des chiffres.")
     private String cin;
 
+    @NotBlank(message = "L'email est obligatoire.")
+    @Email(message = "Format d'email invalide.")
     private String email;
 
     @NotBlank(message = "Le téléphone est obligatoire.")

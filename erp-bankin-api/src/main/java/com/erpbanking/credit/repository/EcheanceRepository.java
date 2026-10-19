@@ -16,6 +16,8 @@ public interface EcheanceRepository extends JpaRepository<Echeance, Long> {
 
     boolean existsByCreditId(Long creditId);
 
+    boolean existsByCreditIdAndStatut(Long creditId, StatutEcheance statut);
+
     List<Echeance> findByDateEcheanceBetweenAndStatutNot(
             LocalDate debut, LocalDate fin, StatutEcheance statut);
 

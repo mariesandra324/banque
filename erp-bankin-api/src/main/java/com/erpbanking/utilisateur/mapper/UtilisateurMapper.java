@@ -28,6 +28,18 @@ public class UtilisateurMapper {
                     : null
                 )
 
+                .roleId(
+                    utilisateur.getRole() != null
+                    ? utilisateur.getRole().getId()
+                    : null
+                )
+
+                .guichetId(
+                    utilisateur.getGuichet() != null
+                    ? utilisateur.getGuichet().getId()
+                    : null
+                )
+
                 .actif(utilisateur.getActif())
                 
                 .build();

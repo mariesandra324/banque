@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Pencil, Search, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Pencil, Search, SlidersHorizontal, Ban, Unlock } from 'lucide-react';
 
 const PAR_PAGE_OPTIONS = [10, 25, 50];
 
-function UtilisateurTable({ utilisateurs, onEdit, onDelete }) {
+function UtilisateurTable({ utilisateurs, onEdit, onBloquer, onDebloquer }) {
   console.log("DATA TABLE :", utilisateurs);
   const [recherche, setRecherche] = useState('');
   const [page, setPage] = useState(1);
@@ -94,13 +94,23 @@ function UtilisateurTable({ utilisateurs, onEdit, onDelete }) {
                     >
                     <Pencil size={17}/>
                     </button>
-                    <button
-                      onClick={() => onDelete(user.id)}
-                      title='supprimer'
-                      style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
-                    >
-                    <Trash2 size={17}/>
-                    </button>
+                    {user.actif ? (
+                      <button
+                        onClick={() => onBloquer(user)}
+                        title='bloquer'
+                        style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
+                      >
+                      <Ban size={17}/>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onDebloquer(user)}
+                        title='débloquer'
+                        style={{ color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
+                      >
+                      <Unlock size={17}/>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

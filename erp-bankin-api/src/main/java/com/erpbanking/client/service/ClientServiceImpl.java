@@ -162,7 +162,16 @@ private CreditResponse mapCreditToResponse(Credit credit) {
     @Override
     public ClientResponse create(ClientRequest request) {
         if (clientRepository.existsByCin(request.getCin())) {
-            throw new RuntimeException("CIN déjà utilisé");
+            throw new DuplicateResourceException("CIN déjà utilisé");
+        }
+
+        if (request.getEmail() != null && !request.getEmail().isBlank()
+                && clientRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Cet email est déjà utilisé par un autre client.");
+        }
+
+        if (clientRepository.existsByTelephone(request.getTelephone())) {
+            throw new DuplicateResourceException("Ce numéro de téléphone est déjà utilisé par un autre client.");
         }
 
         Client client = clientMapper.toEntity(request);

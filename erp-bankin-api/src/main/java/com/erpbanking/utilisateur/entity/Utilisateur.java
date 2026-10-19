@@ -40,7 +40,7 @@ public class Utilisateur implements UserDetails{
     @Column(nullable = false)
     private String motDePasse;
 
-    @Column(length = 20)
+    @Column(length = 20, unique = true)
     private String telephone;
 
     @Builder.Default

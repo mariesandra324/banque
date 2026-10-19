@@ -18,6 +18,10 @@ public class UtilisateurResponse {
     
     private String codeGuichet;
 
+    private Long roleId;
+
+    private Long guichetId;
+
     private String role;
 
     private Boolean actif;
