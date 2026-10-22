@@ -27,4 +27,5 @@ public class CompteResponse {
     private String codeGuichet;
     private String cleRib;
     private String iban;
+    private LocalDate dernierInteretAppliqueLe;
 }

@@ -7,6 +7,10 @@ const TYPES_COMPTE = ['Courant', 'Epargne'];
 // Banque fictive du projet (fixes, non modifiables depuis le formulaire)
 const CODE_BANQUE = '00090';
 
+// Intérêts mensuels fixes crédités automatiquement (aligné sur
+// CompteServiceImpl.INTERET_MENSUEL côté backend).
+const INTERET_MENSUEL = 5000;
+
 
 function CompteForm({ compte, clients, onSubmit, onCancel }) {
   const codeGuichet = localStorage.getItem("codeGuichet");
@@ -269,6 +273,32 @@ const handleCardChange = (e) => {
               </div>
             </div>
           )}
+
+          {/* ===== Intérêts mensuels (automatique, non modifiable) ===== */}
+          <div style={cardStyle}>
+            <div style={cardTitleStyle}>Intérêts mensuels</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {new Intl.NumberFormat('fr-FR').format(INTERET_MENSUEL)} Ar
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>/ mois</span>
+            </div>
+            <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px', lineHeight: 1.5 }}>
+              Crédités automatiquement sur le compte 30 jours après sa création,
+              puis tous les mois. Valable pour les comptes courants et d'épargne.
+            </div>
+            {isEditing && (
+              <div style={{ marginTop: '12px' }}>
+                <label style={labelStyle}>Dernier versement d'intérêts</label>
+                <input
+                  type="text"
+                  value={compte.dernierInteretAppliqueLe || 'Aucun versement pour le moment'}
+                  disabled
+                  style={{ ...inputStyle, ...disabledStyle }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

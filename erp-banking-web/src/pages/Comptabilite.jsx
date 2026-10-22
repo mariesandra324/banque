@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, Download, ScrollText } from 'lucide-react';
+import { CalendarClock, Download, ScrollText, Store } from 'lucide-react';
 import {
   calculerTotaux,
   filtrerLignes,
@@ -13,14 +13,22 @@ import {
   STATUTS_ECHEANCE_FILTRABLES,
   telechargerCsvEcheances,
 } from '../service/echeancierService';
-// BLOC « RAPPORT DE GUICHET » MIS EN COMMENTAIRE — voir ONGLETS plus haut.
-// import { anneesDisponibles, CATEGORIES_RAPPORT, calculerTotauxRapport,
-//   getGuichetsRapport, getRapportGuichet, GRANULARITES, joursDuMois,
-//   MOIS_LIBELLES, telechargerCsvRapport, TOUS_LES_GUICHETS, TOUS_LES_TYPES,
-// } from '../service/rapportGuichetService';
+import {
+  anneesDisponibles,
+  CATEGORIES_RAPPORT,
+  calculerTotauxRapport,
+  getGuichetsRapport,
+  getRapportGuichet,
+  GRANULARITES,
+  joursDuMois,
+  MOIS_LIBELLES,
+  telechargerCsvRapport,
+  TOUS_LES_GUICHETS,
+  TOUS_LES_TYPES,
+} from '../service/rapportGuichetService';
 import JournalTable from '../features/comptabilite/JournalTable';
 import EcheancierTable from '../features/comptabilite/EcheancierTable';
-// import RapportGuichetTable from '../features/comptabilite/RapportGuichetTable';
+import RapportGuichetTable from '../features/comptabilite/RapportGuichetTable';
 import ConsultationEcriture from '../features/comptabilite/ConsultationEcriture';
 
 /*
@@ -43,7 +51,7 @@ import ConsultationEcriture from '../features/comptabilite/ConsultationEcriture'
 const ONGLETS = [
   { id: 'journal', label: 'Journal', icon: ScrollText, sousTitre: 'Journal des écritures' },
   { id: 'echeancier', label: 'Échéancier', icon: CalendarClock, sousTitre: 'Échéances de remboursement des crédits' },
-  // { id: 'guichet', label: 'Rapport de guichet', icon: Store, sousTitre: 'Dépôts, retraits, virements et remboursements par guichet' },
+  { id: 'guichet', label: 'Guichet', icon: Store, sousTitre: 'Entrées et sorties par guichet' },
 ];
 
 const formatMontant = (valeur) =>
@@ -94,10 +102,6 @@ const SelecteurStatut = ({ id, valeur, options, onChange }) => (
   </div>
 );
 
-// COMPOSANT FiltresGuichet MIS EN COMMENTAIRE — reserve au rapport de guichet
-// suspendu (voir ONGLETS plus haut). A decommenter avec le bloc de rendu et
-// l'import de rapportGuichetService si le rapport est reactive.
-/*
 const FiltresGuichet = ({
   granularite, setGranularite, annee, setAnnee, mois, setMois, jour, setJour,
   guichet, setGuichet, categorie, setCategorie, guichets,
@@ -197,7 +201,6 @@ const FiltresGuichet = ({
     </div>
   );
 };
-*/
 
 const Comptabilite = () => {
   const [onglet, setOnglet] = useState('journal');
@@ -216,28 +219,28 @@ const Comptabilite = () => {
   const [chargementEcheances, setChargementEcheances] = useState(true);
   const [erreurEcheances, setErreurEcheances] = useState('');
 
-  // RAPPORT DE GUICHET — MIS EN COMMENTAIRE (voir ONGLETS plus haut).
-  // const [rapport, setRapport] = useState([]);
-  // const [granularite, setGranularite] = useState('ANNEE');
-  // const [annee, setAnnee] = useState('');
-  // const [mois, setMois] = useState('');
-  // const [jour, setJour] = useState('');
-  // const [guichet, setGuichet] = useState(TOUS_LES_GUICHETS);
-  // const [categorie, setCategorie] = useState(TOUS_LES_TYPES);
-  // const [guichets, setGuichets] = useState([]);
-  // const [chargementRapport, setChargementRapport] = useState(true);
-  // const [erreurRapport, setErreurRapport] = useState('');
+  // Rapport de guichet
+  const [rapport, setRapport] = useState([]);
+  const [granularite, setGranularite] = useState('ANNEE');
+  const [annee, setAnnee] = useState('');
+  const [mois, setMois] = useState('');
+  const [jour, setJour] = useState('');
+  const [guichet, setGuichet] = useState(TOUS_LES_GUICHETS);
+  const [categorie, setCategorie] = useState(TOUS_LES_TYPES);
+  const [guichets, setGuichets] = useState([]);
+  const [chargementRapport, setChargementRapport] = useState(true);
+  const [erreurRapport, setErreurRapport] = useState('');
 
-  // useEffect(() => {
-  //   let annule = false;
-  //
-  //   getGuichetsRapport().then(
-  //     (data) => { if (!annule) setGuichets(Array.isArray(data) ? data : []); },
-  //     () => { if (!annule) setGuichets([]); },
-  //   );
-  //
-  //   return () => { annule = true; };
-  // }, []);
+  useEffect(() => {
+    let annule = false;
+
+    getGuichetsRapport().then(
+      (data) => { if (!annule) setGuichets(Array.isArray(data) ? data : []); },
+      () => { if (!annule) setGuichets([]); },
+    );
+
+    return () => { annule = true; };
+  }, []);
 
   useEffect(() => {
     let annule = false;
@@ -281,41 +284,39 @@ const Comptabilite = () => {
     return () => { annule = true; };
   }, [statutEcheance]);
 
-  // RAPPORT DE GUICHET — MIS EN COMMENTAIRE (voir ONGLETS plus haut).
-  // useEffect(() => {
-  //   let annule = false;
-  //
-  //   getRapportGuichet({ granularite, annee, mois, jour, guichet, categorie }).then(
-  //     (data) => {
-  //       if (annule) return;
-  //       setRapport(Array.isArray(data) ? data : []);
-  //       setErreurRapport('');
-  //       setChargementRapport(false);
-  //     },
-  //     (err) => {
-  //       if (annule) return;
-  //       setErreurRapport(messageErreur(err, 'Impossible de charger le rapport de guichet.'));
-  //       setRapport([]);
-  //       setChargementRapport(false);
-  //     },
-  //   );
-  //
-  //   return () => { annule = true; };
-  // }, [granularite, annee, mois, jour, guichet, categorie]);
+  useEffect(() => {
+    let annule = false;
+
+    getRapportGuichet({ granularite, annee, mois, jour, guichet, categorie }).then(
+      (data) => {
+        if (annule) return;
+        setRapport(Array.isArray(data) ? data : []);
+        setErreurRapport('');
+        setChargementRapport(false);
+      },
+      (err) => {
+        if (annule) return;
+        setErreurRapport(messageErreur(err, 'Impossible de charger le rapport de guichet.'));
+        setRapport([]);
+        setChargementRapport(false);
+      },
+    );
+
+    return () => { annule = true; };
+  }, [granularite, annee, mois, jour, guichet, categorie]);
 
   const totauxJournal = calculerTotaux(lignes);
   const equilibre = Math.abs(totauxJournal.debit - totauxJournal.credit) < 1;
   const totauxEcheances = calculerTotauxEcheances(echeances);
-  // const totauxRapport = calculerTotauxRapport(rapport);
+  const totauxRapport = calculerTotauxRapport(rapport);
 
-  // Avec l'onglet guichet commente, seuls journal et echeancier subsistent.
-  const enCours = onglet === 'echeancier' ? chargementEcheances : chargement;
-  const contenuVide = onglet === 'echeancier' ? echeances.length === 0 : lignes.length === 0;
+  const enCours = onglet === 'echeancier' ? chargementEcheances : onglet === 'guichet' ? chargementRapport : chargement;
+  const contenuVide = onglet === 'echeancier' ? echeances.length === 0 : onglet === 'guichet' ? rapport.length === 0 : lignes.length === 0;
 
   const exporter = () => {
     if (onglet === 'echeancier') telechargerCsvEcheances(echeances, `echeancier_${horodatage()}.csv`);
+    else if (onglet === 'guichet') telechargerCsvRapport(rapport, `rapport_guichet_${horodatage()}.csv`);
     else telechargerCsv(lignes, `journal_${horodatage()}.csv`);
-    // else telechargerCsvRapport(rapport, `rapport_guichet_${horodatage()}.csv`);
   };
 
   return (
@@ -416,8 +417,6 @@ const Comptabilite = () => {
         </>
       )}
 
-      {/*
-      ONGLET RAPPORT DE GUICHET MIS EN COMMENTAIRE — voir ONGLETS plus haut.
       {onglet === 'guichet' && (
         <>
           {erreurRapport && <Alerte>{erreurRapport}</Alerte>}
@@ -449,19 +448,16 @@ const Comptabilite = () => {
             />
           </div>
 
-          {chargementRapport ? <Chargement>Chargement du rapport de guichet...</Chargement> : (
-            <RapportGuichetTable lignes={rapport} />
-          )}
-
-          <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--muted)' }}>
-            « NON RATTACHE » regroupe les opérations sans guichet identifié : opérations antérieures
-            au suivi, et remboursements d'échéance, qui sont enregistrés sans guichet. Les
-            remboursements sont isolés des retraits pour ne pas être comptés deux fois.
-          </p>
-        </>
+      {chargementRapport ? <Chargement>Chargement du rapport de guichet...</Chargement> : (
+        <RapportGuichetTable lignes={rapport} guichets={guichets} />
       )}
-      */}
-    </div>
+
+      <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--muted)' }}>
+        « NON RATTACHE » regroupe les opérations sans guichet identifié (historique ou mouvement automatique).
+      </p>
+    </>
+  )}
+</div>
   );
 };
 

@@ -40,7 +40,8 @@ public class CompteMapper {
             .codeBanque(compte.getCodeBanque())
             .codeGuichet(compte.getCodeGuichet())
             .cleRib(compte.getCleRib())
-            .iban(compte.getIban())
-            .build();
+        .iban(compte.getIban())
+        .dernierInteretAppliqueLe(compte.getDernierInteretAppliqueLe())
+        .build();
 }
 }

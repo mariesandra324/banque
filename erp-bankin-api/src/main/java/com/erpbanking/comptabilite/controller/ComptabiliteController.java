@@ -46,7 +46,6 @@ public class ComptabiliteController {
 
     // Rapport de guichet, filtrable par jour, mois ou année.
     // Réservé à l'administrateur et au comptable.
-    /*
     @GetMapping("/rapport-guichet")
     @PreAuthorize("hasAnyRole('ADMIN','COMPTABLE')")
     public ResponseEntity<List<RapportGuichetResponse>> getRapportGuichet(
@@ -73,5 +72,4 @@ public class ComptabiliteController {
     public ResponseEntity<List<String>> getGuichetsRapport() {
         return ResponseEntity.ok(rapportGuichetService.getGuichetsDisponibles());
     }
-    */
 }

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
 import { calculerTotauxRapport } from '../../service/rapportGuichetService';
 
 const PAR_PAGE_OPTIONS = [10, 25, 50, 100];
@@ -18,15 +17,14 @@ const COLONNES = [
 
 const styleCellule = { padding: '12px 16px', fontSize: '13px', textAlign: 'right', whiteSpace: 'nowrap' };
 
-const RapportGuichetTable = ({ lignes }) => {
+const RapportGuichetTable = ({ lignes, guichets = [] }) => {
   const [recherche, setRecherche] = useState('');
   const [page, setPage] = useState(1);
   const [parPage, setParPage] = useState(25);
 
   const lignesFiltrees = useMemo(() => {
-    const q = recherche.trim().toLowerCase();
-    if (!q) return lignes || [];
-    return (lignes || []).filter((l) => String(l.codeGuichet || '').toLowerCase().includes(q));
+    if (!recherche) return lignes || [];
+    return (lignes || []).filter((l) => String(l.codeGuichet || '') === recherche);
   }, [lignes, recherche]);
 
   const totaux = useMemo(() => calculerTotauxRapport(lignesFiltrees), [lignesFiltrees]);
@@ -48,23 +46,23 @@ const RapportGuichetTable = ({ lignes }) => {
           padding: '16px', borderBottom: '1px solid var(--border-color)',
         }}
       >
-        <div style={{ position: 'relative', width: '260px' }}>
-          <Search
-            size={16}
-            color="var(--muted)"
-            style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)' }}
-          />
-          <input
-            type="text"
-            placeholder="Rechercher un guichet..."
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label htmlFor="recherche-guichet" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Guichet
+          </label>
+          <select
+            id="recherche-guichet"
             value={recherche}
             onChange={(e) => { setRecherche(e.target.value); setPage(1); }}
             style={{
-              width: '100%', padding: '8px 10px 8px 32px', borderRadius: '6px',
-              border: '1px solid var(--input-border)', fontSize: '13px', boxSizing: 'border-box',
+              padding: '8px 10px', borderRadius: '6px',
+              border: '1px solid var(--input-border)', fontSize: '13px',
               backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)',
             }}
-          />
+          >
+            <option value="">Tous les guichets</option>
+            {guichets.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
         </div>
       </div>
 

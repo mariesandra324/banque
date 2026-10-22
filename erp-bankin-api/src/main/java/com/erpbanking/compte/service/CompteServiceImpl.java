@@ -11,6 +11,10 @@ import com.erpbanking.compte.dto.CompteResponse;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.mapper.CompteMapper;
 import com.erpbanking.compte.repository.CompteRepository;
+import org.springframework.scheduling.annotation.Scheduled;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import com.erpbanking.notification.entity.NotificationType;
 import com.erpbanking.notification.service.NotificationService;
@@ -50,6 +54,79 @@ public class CompteServiceImpl implements CompteService {
     );
 
     private static final int LONGUEUR_SUFFIXE = 9;
+
+    // ===== Intérêts mensuels =====
+    // Montant fixe crédité sur chaque compte (courant ou épargne) tous les
+    // 30 jours révolus depuis la création (ou depuis le dernier versement).
+    public static final BigDecimal INTERET_MENSUEL = new BigDecimal("5000");
+
+    // Nombre de jours entre deux versements d'intérêts.
+    private static final long PERIODE_INTERET_JOURS = 30;
+
+    @Scheduled(cron = "0 0 1 * * *")
+    @Override
+    public void appliquerInteretsMensuels() {
+
+        LocalDate aujourdhui = LocalDate.now();
+        List<Compte> comptes = compteRepository.findAll();
+
+        int totalCredite = 0;
+
+        for (Compte compte : comptes) {
+
+            // Pas d'intérêts sur un compte clôturé / inactif
+            if (compte.getStatut() != null
+                    && ("CLOTURE".equalsIgnoreCase(compte.getStatut())
+                    || "INACTIF".equalsIgnoreCase(compte.getStatut()))) {
+                continue;
+            }
+
+            LocalDate reference = compte.getDernierInteretAppliqueLe() != null
+                    ? compte.getDernierInteretAppliqueLe()
+                    : compte.getDateCreation();
+
+            if (reference == null) {
+                continue;
+            }
+
+            // Premier versement : uniquement après 30 jours depuis la création.
+            if (ChronoUnit.DAYS.between(reference, aujourdhui) < PERIODE_INTERET_JOURS) {
+                continue;
+            }
+
+            BigDecimal solde = compte.getSolde() != null ? compte.getSolde() : BigDecimal.ZERO;
+            compte.setSolde(solde.add(INTERET_MENSUEL));
+            compte.setDernierInteretAppliqueLe(aujourdhui);
+            compteRepository.save(compte);
+            totalCredite++;
+
+            auditService.journaliser(
+                    AuditAction.MODIFICATION,
+                    AuditModule.COMPTES,
+                    "Compte #" + compte.getId(),
+                    "Versement d'intérêts mensuels (" + INTERET_MENSUEL + " Ar) sur le compte "
+                            + compte.getNumeroCompte() + "."
+            );
+
+            if (compte.getClient() != null) {
+                notificationService.creerPourClient(
+                        compte.getClient().getId(),
+                        NotificationType.INTERET_VERSE,
+                        "Intérêts mensuels de " + INTERET_MENSUEL + " Ar crédités sur votre compte "
+                                + compte.getNumeroCompte() + ".",
+                        "/comptes"
+                );
+            }
+        }
+
+        if (totalCredite > 0) {
+            notificationService.creerPourRole(
+                    NotificationType.COMPTE_CREE,
+                    totalCredite + " compte(s) ont reçu leurs intérêts mensuels (" + INTERET_MENSUEL + " Ar).",
+                    "/comptes"
+            );
+        }
+    }
 
     @Override
     public CompteResponse create(CompteRequest request) {

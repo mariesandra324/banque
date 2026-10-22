@@ -30,6 +30,7 @@ public enum NotificationType {
     CREDIT_ACCORDE("CLIENT", "\uD83D\uDCB3", "Votre crédit a été accordé"),
     ECHEANCE_PROCHAINE("CLIENT", "\u23F0", "Votre échéance de crédit approche"),
     ECHEANCE_EN_RETARD("CLIENT", "\u26A0\uFE0F", "Votre échéance de crédit est en retard"),
+    INTERET_VERSE("CLIENT", "\uD83D\uDCB0", "Intérêts mensuels crédités"),
 
     // ============ GESTIONNAIRE ============
     DEMANDE_CREDIT_A_TRAITER("GESTIONNAIRE", "\uD83D\uDD14", "Nouvelle demande de crédit à traiter"),

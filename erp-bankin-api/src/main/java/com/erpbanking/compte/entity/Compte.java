@@ -61,4 +61,7 @@ public class Compte {
 
     @OneToOne(mappedBy = "compte")
     private Carte carte;
+
+    @Column(name = "dernier_interet_applique_le")
+    private LocalDate dernierInteretAppliqueLe;
 }

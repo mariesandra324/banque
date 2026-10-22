@@ -1,8 +1,38 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, Landmark } from "lucide-react";
+import {
+    Mail,
+    Lock,
+    Eye,
+    EyeOff,
+    Landmark,
+    ShieldCheck,
+    Users,
+    TrendingUp,
+    AlertCircle,
+    Loader2,
+    ArrowRight,
+} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import "../../styles/login.css";
+
+const AVANTAGES = [
+    {
+        icon: ShieldCheck,
+        titre: "Accès sécurisé et tracé",
+        texte: "Chaque opération effectuée est journalisée dans l'audit.",
+    },
+    {
+        icon: Users,
+        titre: "Clients, comptes & crédits",
+        texte: "Pilotez l'ensemble du portefeuille depuis un seul écran.",
+    },
+    {
+        icon: TrendingUp,
+        titre: "Reporting en temps réel",
+        texte: "Tableaux de bord et indicateurs toujours à jour.",
+    },
+];
 
 function Login() {
 
@@ -15,11 +45,13 @@ function Login() {
     const [showPassword, setShowPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [erreur, setErreur] = useState("");
 
     const handleLogin = async (e) => {
 
         e.preventDefault();
 
+        setErreur("");
         setLoading(true);
 
         try {
@@ -31,10 +63,13 @@ function Login() {
 
             navigate("/dashboard");
 
-        // eslint-disable-next-line no-unused-vars
         } catch (error) {
 
-            alert("Email ou mot de passe incorrect.");
+            // On affiche le message renvoyé par l'API s'il existe,
+            // sinon on retombe sur le message générique.
+            setErreur(
+                error?.response?.data?.message || "Email ou mot de passe incorrect."
+            );
 
         } finally {
 
@@ -48,75 +83,143 @@ function Login() {
 
         <div className="login-page">
 
-            <div className="login-card">
+            {/* Décor */}
+            <span className="login-blob login-blob--one" />
+            <span className="login-blob login-blob--two" />
 
-                <div className="login-header">
+            <div className="login-shell">
 
-                    <Landmark size={55} />
+                {/* ===== Colonne présentation ===== */}
+                <aside className="login-side">
 
-                    <h1>ERP Banking</h1>
+                    <div className="login-brand">
 
-                    <p>Connectez-vous à votre espace sécurisé</p>
-
-                </div>
-
-                <form onSubmit={handleLogin}>
-
-                    <div className="input-group">
-
-                        <Mail size={20} />
-
-                        <input
-                            type="email"
-                            placeholder="Email"
-                            value={email}
-                            onChange={(e)=>setEmail(e.target.value)}
-                            required
-                        />
-
-                    </div>
-
-                    <div className="input-group">
-
-                        <Lock size={20}/>
-
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Mot de passe"
-                            value={motDePasse}
-                            onChange={(e)=>setMotDePasse(e.target.value)}
-                            required
-                        />
-
-                        <span
-                            className="password-toggle"
-                            onClick={()=>setShowPassword(!showPassword)}
-                        >
-
-                            {
-                                showPassword
-                                ? <EyeOff size={20}/>
-                                : <Eye size={20}/>
-                            }
-
+                        <span className="login-logo">
+                            <Landmark size={26} />
                         </span>
 
+                        <div>
+                            <p className="login-logo-name">ERP Banking</p>
+                            <p className="login-logo-tag">Plateforme de gestion bancaire</p>
+                        </div>
+
                     </div>
 
-                    <button
-                        className="login-btn"
-                        disabled={loading}
-                    >
+                    <div className="login-hero">
+                        <h2>Toute votre banque, en un seul écran</h2>
+                        <p>
+                            Comptes, crédits, clients et comptabilité : un espace unique,
+                            sécurisé et pensé pour les équipes de guichet.
+                        </p>
+                    </div>
 
-                        {
-                            loading
-                            ? "Connexion..."
-                            : "Se connecter"
-                        }
+                    <ul className="login-features">
+                        {AVANTAGES.map(({ icon: Icone, titre, texte }) => (
+                            <li className="login-feature" key={titre}>
+                                <span className="login-feature-icon">
+                                    <Icone size={17} />
+                                </span>
+                                <div>
+                                    <p className="login-feature-title">{titre}</p>
+                                    <p className="login-feature-text">{texte}</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
 
-                    </button>
+                    <p className="login-side-foot">
+                        © {new Date().getFullYear()} ERP Banking — Tous droits réservés
+                    </p>
 
-                </form>
+                </aside>
+
+                {/* ===== Colonne formulaire ===== */}
+                <main className="login-form-side">
+
+                    <div className="login-form-head">
+                        <h1>Connexion</h1>
+                        <p>Accédez à votre espace sécurisé</p>
+                    </div>
+
+                    {erreur && (
+                        <div className="login-error" role="alert">
+                            <AlertCircle size={16} />
+                            <span>{erreur}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} noValidate>
+
+                        <div className="login-field">
+                            <label htmlFor="login-email">Adresse email</label>
+                            <div className="login-input">
+                                <Mail size={18} />
+                                <input
+                                    id="login-email"
+                                    type="email"
+                                    placeholder="prenom.nom@banque.mg"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        setErreur("");
+                                    }}
+                                    autoComplete="email"
+                                    autoFocus
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="login-field">
+                            <label htmlFor="login-motdepasse">Mot de passe</label>
+                            <div className="login-input">
+                                <Lock size={18} />
+                                <input
+                                    id="login-motdepasse"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={motDePasse}
+                                    onChange={(e) => {
+                                        setMotDePasse(e.target.value);
+                                        setErreur("");
+                                    }}
+                                    autoComplete="current-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="login-toggle"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                    title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={18} className="login-spinner" />
+                                    Connexion en cours...
+                                </>
+                            ) : (
+                                <>
+                                    Se connecter
+                                    <ArrowRight size={18} />
+                                </>
+                            )}
+                        </button>
+
+                    </form>
+
+                    <p className="login-help">
+                        Accès réservé au personnel autorisé. En cas d'oubli de mot de passe,
+                        contactez votre administrateur.
+                    </p>
+
+                </main>
 
             </div>
 

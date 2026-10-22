@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.erpbanking.comptabilite.dto.RapportGuichetLigne;
 import com.erpbanking.comptabilite.dto.RapportGuichetResponse;
+import com.erpbanking.guichet.repository.GuichetRepository;
 import com.erpbanking.transaction.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,7 @@ public class RapportGuichetService {
     }
 
     private final TransactionRepository transactionRepository;
+    private final GuichetRepository guichetRepository;
 
     /**
      * Agrège les transactions réussies par période et par guichet.
@@ -109,20 +111,15 @@ public class RapportGuichetService {
     }
 
     /**
-     * Guichets proposés dans le filtre : ceux qui figurent dans le rapport,
-     * plus la mention des transactions non rattachées.
+     * Guichets proposés dans le filtre : tous les guichets actifs, afin
+     * qu'ils soient sélectionnables même sans transaction sur la période.
      */
     @Transactional(readOnly = true)
     public List<String> getGuichetsDisponibles() {
-        return transactionRepository.agregerParPeriodeEtGuichet(
-                        Granularite.ANNEE.getDateTrunc(),
-                        Granularite.ANNEE.getFormat(),
-                        null, null, null, null, null)
+        return guichetRepository.findByActifTrueOrderByCodeGuichetAsc()
                 .stream()
-                .map(RapportGuichetLigne::getCodeGuichet)
+                .map(com.erpbanking.guichet.entity.Guichet::getCodeGuichet)
                 .filter(java.util.Objects::nonNull)
-                .distinct()
-                .sorted()
                 .toList();
     }
 
