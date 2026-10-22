@@ -712,4 +712,50 @@ public void envoyerConfirmationDemandeCredit(
         e.printStackTrace();
     }
 }
+
+    // =========================================================
+    // CODE OTP DE REINITIALISATION DU MOT DE PASSE MOBILE
+    // =========================================================
+
+    /**
+     * Envoie le code de reinitialisation par e-mail.
+     *
+     * Volontairement synchrone et sans catch : si l'e-mail ne part pas, le
+     * service appelant doit le savoir et ne pas annoncer un envoi reussi.
+     */
+    public void envoyerCodeReinitialisation(
+            String emailClient,
+            String nomClient,
+            String code
+    ) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setFrom(mailUsername);
+        message.setTo(emailClient);
+        message.setSubject("Code de reinitialisation - ERP Banking");
+
+        message.setText(
+                "Bonjour " + nomClient + ",\n\n" +
+
+                "Votre code de reinitialisation de mot de passe est :\n\n" +
+
+                "        " + code + "\n\n" +
+
+                "Ce code est valable pendant 10 minutes.\n" +
+                "Il ne peut etre utilise qu'une seule fois.\n\n" +
+
+                "Si vous n'etes pas a l'origine de cette demande, ignorez " +
+                "cet e-mail : votre mot de passe reste inchange.\n\n" +
+
+                "Cordialement,\n" +
+                "L'equipe de votre banque"
+        );
+
+        mailSender.send(message);
+
+        System.out.println(
+                "EMAIL OTP REINITIALISATION ENVOYE A : " + emailClient
+        );
+    }
 }

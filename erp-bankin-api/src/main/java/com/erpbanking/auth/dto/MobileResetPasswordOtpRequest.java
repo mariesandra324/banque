@@ -15,4 +15,5 @@ public class MobileResetPasswordOtpRequest {
     private String cin;
     private String code;
     private String nouveauMotDePasse;
+    private String confirmationMotDePasse;
 }
