@@ -19,18 +19,18 @@ import "../../styles/login.css";
 const AVANTAGES = [
     {
         icon: ShieldCheck,
-        titre: "Accès sécurisé et tracé",
-        texte: "Chaque opération effectuée est journalisée dans l'audit.",
+         titre: "Accès sécurisé et tracé",
+        // texte: "Chaque opération effectuée est journalisée dans l'audit.",
     },
     {
         icon: Users,
-        titre: "Clients, comptes & crédits",
-        texte: "Pilotez l'ensemble du portefeuille depuis un seul écran.",
+         titre: "Clients, comptes & crédits",
+        // texte: "Pilotez l'ensemble du portefeuille depuis un seul écran.",
     },
     {
         icon: TrendingUp,
         titre: "Reporting en temps réel",
-        texte: "Tableaux de bord et indicateurs toujours à jour.",
+        // texte: "Tableaux de bord et indicateurs toujours à jour.",
     },
 ];
 
@@ -198,21 +198,27 @@ function Login() {
                             </div>
                         </div>
 
-                        <button type="submit" className="login-btn" disabled={loading}>
-                            {loading ? (
-                                <>
-                                    <Loader2 size={18} className="login-spinner" />
-                                    Connexion en cours...
-                                </>
-                            ) : (
-                                <>
-                                    Se connecter
-                                    <ArrowRight size={18} />
-                                </>
-                            )}
-                        </button>
+                    <button type="submit" className="login-btn" disabled={loading}>
+                        {loading ? (
+                            <>
+                                <Loader2 size={18} className="login-spinner" />
+                                Connexion en cours...
+                            </>
+                        ) : (
+                            <>
+                                Se connecter
+                                <ArrowRight size={18} />
+                            </>
+                        )}
+                    </button>
 
-                    </form>
+                    <div className="login-forgot">
+                        <button type="button" onClick={() => navigate("/mot-de-passe-oublie")}>
+                            Mot de passe oublié ?
+                        </button>
+                    </div>
+
+                </form>
 
                     <p className="login-help">
                         Accès réservé au personnel autorisé. En cas d'oubli de mot de passe,

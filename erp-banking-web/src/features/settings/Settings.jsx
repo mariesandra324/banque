@@ -8,6 +8,12 @@ import {
   ChevronRight,
   Mail,
   Smartphone,
+  Sun,
+  Moon,
+  ShieldCheck,
+  Check,
+  Pencil,
+  X,
 } from "lucide-react";
 
 import { useTheme } from "../../hooks/useTheme";
@@ -53,16 +59,26 @@ const Settings = () => {
     <div className="settings-page">
 
       <div className="settings-header">
-        <h1>Paramètres</h1>
-        <p>
-          Gérez votre compte et les préférences de l'application
-        </p>
+        <div>
+          <span className="settings-eyebrow">Compte & préférences</span>
+          <h1>Paramètres</h1>
+          <p>
+            Gérez votre profil, l'apparence et la sécurité de votre compte.
+          </p>
+        </div>
+
+        <span className="settings-header-badge">
+          <ShieldCheck size={15} />
+          Espace sécurisé
+        </span>
       </div>
 
       <div className="settings-container">
 
         {/* MENU GAUCHE */}
-        <div className="settings-menu">
+        <aside className="settings-menu">
+
+          <div className="settings-menu-title">Réglages</div>
 
           {menu.map((item) => {
             const Icon = item.icon;
@@ -75,47 +91,49 @@ const Settings = () => {
                 }`}
                 onClick={() => setSection(item.id)}
               >
-                <Icon size={19} />
+                <Icon size={18} />
 
                 <span>{item.label}</span>
 
                 <ChevronRight
-                  size={17}
+                  size={16}
                   className="settings-arrow"
                 />
               </button>
             );
           })}
 
-        </div>
+        </aside>
 
         {/* CONTENU */}
-        <div className="settings-content">
+        <section className="settings-content">
+          <div className="settings-enter" key={section}>
 
-          {section === "profil" && (
-            <Profil />
-          )}
+            {section === "profil" && (
+              <Profil />
+            )}
 
-          {section === "apparence" && (
-            <Apparence
-              theme={theme}
-              setTheme={setTheme}
-            />
-          )}
+            {section === "apparence" && (
+              <Apparence
+                theme={theme}
+                setTheme={setTheme}
+              />
+            )}
 
-          {section === "notifications" && (
-            <Notifications />
-          )}
+            {section === "notifications" && (
+              <Notifications />
+            )}
 
-          {section === "securite" && (
-            <Securite />
-          )}
+            {section === "securite" && (
+              <Securite />
+            )}
 
-          {section === "langue" && (
-            <Langue />
-          )}
+            {section === "langue" && (
+              <Langue />
+            )}
 
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -217,16 +235,16 @@ const Profil = () => {
         <div>
           <h2>Mon profil</h2>
           <p>
-            Consultez les informations de votre compte
+            Consultez et mettez à jour les informations de votre compte
           </p>
         </div>
       </div>
 
       {/* =========================
-          AVATAR
+          BANNIÈRE
       ========================== */}
 
-      <div className="profile-card">
+      <div className="profile-banner">
 
         <div className="profile-avatar">
           {initiales || "U"}
@@ -237,8 +255,13 @@ const Profil = () => {
             {prenom} {nom}
           </h3>
 
-          <p>
-            {role}
+          {role && (
+            <span className="profile-role">{role}</span>
+          )}
+
+          <p className="profile-email">
+            <Mail size={13} />
+            {email || "—"}
           </p>
         </div>
 
@@ -262,9 +285,7 @@ const Profil = () => {
             readOnly={!modeEdition}
           />
           {modeEdition && fieldErrors.nom && (
-            <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>
-              {fieldErrors.nom}
-            </div>
+            <div className="field-error">{fieldErrors.nom}</div>
           )}
         </div>
 
@@ -280,9 +301,7 @@ const Profil = () => {
             readOnly={!modeEdition}
           />
           {modeEdition && fieldErrors.prenom && (
-            <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>
-              {fieldErrors.prenom}
-            </div>
+            <div className="field-error">{fieldErrors.prenom}</div>
           )}
         </div>
 
@@ -311,35 +330,39 @@ const Profil = () => {
       </div>
 
       {successMessage && (
-        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '13px' }}>
+        <div className="alert alert-success">
+          <Check size={15} />
           {successMessage}
         </div>
       )}
 
       {submitError && (
-        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '13px' }}>
+        <div className="alert alert-error">
+          <X size={15} />
           {submitError}
         </div>
       )}
 
       {modeEdition ? (
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="settings-actions">
           <button className="btn-primary" onClick={enregistrer} disabled={loading}>
+            <Check size={15} />
             {loading ? "Enregistrement..." : "Enregistrer"}
           </button>
 
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary btn-ghost"
             onClick={annulerEdition}
             disabled={loading}
-            style={{ backgroundColor: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--input-border)' }}
           >
+            <X size={15} />
             Annuler
           </button>
         </div>
       ) : (
         <button className="btn-primary" onClick={debutEdition}>
+          <Pencil size={15} />
           Modifier le profil
         </button>
       )}
@@ -359,11 +382,18 @@ const Apparence = () => {
   return (
     <div className="appearance-settings">
 
-      <h2>Apparence</h2>
+      <div className="settings-section-header">
+        <div className="settings-icon">
+          <Palette size={22} />
+        </div>
 
-      <p>
-        Choisissez le mode d'affichage de l'application.
-      </p>
+        <div>
+          <h2>Apparence</h2>
+          <p>
+            Choisissez le mode d'affichage de l'application
+          </p>
+        </div>
+      </div>
 
       <div className="theme-options">
 
@@ -373,11 +403,23 @@ const Apparence = () => {
           }`}
           onClick={() => setTheme("light")}
         >
-          ☀️
-          <div>
-            <strong>Mode clair</strong>
-            <span>
-              Utiliser le thème clair
+          <div className="theme-preview theme-preview-light">
+            <span className="tp-bar" />
+            <span className="tp-line" />
+            <span className="tp-line tp-short" />
+          </div>
+
+          <div className="theme-option-row">
+            <div className="theme-option-text">
+              <strong>
+                <Sun size={15} />
+                Mode clair
+              </strong>
+              <span>Interface lumineuse</span>
+            </div>
+
+            <span className="theme-radio">
+              {theme === "light" && <Check size={11} />}
             </span>
           </div>
         </button>
@@ -389,11 +431,23 @@ const Apparence = () => {
           }`}
           onClick={() => setTheme("dark")}
         >
-          🌙
-          <div>
-            <strong>Mode sombre</strong>
-            <span>
-              Utiliser le thème sombre
+          <div className="theme-preview theme-preview-dark">
+            <span className="tp-bar" />
+            <span className="tp-line" />
+            <span className="tp-line tp-short" />
+          </div>
+
+          <div className="theme-option-row">
+            <div className="theme-option-text">
+              <strong>
+                <Moon size={15} />
+                Mode sombre
+              </strong>
+              <span>Repos visuel</span>
+            </div>
+
+            <span className="theme-radio">
+              {theme === "dark" && <Check size={11} />}
             </span>
           </div>
         </button>
@@ -438,6 +492,14 @@ const Switch = ({ on, onClick }) => (
 const Notifications = () => {
   const [preferences, setPreferences] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ligneSauvee, setLigneSauvee] = useState(null);
+
+  useEffect(() => {
+    if (!ligneSauvee) return undefined;
+
+    const timer = setTimeout(() => setLigneSauvee(null), 5000);
+    return () => clearTimeout(timer);
+  }, [ligneSauvee]);
 
   useEffect(() => {
     let active = true;
@@ -462,6 +524,7 @@ const Notifications = () => {
       p.type === type ? { ...p, [field]: value } : p
     );
     setPreferences(next);
+    setLigneSauvee(type);
     notificationService.savePreferences(next).catch(() => {});
   };
 
@@ -495,10 +558,17 @@ const Notifications = () => {
             <h3 className="notification-group-title">{group.label}</h3>
 
             {group.items.map((pref) => (
-              <div key={pref.type} className="setting-row">
-                <div>
+              <div
+                key={pref.type}
+                className={`setting-row ${ligneSauvee === pref.type ? "setting-row-saved" : ""}`}
+                style={ligneSauvee === pref.type ? { backgroundColor: 'rgba(34,197,94,0.16)' } : undefined}
+              >
+                <div className="setting-row-text">
                   <strong>
-                    {pref.emoji} {pref.libelle}
+                    {pref.emoji && (
+                      <span className="notification-emoji">{pref.emoji}</span>
+                    )}
+                    {pref.libelle}
                   </strong>
                   <p>
                     Notifier lorsque ce type d'événement se produit
@@ -507,7 +577,7 @@ const Notifications = () => {
 
                 <div className="notification-toggles">
                   <label className="notification-toggle">
-                    <Mail size={15} />
+                    <Mail size={14} />
                     Email
                     <Switch
                       on={pref.emailActive}
@@ -518,7 +588,7 @@ const Notifications = () => {
                   </label>
 
                   <label className="notification-toggle">
-                    <Smartphone size={15} />
+                    <Smartphone size={14} />
                     Push
                     <Switch
                       on={pref.pushActive}
@@ -565,17 +635,18 @@ const Securite = () => {
       </div>
 
       {successMessage && (
-        <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '6px', backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '13px' }}>
+        <div className="alert alert-success">
+          <Check size={15} />
           {successMessage}
         </div>
       )}
 
       {modeEdition ? (
-        <div style={{ padding: '24px', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--heading)', margin: '0 0 4px' }}>
+        <div className="security-editor">
+          <h3>
             Changer le mot de passe
           </h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 18px' }}>
+          <p>
             Renseignez votre mot de passe actuel puis choisissez un nouveau mot de passe sécurisé.
           </p>
 
@@ -590,12 +661,18 @@ const Securite = () => {
       ) : (
         <div className="security-card">
 
-          <h3>Mot de passe</h3>
+          <div className="security-badge">
+            <Lock size={18} />
+          </div>
 
-          <p>
-            Il est recommandé de modifier régulièrement
-            votre mot de passe.
-          </p>
+          <div className="security-text">
+            <h3>Mot de passe</h3>
+
+            <p>
+              Il est recommandé de modifier régulièrement
+              votre mot de passe.
+            </p>
+          </div>
 
           <button className="btn-primary" onClick={() => { setSuccessMessage(""); setModeEdition(true); }}>
             Changer le mot de passe
@@ -612,6 +689,11 @@ const Securite = () => {
 /* =========================
    LANGUE
 ========================= */
+
+const LANGUES = [
+  { code: "fr", nom: "Français", court: "FR" },
+  { code: "en", nom: "English", court: "EN" },
+];
 
 const Langue = () => {
 
@@ -642,22 +724,26 @@ const Langue = () => {
 
       </div>
 
-      <div className="form-group">
+      <div className="language-options">
 
-        <label>Langue</label>
+        {LANGUES.map((item) => (
+          <button
+            key={item.code}
+            className={`language-option ${
+              langue === item.code ? "selected" : ""
+            }`}
+            onClick={() => changerLangue(item.code)}
+          >
+            <span className="lang-code">{item.court}</span>
+            {item.nom}
 
-        <select
-          value={langue}
-          onChange={(e) => changerLangue(e.target.value)}
-        >
-          <option value="fr">
-            Français
-          </option>
-
-          <option value="en">
-            English
-          </option>
-        </select>
+            {langue === item.code && (
+              <span className="language-check">
+                <Check size={16} />
+              </span>
+            )}
+          </button>
+        ))}
 
       </div>
 

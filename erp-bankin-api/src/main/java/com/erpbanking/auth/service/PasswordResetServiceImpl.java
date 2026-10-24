@@ -9,6 +9,8 @@ import com.erpbanking.client.entity.StatutMobile;
 import com.erpbanking.client.repository.ClientMobileRepository;
 import com.erpbanking.client.repository.ClientRepository;
 import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.utilisateur.entity.Utilisateur;
+import com.erpbanking.utilisateur.repository.UtilisateurRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -41,6 +43,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final PasswordResetOtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UtilisateurRepository utilisateurRepository;
     private final SecureRandom random = new SecureRandom();
 
     @Override
@@ -170,11 +173,18 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             clientMobileRepository.save(acces);
         });
 
+        if (client.getEmail() != null && !client.getEmail().isBlank()) {
+            utilisateurRepository.findByEmail(client.getEmail()).ifPresent(utilisateur -> {
+                utilisateur.setMotDePasse(hash);
+                utilisateurRepository.save(utilisateur);
+            });
+        }
+
         otp.setUsed(true);
         otp.setUsedAt(LocalDateTime.now());
         otpRepository.save(otp);
 
-        log.info("Mot de passe mobile reinitialise pour le client {}", client.getId());
+        log.info("Mot de passe reinitialise pour le client {}", client.getId());
 
         return MobileResetPasswordOtpResponse.builder()
                 .message("Mot de passe réinitialisé avec succès.")

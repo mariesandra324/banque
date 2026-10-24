@@ -26,7 +26,8 @@ const authService = {
     } catch {
       return {
         email: localStorage.getItem('email'),
-        role: localStorage.getItem('role')
+        role: localStorage.getItem('role'),
+        codeGuichet: localStorage.getItem('codeGuichet')
       };
     }
   },

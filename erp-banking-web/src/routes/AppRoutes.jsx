@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from '../pages/Dashboard';
 import Login from '../features/auth/Login';
+import ForgotPassword from '../features/auth/ForgotPassword';
 import Clients from '../pages/Clients';
 import AccesMobile from '../pages/AccesMobile';
 import Comptes from '../pages/Comptes';
@@ -21,7 +22,11 @@ import ClientDossier from '../pages/ClientDossier';
 import Comptabilite from '../pages/Comptabilite';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -31,7 +36,11 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const RoleRoute = ({ allowedRoles, children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -49,6 +58,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Route Publique : La page de Connexion */}
       <Route path="/login" element={<Login />} />
+      <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
 
       {/* Routes Sécurisées : Accessibles uniquement si on a un token */}
       <Route

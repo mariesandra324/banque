@@ -16,7 +16,11 @@ export const AuthProvider = ({ children }) => {
         const userData = await authService.getCurrentUser();
         console.log('userData');
         if (userData?.email && userData?.role) {
-          setUser(userData);
+          setUser({
+            email: userData.email,
+            role: userData.role,
+            codeGuichet: userData.codeGuichet || localStorage.getItem('codeGuichet')
+          });
         } else {
           authService.logout();
         }
@@ -30,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     const data = await authService.login(credentials);
     console.log('data');
-    setUser({ email: data.email, role: data.role });
+    setUser({ email: data.email, role: data.role, codeGuichet: data.codeGuichet });
     api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
     return data;
   };

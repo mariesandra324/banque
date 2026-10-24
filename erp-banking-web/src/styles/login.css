@@ -440,3 +440,11 @@ body {
         font-size: 22px;
     }
 }
+
+.login-forgot{margin-top:18px;display:flex;justify-content:flex-end}
+.login-forgot button{border:none;background:transparent;color:rgba(148,197,255,.95);font-weight:500;cursor:pointer;font-size:.95rem}
+.login-forgot button:hover{text-decoration:underline}
+.login-back{margin-top:20px;align-self:center;display:flex;align-items:center;gap:8px;border:none;background:transparent;color:rgba(226,232,240,.7);cursor:pointer;font-size:.95rem}
+.login-back:hover{color:#f8fafc}
+.login-success{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;background:linear-gradient(90deg,rgba(52,211,153,.22) 0%,rgba(15,23,42,.8) 100%);border:1px solid rgba(52,211,153,.5);color:#86efac;font-size:.95rem}
+
