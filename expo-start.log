@@ -1,0 +1,23 @@
+Starting project at D:\stage M2\ERPBankingMobile
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Starting Metro Bundler
+
+Waiting on http://localhost:8089
+
+An update for expo is available: 57.0.21 → ~57.0.24
+12 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+Web Bundled 12486ms node_modules\expo-router\entry.js (1375 modules)
+λ Bundled 12592ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1410 modules)
+"shadow*" style props are deprecated. Use "boxShadow".
+Android Bundled 7358ms node_modules\expo-router\entry.js (1886 modules)
+λ Bundled 1577ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+Web Bundled 1942ms node_modules\expo-router\entry.js (1 module)
+λ Bundled 41ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+Web Bundled 311ms node_modules\expo-router\entry.js (1 module)
+λ Bundled 43ms node_modules\expo\node_modules\@expo\cli\node_modules\@expo\router-server\node\render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+Web Bundled 369ms node_modules\expo-router\entry.js (1 module)
