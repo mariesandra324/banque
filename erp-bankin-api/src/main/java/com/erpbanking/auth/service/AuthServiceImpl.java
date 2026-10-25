@@ -92,9 +92,9 @@ public MobileLoginResponse mobileLogin (MobileLoginRequest request) {
     // 1. RECHERCHER LE CLIENT PAR NOM COMPLET
     // =====================================================
 
-    Client client = findByNomComplet(nomComplet);
+    List<Client> candidats = findByNomComplet(nomComplet);
 
-    if (client == null) {
+    if (candidats.isEmpty()) {
         throw new RuntimeException(
                 "Nom complet incorrect."
         );
@@ -104,16 +104,21 @@ public MobileLoginResponse mobileLogin (MobileLoginRequest request) {
     // 2. VÉRIFIER LE MOT DE PASSE (CODE PERSONNEL)
     // =====================================================
 
-    if (client.getCodePersonnelHash() == null
-            || !passwordEncoder.matches(
-                    request.getMotDePasse(),
-                    client.getCodePersonnelHash()
-            )) {
-
-        throw new RuntimeException(
-                "Mot de passe incorrect."
-        );
-    }
+    // Plusieurs clients peuvent partager le même nom complet (doublons en
+    // base). On ne peut donc pas se contenter du premier résultat : le mot
+    // de passe doit être vérifié sur chaque homonyme pour retrouver le bon
+    // client, sinon une réinitialisation sur l'un est ignorée si l'autre
+    // est renvoyé en premier par la requête.
+    Client client = candidats.stream()
+            .filter(c -> c.getCodePersonnelHash() != null
+                    && passwordEncoder.matches(
+                            request.getMotDePasse(),
+                            c.getCodePersonnelHash()
+                    ))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException(
+                    "Mot de passe incorrect."
+            ));
 
     // =====================================================
     // 3. VÉRIFIER LE STATUT DE L'ACCÈS MOBILE
@@ -190,19 +195,13 @@ public MobileLoginResponse mobileLogin (MobileLoginRequest request) {
             .build();
 }
 
-private Client findByNomComplet(String nomComplet) {
+private List<Client> findByNomComplet(String nomComplet) {
 
     String recherche = nomComplet.trim()
             .toLowerCase(Locale.ROOT)
             .replaceAll("\\s+", " ");
 
-    List<Client> clients = clientRepository.findByNomComplet(recherche);
-
-    if (clients.isEmpty()) {
-        return null;
-    }
-
-    return clients.get(0);
+    return clientRepository.findByNomComplet(recherche);
 }
 
 private Compte premierCompte(Long clientId) {
