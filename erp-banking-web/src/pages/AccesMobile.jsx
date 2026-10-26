@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { clientService } from '../service/clientService';
 import ClientMobileTable from '../features/client/ClientMobileTable';
 import { useAuth } from '../hooks/useAuth';
+import { extraireMessageErreur } from '../utils/messageErreur';
 
 const AccesMobile = () => {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ const AccesMobile = () => {
       setError(null);
     } catch (err) {
       console.error('Erreur API accès mobiles :', err);
-      setError(err.message ?? 'Erreur inconnue lors de la récupération des accès mobiles.');
+      setError(extraireMessageErreur(err, 'Erreur inconnue lors de la récupération des accès mobiles.'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +50,7 @@ const AccesMobile = () => {
       loadAccesMobiles();
     } catch (err) {
       console.error('Erreur modification statut accès mobile :', err);
-      setError(err.message || 'Impossible de modifier le statut.');
+      setError(extraireMessageErreur(err, 'Impossible de modifier le statut.'));
     }
   };
 

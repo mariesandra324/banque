@@ -9,11 +9,15 @@ import java.util.Optional;
 
 public interface GuichetRepository extends JpaRepository<Guichet, Long> {
 
-    Optional<Guichet> findByCodeGuichet(Guichet codeGuichet);
+    Optional<Guichet> findByCodeGuichet(String codeGuichet);
+
+    boolean existsByCodeGuichet(String codeGuichet);
+
+    List<Guichet> findAllByOrderByCodeGuichetAsc();
 
     List<Guichet> findByActifTrueOrderByCodeGuichetAsc();
 
     @Query
     ("SELECT g FROM Guichet g WHERE g.id NOT IN (SELECT u.guichet.id FROM Utilisateur u WHERE u.guichet IS NOT NULL) AND g.actif = true ")
-List<Guichet> findGuichetsDisponibles();
+    List<Guichet> findGuichetsDisponibles();
 }

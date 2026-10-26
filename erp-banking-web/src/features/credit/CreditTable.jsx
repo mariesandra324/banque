@@ -67,7 +67,7 @@ function CreditTable({ credits = [], onVoir }) {
   } catch (error) {
     console.error('Erreur échéancier :', error);
     setErreurEcheancier(
-      error.response?.data?.message || error.message || 'Une erreur est survenue.'
+      error.response?.data?.message || 'Une erreur est survenue.'
     );
   } finally {
     setChargementEcheancier(false);
@@ -92,7 +92,7 @@ function CreditTable({ credits = [], onVoir }) {
     } catch (error) {
       console.error('Erreur échéancier :', error);
       setErreurEcheancier(
-        error.response?.data?.message || error.message || 'Une erreur est survenue.'
+        error.response?.data?.message || 'Une erreur est survenue.'
       );
     } finally {
       setChargementEcheancier(false);

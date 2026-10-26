@@ -163,7 +163,6 @@ function AuditPanel() {
           statut === 403
             ? "Vous n'avez pas les droits pour consulter le journal d'audit."
             : e?.response?.data?.message ||
-              e?.message ||
               'Impossible de charger le journal d\'audit.',
         );
         setDonnees([]);

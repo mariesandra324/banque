@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { clientService } from '../../service/clientService';
+import { extraireMessageErreur } from '../../utils/messageErreur';
 
 const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: 'var(--text-primary)' };
 const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--input-border)', boxSizing: 'border-box', fontSize: '14px', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' };
@@ -40,7 +41,7 @@ function ClientMobileModal({ client, onClose, onSuccess }) {
       await clientService.createAccesMobile(client.id, formData);
       onSuccess();
     } catch (err) {
-      setSubmitError(err.message || "Impossible de créer l'accès mobile.");
+      setSubmitError(extraireMessageErreur(err, "Impossible de créer l'accès mobile."));
     } finally {
       setLoading(false);
     }

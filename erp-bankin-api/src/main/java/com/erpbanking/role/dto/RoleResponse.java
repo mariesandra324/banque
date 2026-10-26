@@ -1,6 +1,8 @@
 package com.erpbanking.role.dto;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,4 +18,6 @@ public class RoleResponse {
     private Boolean actif;
 
     private LocalDateTime dateCreation;
+
+    private Set<Long> permissionIds;
 }

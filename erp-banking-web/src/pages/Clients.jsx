@@ -4,6 +4,7 @@ import ClientForm from '../features/client/ClientForm';
 import ClientTable from '../features/client/ClientTable';
 import ClientMobileModal from '../features/client/ClientMobileModal';
 import { useAuth } from '../hooks/useAuth';
+import { extraireMessageErreur } from '../utils/messageErreur';
 
 // Le comptable est un rôle de consultation : il ne peut pas créer de client.
 const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
@@ -34,7 +35,7 @@ const Clients = () => {
       setError(null);
     } catch (err) {
       console.error('Erreur API clients :', err);
-      setError(err.message ?? 'Erreur inconnue lors de la récupération des clients.');
+      setError(extraireMessageErreur(err, 'Erreur inconnue lors de la récupération des clients.'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,7 @@ const Clients = () => {
       showNotification('Client supprimé avec succès.');
     } catch (err) {
       console.error('Erreur suppression client :', err);
-      setError(err.message || 'Impossible de supprimer le client.');
+      setError(extraireMessageErreur(err, 'Impossible de supprimer le client.'));
     }
   };
 

@@ -31,7 +31,7 @@ const Utilisateurs = () => {
 
   } catch (err) {
     console.error('Erreur chargement utilisateurs :', err);
-    setError(err.message || 'Erreur lors de la récupération des utilisateurs.');
+    setError(err.response?.data?.message || 'Erreur lors de la récupération des utilisateurs.');
   } finally {
     setLoading(false);
   }
@@ -77,7 +77,7 @@ const Utilisateurs = () => {
       loadUtilisateurs();
     } catch (err) {
       console.error('Erreur blocage utilisateur :', err);
-      setError(err.message || "Impossible de bloquer l'utilisateur.");
+      setError(err.response?.data?.message || "Impossible de bloquer l'utilisateur.");
     }
   };
 
@@ -89,7 +89,7 @@ const Utilisateurs = () => {
       loadUtilisateurs();
     } catch (err) {
       console.error('Erreur déblocage utilisateur :', err);
-      setError(err.message || "Impossible de débloquer l'utilisateur.");
+      setError(err.response?.data?.message || "Impossible de débloquer l'utilisateur.");
     }
   };
 

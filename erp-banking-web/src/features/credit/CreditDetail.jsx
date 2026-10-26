@@ -69,7 +69,7 @@ function CreditDetail({
     console.error("Erreur remboursement :", error);
 
     alert(
-      error.response?.data?.message || error.message || "Une erreur est survenue lors du remboursement."
+      error.response?.data?.message || "Une erreur est survenue lors du remboursement."
     );
 
   } finally {

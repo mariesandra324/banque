@@ -4,10 +4,16 @@ import com.erpbanking.role.dto.RoleRequest;
 import com.erpbanking.role.dto.RoleResponse;
 import com.erpbanking.role.mapper.RoleMapper;
 import com.erpbanking.role.repository.RoleRepository;
+import com.erpbanking.permission.entity.Permission;
+import com.erpbanking.permission.repository.PermissionRepository;
 import com.erpbanking.role.entity.Role;
 import com.erpbanking.common.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.*;
 
 @Service
@@ -15,9 +21,12 @@ import lombok.*;
 public class RoleServiceImpl implements RoleService{
     private final RoleRepository roleRepository;
 
+    private final PermissionRepository permissionRepository;
+
     private final RoleMapper roleMapper;
 
     @Override
+    @Transactional
     public RoleResponse create(RoleRequest request){
 
 
@@ -32,6 +41,7 @@ public class RoleServiceImpl implements RoleService{
 
         Role role = RoleMapper.toEntity(request);
 
+        role.setPermissions(chargerPermissions(request.getPermissionIds()));
 
         Role saved = roleRepository.save(role);
 
@@ -75,6 +85,7 @@ public class RoleServiceImpl implements RoleService{
 
 
     @Override
+    @Transactional
     public RoleResponse update(
             Long id,
             RoleRequest request
@@ -94,6 +105,14 @@ public class RoleServiceImpl implements RoleService{
         role.setDescription(
                 request.getDescription()
         );
+
+        if (request.getActif() != null) {
+            role.setActif(request.getActif());
+        }
+
+        if (request.getPermissionIds() != null) {
+            role.setPermissions(chargerPermissions(request.getPermissionIds()));
+        }
 
 
         return RoleMapper.toResponse(
@@ -123,5 +142,14 @@ public class RoleServiceImpl implements RoleService{
 
         roleRepository.save(role);
 
+    }
+
+    private Set<Permission> chargerPermissions(Set<Long> permissionIds) {
+
+        if (permissionIds == null || permissionIds.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        return new HashSet<>(permissionRepository.findAllById(permissionIds));
     }
 }

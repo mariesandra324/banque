@@ -8,10 +8,10 @@ import lombok.*;
 
 @Data
 public class UtilisateurRequest {
-    @NotBlank
+    @NotBlank(message = "Le nom est obligatoire.")
     private String nom;
 
-    @NotBlank
+    @NotBlank(message = "Le prénom est obligatoire.")
     private String prenom;
 
     @NotBlank(message = "L'email est obligatoire.")

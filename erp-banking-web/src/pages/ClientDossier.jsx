@@ -46,7 +46,6 @@ function ClientDossier() {
       console.error("Erreur chargement dossier client :", err);
       setError(
         err.response?.data?.message ||
-          err.message ||
           "Impossible de charger le dossier du client."
       );
     } finally {

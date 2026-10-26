@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { clientService } from '../../service/clientService';
+import { extraireMessageErreur } from '../../utils/messageErreur';
 
 const PHONE_PREFIX = '+261';
 
@@ -122,7 +123,7 @@ function ClientForm({ client, onSuccess, onCancel }) {
       }
       onSuccess();
     } catch (err) {
-      setSubmitError(err.message || "Impossible d'enregistrer le client.");
+      setSubmitError(extraireMessageErreur(err, "Impossible d'enregistrer le client."));
     } finally {
       setLoading(false);
     }

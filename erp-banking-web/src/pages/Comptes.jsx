@@ -43,7 +43,7 @@ const Comptes = () => {
       setError(null);
     } catch (err) {
       console.error('Erreur chargement comptes :', err);
-      setError(err.message || 'Erreur lors de la récupération des comptes.');
+      setError(err.response?.data?.message || 'Erreur lors de la récupération des comptes.');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,6 @@ const Comptes = () => {
 
     setError(
       err.response?.data?.message ||
-      err.message ||
       'Impossible de sauvegarder le compte.'
     );
   }
@@ -147,7 +146,7 @@ const Comptes = () => {
       showNotification('Compte supprimé avec succès.');
     } catch (err) {
       console.error('Erreur suppression compte :', err);
-      setError(err.message || 'Impossible de supprimer le compte.');
+      setError(err.response?.data?.message || 'Impossible de supprimer le compte.');
     }
   };
 

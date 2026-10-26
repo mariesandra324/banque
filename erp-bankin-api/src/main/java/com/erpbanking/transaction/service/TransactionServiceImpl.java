@@ -288,7 +288,6 @@ private void envoyerNotificationTransactionDestination(
 
     @Override
     public TransactionResponse obtenirReference(String reference) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'obtenirReference'");
+        return obtenirParReference(reference);
     }
 }
