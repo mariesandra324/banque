@@ -27,6 +27,13 @@ const demandeCreditService = {
         return response.data;
     },
 
+    optimiser: async (budget) => {
+        const response = await api.post("/credits/optimize", null, {
+            params: { budget }
+        });
+        return response.data;
+    },
+
     // Créer une demande
     creer: async (demande) => {
         const response = await api.post("/demandes-credit", demande);

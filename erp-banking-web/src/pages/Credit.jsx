@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, WandSparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import DemandeCreditTable from '../features/credit/DemandeCreditTable';
 import CreditTable from '../features/credit/CreditTable';
@@ -32,6 +32,8 @@ function Credit() {
   const [erreur, setErreur] = useState(null);
   const [formOuvert, setFormOuvert] = useState(!!demandeCreditId);
   const [offres, setOffres] = useState([]);
+  const [budgetOptimisation, setBudgetOptimisation] = useState('');
+  const [optimisationEnCours, setOptimisationEnCours] = useState(false);
 
   const chargerDonnees = async () => {
     setChargement(true);
@@ -73,6 +75,35 @@ function Credit() {
   }catch (err) {
     console.error('Erreur rejet:', err.response?.data || err.message);
   }};
+
+  const handleOptimiser = async () => {
+    const budgetAr = Number(budgetOptimisation);
+    if (!Number.isSafeInteger(budgetAr) || budgetAr < 0) {
+      setErreur('Saisissez un budget entier positif en Ariary.');
+      return;
+    }
+
+    setOptimisationEnCours(true);
+    setErreur(null);
+    try {
+      const demandesAcceptees = await demandeCreditService.optimiser(
+        Math.floor(budgetAr / 1000)
+      );
+      await chargerDonnees();
+      setErreur(
+        demandesAcceptees.length
+          ? `${demandesAcceptees.length} demande(s) acceptée(s) et offre(s) générée(s).`
+          : 'Aucune demande ne correspond à ce budget.'
+      );
+    } catch (err) {
+      console.error('Erreur optimisation des crédits:', err);
+      setErreur(
+        err.response?.data?.message || "Impossible d'optimiser les demandes."
+      );
+    } finally {
+      setOptimisationEnCours(false);
+    }
+  };
 
   const handleCreerDemande = async (donnees) => {
     await creerDemandeCredit(donnees);
@@ -154,17 +185,55 @@ function Credit() {
         <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--heading)', margin: 0 }}>
           Crédit
         </h1>
-        <button
-          onClick={() => setFormOuvert(true)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
-            borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: 'white',
-            fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-          }}
-        >
-          <Plus size={16} />
-          {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres' ? 'Nouvelle offre' : 'Nouveau crédit'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {ongletActif === 'demandes' && (
+            <>
+              <label htmlFor="budget-optimisation" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                Budget (Ar)
+              </label>
+              <input
+                id="budget-optimisation"
+                type="number"
+                min="0"
+                step="1000"
+                value={budgetOptimisation}
+                onChange={(event) => setBudgetOptimisation(event.target.value)}
+                placeholder="Ex. 100 000 000"
+                style={{
+                  width: '150px', padding: '9px 10px', borderRadius: '8px',
+                  border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)',
+                  color: 'var(--text-primary)', fontSize: '13px',
+                }}
+              />
+              <button
+                onClick={handleOptimiser}
+                disabled={optimisationEnCours || budgetOptimisation === ''}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
+                  borderRadius: '8px', border: '1px solid #2563eb',
+                  backgroundColor: 'var(--card-bg)', color: '#2563eb',
+                  fontSize: '13px', fontWeight: '600',
+                  cursor: optimisationEnCours ? 'wait' : 'pointer',
+                  opacity: optimisationEnCours || budgetOptimisation === '' ? 0.6 : 1,
+                }}
+              >
+                <WandSparkles size={16} />
+                {optimisationEnCours ? 'Optimisation...' : 'Optimiser'}
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setFormOuvert(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
+              borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: 'white',
+              fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+            }}
+          >
+            <Plus size={16} />
+            {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres' ? 'Nouvelle offre' : 'Nouveau crédit'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', overflowX: 'auto' }}>
@@ -186,7 +255,14 @@ function Credit() {
       </div>
 
       {erreur && (
-        <div style={{ padding: '12px 16px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: erreur.includes('acceptée') || erreur.includes('Aucune demande')
+            ? '#dcfce7' : '#fee2e2',
+          color: erreur.includes('acceptée') || erreur.includes('Aucune demande')
+            ? '#166534' : '#991b1b',
+          borderRadius: '8px', marginBottom: '16px', fontSize: '13px'
+        }}>
           {erreur}
         </div>
       )}
