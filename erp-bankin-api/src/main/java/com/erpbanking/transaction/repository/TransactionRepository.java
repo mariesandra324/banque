@@ -34,6 +34,17 @@ public interface TransactionRepository  extends JpaRepository<Transaction, Long>
     @Query("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd ORDER BY t.dateTransaction DESC")
     List<Transaction> findAllWithAccountsOrderByDateTransactionDesc();
 
+    List<Transaction> findByGuichetIdOrderByDateTransactionDesc(Long guichetId);
+
+    List<Transaction> findTop5ByGuichetIdOrderByDateTransactionDesc(Long guichetId);
+
+    @Query(value = "SELECT COALESCE(SUM(CASE "
+            + "WHEN type = 'DEPOT' THEN montant "
+            + "WHEN type = 'RETRAIT' THEN -montant "
+            + "ELSE 0 END), 0) "
+            + "FROM transactions WHERE guichet_id = :guichetId AND statut = 'SUCCES'", nativeQuery = true)
+    java.math.BigDecimal calculerSoldeGuichet(@Param("guichetId") Long guichetId);
+
     Transaction findByReference(String reference);
 
     @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd WHERE (cs.client.id = :clientId OR cd.client.id = :clientId) ORDER BY t.dateTransaction DESC ")

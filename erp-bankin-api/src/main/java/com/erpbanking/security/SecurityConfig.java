@@ -1,7 +1,9 @@
 package com.erpbanking.security;
 
 import java.util.List;
+import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -33,6 +35,8 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter; // <-- ajouté
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8081,http://localhost:19006,http://127.0.0.1:8081,http://127.0.0.1:19006}")
+    private String allowedOrigins;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -101,13 +105,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173",
-                        "http://localhost:8081",
-                        "http://localhost:19006",
-                        "http://127.0.0.1:8081",
-                        "http://127.0.0.1:19006"
-                )
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toList()
         );
 
         configuration.setAllowedMethods(

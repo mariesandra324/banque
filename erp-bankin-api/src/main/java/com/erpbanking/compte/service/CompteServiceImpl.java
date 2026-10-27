@@ -8,6 +8,7 @@ import com.erpbanking.client.repository.ClientRepository;
 
 import com.erpbanking.compte.dto.CompteRequest;
 import com.erpbanking.compte.dto.CompteResponse;
+import com.erpbanking.compte.dto.ParametresInteretsResponse;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.mapper.CompteMapper;
 import com.erpbanking.compte.repository.CompteRepository;
@@ -46,6 +47,8 @@ public class CompteServiceImpl implements CompteService {
 
     private final AuditService auditService;
 
+    private final ParametresInteretsService parametresInteretsService;
+
     // Préfixe à 2 chiffres selon le type de compte (norme RIB : 11 chiffres au total pour numeroCompte).
     // Les clés doivent matcher exactement les valeurs du <select> côté frontend (Comptes.jsx).
     private static final Map<String, String> PREFIXES_PAR_TYPE = Map.of(
@@ -56,10 +59,6 @@ public class CompteServiceImpl implements CompteService {
     private static final int LONGUEUR_SUFFIXE = 9;
 
     // ===== Intérêts mensuels =====
-    // Montant fixe crédité sur chaque compte (courant ou épargne) tous les
-    // 30 jours révolus depuis la création (ou depuis le dernier versement).
-    public static final BigDecimal INTERET_MENSUEL = new BigDecimal("5000");
-
     // Nombre de jours entre deux versements d'intérêts.
     private static final long PERIODE_INTERET_JOURS = 30;
 
@@ -69,8 +68,10 @@ public class CompteServiceImpl implements CompteService {
 
         LocalDate aujourdhui = LocalDate.now();
         List<Compte> comptes = compteRepository.findAll();
+        ParametresInteretsResponse parametres = parametresInteretsService.get();
 
         int totalCredite = 0;
+        BigDecimal totalInteretsCredites = BigDecimal.ZERO;
 
         for (Compte compte : comptes) {
 
@@ -94,17 +95,19 @@ public class CompteServiceImpl implements CompteService {
                 continue;
             }
 
+            BigDecimal interetMensuel = montantInteretPourType(compte.getTypeCompte(), parametres);
             BigDecimal solde = compte.getSolde() != null ? compte.getSolde() : BigDecimal.ZERO;
-            compte.setSolde(solde.add(INTERET_MENSUEL));
+            compte.setSolde(solde.add(interetMensuel));
             compte.setDernierInteretAppliqueLe(aujourdhui);
             compteRepository.save(compte);
             totalCredite++;
+            totalInteretsCredites = totalInteretsCredites.add(interetMensuel);
 
             auditService.journaliser(
                     AuditAction.MODIFICATION,
                     AuditModule.COMPTES,
                     "Compte #" + compte.getId(),
-                    "Versement d'intérêts mensuels (" + INTERET_MENSUEL + " Ar) sur le compte "
+                    "Versement d'intérêts mensuels (" + interetMensuel + " Ar) sur le compte "
                             + compte.getNumeroCompte() + "."
             );
 
@@ -112,7 +115,7 @@ public class CompteServiceImpl implements CompteService {
                 notificationService.creerPourClient(
                         compte.getClient().getId(),
                         NotificationType.INTERET_VERSE,
-                        "Intérêts mensuels de " + INTERET_MENSUEL + " Ar crédités sur votre compte "
+                        "Intérêts mensuels de " + interetMensuel + " Ar crédités sur votre compte "
                                 + compte.getNumeroCompte() + ".",
                         "/comptes"
                 );
@@ -122,10 +125,23 @@ public class CompteServiceImpl implements CompteService {
         if (totalCredite > 0) {
             notificationService.creerPourRole(
                     NotificationType.COMPTE_CREE,
-                    totalCredite + " compte(s) ont reçu leurs intérêts mensuels (" + INTERET_MENSUEL + " Ar).",
+                    totalCredite + " compte(s) ont reçu leurs intérêts mensuels ("
+                            + totalInteretsCredites + " Ar au total).",
                     "/comptes"
             );
         }
+    }
+
+    private BigDecimal montantInteretPourType(
+            String typeCompte,
+            ParametresInteretsResponse parametres) {
+        if ("Courant".equalsIgnoreCase(typeCompte)) {
+            return parametres.getMontantCourant();
+        }
+        if ("Epargne".equalsIgnoreCase(typeCompte)) {
+            return parametres.getMontantEpargne();
+        }
+        throw new IllegalArgumentException("Type de compte inconnu pour le calcul des intérêts : " + typeCompte);
     }
 
     @Override

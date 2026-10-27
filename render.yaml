@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: erp-banking-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./erp-bankin-api/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: APPLICATION_SECURITY_JWT_SECRET_KEY
+        sync: false
+      - key: APP_FRONTEND_URL
+        sync: false
+      - key: APP_BACKEND_URL
+        sync: false

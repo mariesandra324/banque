@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Search } from 'lucide-react';
 import { clientService } from '../service/clientService';
+import { getComptes } from '../service/compteService';
 import ClientForm from '../features/client/ClientForm';
 import ClientTable from '../features/client/ClientTable';
 import ClientMobileModal from '../features/client/ClientMobileModal';
@@ -14,6 +16,8 @@ const Clients = () => {
   const peutCreerClient = ROLES_AUTORISES_A_CREER.includes(user?.role);
 
   const [clients, setClients] = useState([]);
+  const [comptes, setComptes] = useState([]);
+  const [recherche, setRecherche] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -30,8 +34,12 @@ const Clients = () => {
   const loadClients = async () => {
     try {
       setLoading(true);
-      const data = await clientService.getAllClients();
+      const [data, comptesResponse] = await Promise.all([
+        clientService.getAllClients(),
+        getComptes().then((response) => response.data).catch(() => []),
+      ]);
       setClients(data);
+      setComptes(Array.isArray(comptesResponse) ? comptesResponse : []);
       setError(null);
     } catch (err) {
       console.error('Erreur API clients :', err);
@@ -99,23 +107,38 @@ const Clients = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: '20px', margin: 0, color: 'var(--heading)' }}>Clients</h1>
 
-        {vue === 'liste' ? (
-          peutCreerClient && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {vue === 'liste' && (
+            <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
+              <Search size={16} color="#94a3b8" style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                placeholder="Rechercher par nom ou n° de compte..."
+                value={recherche}
+                onChange={(e) => setRecherche(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: '6px', border: '1px solid var(--input-border)', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
+              />
+            </div>
+          )}
+
+          {vue === 'liste' ? (
+            peutCreerClient && (
+              <button
+                onClick={handleOpenAdd}
+                style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+              >
+                + Ajouter un client
+              </button>
+            )
+          ) : (
             <button
-              onClick={handleOpenAdd}
-              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+              onClick={handleVoirListe}
+              style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
             >
-              + Ajouter un client
+              Voir la liste des clients
             </button>
-          )
-        ) : (
-          <button
-            onClick={handleVoirListe}
-            style={{ backgroundColor: 'var(--card-bg)', color: '#2563eb', padding: '10px 16px', borderRadius: '6px', border: '1px solid #2563eb', cursor: 'pointer', fontWeight: '500' }}
-          >
-            Voir la liste des clients
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
       {notification && (
@@ -133,6 +156,8 @@ const Clients = () => {
       ) : (
         <ClientTable
           clients={clients}
+          comptes={comptes}
+          recherche={recherche}
           onEdit={handleOpenEdit}
           onDelete={handleDelete}
           onCreateMobile={setClientMobileCible}
