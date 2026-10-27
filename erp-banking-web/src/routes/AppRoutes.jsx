@@ -1,5 +1,4 @@
-
-import { Routes, Route, Navigate } from 'react-router-dom';
+﻿import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from '../pages/Dashboard';
@@ -20,6 +19,8 @@ import Audit from '../pages/Audit';
 import Settings from '../features/settings/Settings';
 import ClientDossier from '../pages/ClientDossier';
 import Comptabilite from '../pages/Comptabilite';
+import MonGuichet from '../pages/MonGuichet';
+import TransfertsCoffre from '../pages/TransfertsCoffre';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -56,11 +57,9 @@ const RoleRoute = ({ allowedRoles, children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Route Publique : La page de Connexion */}
       <Route path="/login" element={<Login />} />
       <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
 
-      {/* Routes Sécurisées : Accessibles uniquement si on a un token */}
       <Route
             path="/"
             element={
@@ -69,8 +68,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
             }
         >
-            
-            {/* Page d'accueil après connexion */}
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route
@@ -81,7 +78,23 @@ const AppRoutes = () => {
                 </RoleRoute>
               }
             />
-            <Route path="/clients/:id" element={<ClientDossier />} />
+            <Route path="clients/:id" element={<ClientDossier />} />
+            <Route
+              path="mon-guichet"
+              element={
+                <RoleRoute allowedRoles={["AGENT", "ADMIN"]}>
+                  <MonGuichet />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="transferts-coffre"
+              element={
+                <RoleRoute allowedRoles={["GESTIONNAIRE", "ADMIN"]}>
+                  <TransfertsCoffre />
+                </RoleRoute>
+              }
+            />
             <Route path="comptes" element={<Comptes />} />
             <Route
               path="acces-mobile"
@@ -97,7 +110,7 @@ const AppRoutes = () => {
             <Route path="credits/demandes/:id" element={<DemandeCreditDetail />} />
             <Route path="credits/demandes/nouvelle" element={<DemandeCreditForm />} />
             <Route path="credits/nouveau" element={<CreditForm />} />
-            <Route path="/credits/offres/:id" element={<OffreCreditDetail />}/>
+            <Route path="credits/offres/:id" element={<OffreCreditDetail />}/>
             <Route
               path="comptabilite"
               element={
@@ -106,19 +119,18 @@ const AppRoutes = () => {
                 </RoleRoute>
               }
             />
-            <Route path="/rapports" element={<Rapports />}/>
+            <Route path="rapports" element={<Rapports />}/>
             <Route
-              path="/audit"
+              path="audit"
               element={
                 <RoleRoute allowedRoles={["ADMIN", "COMPTABLE"]}>
                   <Audit />
                 </RoleRoute>
               }
             />
-            <Route path="/parametres" element={<Settings />} />
+            <Route path="parametres" element={<Settings />} />
       </Route>
 
-      {/* Si l'utilisateur tape une URL inconnue, on le redirige vers l'accueil (qui vérifiera s'il est connecté) */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

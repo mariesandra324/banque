@@ -1,16 +1,12 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { previewNumero } from '../../service/compteService';
+import { getInteretsMensuels } from '../../service/interetService';
 
 const TYPES_COMPTE = ['Courant', 'Epargne'];
 
 // Banque fictive du projet (fixes, non modifiables depuis le formulaire)
 const CODE_BANQUE = '00090';
-
-// Intérêts mensuels fixes crédités automatiquement (aligné sur
-// CompteServiceImpl.INTERET_MENSUEL côté backend).
-const INTERET_MENSUEL = 5000;
-
 
 function CompteForm({ compte, clients, onSubmit, onCancel }) {
   const codeGuichet = localStorage.getItem("codeGuichet");
@@ -25,6 +21,8 @@ function CompteForm({ compte, clients, onSubmit, onCancel }) {
     clientId: '',
   });
   const [fieldErrors, setFieldErrors] = useState({});
+  const [parametresInterets, setParametresInterets] = useState(null);
+  const [erreurInterets, setErreurInterets] = useState('');
 
   const [hasCard, setHasCard] = useState(false);
 
@@ -40,6 +38,12 @@ const handleCardChange = (e) => {
     [name]: value,
   }));
 };
+
+  useEffect(() => {
+    getInteretsMensuels()
+      .then(({ data }) => setParametresInterets(data))
+      .catch(() => setErreurInterets('Impossible de charger le montant des intérêts mensuels.'));
+  }, []);
 
   useEffect(() => {
     if (compte) {
@@ -133,10 +137,112 @@ const handleCardChange = (e) => {
   const disabledStyle = { backgroundColor: 'var(--table-header)', color: 'var(--muted)' };
   const cardStyle = { backgroundColor: 'var(--card-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', padding: '24px' };
   const cardTitleStyle = { fontSize: '15px', fontWeight: '700', color: 'var(--heading)', marginBottom: '18px' };
+  const montantInteret = formData.typeCompte === 'Courant'
+    ? parametresInterets?.montantCourant
+    : formData.typeCompte === 'Epargne'
+      ? parametresInterets?.montantEpargne
+      : null;
 
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
+      {/* ===== CARTE BANCAIRE ===== */}
+      <div
+        style={{
+          ...cardStyle,
+          marginBottom: '24px',
+        }}
+      >
+        {/* En-tête avec case à cocher */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: hasCard ? '20px' : '0',
+          }}
+        >
+          <div style={cardTitleStyle}>
+            Carte bancaire
+          </div>
+
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: 'var(--text-primary)',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={hasCard}
+              onChange={(e) => setHasCard(e.target.checked)}
+              style={{
+                width: '16px',
+                height: '16px',
+                cursor: 'pointer',
+              }}
+            />
+
+            Ce compte possède une carte bancaire
+          </label>
+        </div>
+
+        {/* ===== FORMULAIRE CARTE ===== */}
+        {hasCard && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              paddingTop: '4px',
+            }}
+          >
+            {/* Type de carte */}
+            <div>
+              <label style={labelStyle}>
+                Type de carte
+              </label>
+
+              <select
+                name="typeCarte"
+                value={cardData.typeCarte}
+                onChange={handleCardChange}
+                style={{
+                  ...inputStyle,
+                  backgroundColor: 'var(--card-bg)',
+                }}
+              >
+                <option value="VISA">VISA</option>
+                <option value="MASTERCARD">Mastercard</option>
+              </select>
+            </div>
+
+            {/* Compte associé */}
+            <div>
+              <label style={labelStyle}>
+                Compte associé
+              </label>
+
+              <input
+                type="text"
+                value={formData.numeroCompte || '-'}
+                disabled
+                style={{
+                  ...inputStyle,
+                  ...disabledStyle,
+                  fontFamily: 'monospace',
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', alignItems: 'start' }}>
 
         {/* ===== Colonne principale ===== */}
         <div style={cardStyle}>
@@ -220,7 +326,7 @@ const handleCardChange = (e) => {
         </div>
 
         {/* ===== Colonne latérale ===== */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
 
           <div style={cardStyle}>
             <div style={cardTitleStyle}>Informations bancaires</div>
@@ -251,7 +357,7 @@ const handleCardChange = (e) => {
           </div>
 
           {isEditing && (compte.cleRib || compte.iban) && (
-            <div style={cardStyle}>
+            <div style={{ ...cardStyle, gridColumn: '1 / -1' }}>
               <div style={cardTitleStyle}>RIB / IBAN</div>
               <div style={{ marginBottom: '14px' }}>
                 <label style={labelStyle}>Clé RIB</label>
@@ -274,19 +380,26 @@ const handleCardChange = (e) => {
             </div>
           )}
 
-          {/* ===== Intérêts mensuels (automatique, non modifiable) ===== */}
-          <div style={cardStyle}>
+          {/* ===== Intérêts mensuels ===== */}
+          <div style={{ ...cardStyle, gridColumn: '2', gridRow: '1' }}>
             <div style={cardTitleStyle}>Intérêts mensuels</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                {new Intl.NumberFormat('fr-FR').format(INTERET_MENSUEL)} Ar
+                {montantInteret == null
+                  ? '—'
+                  : `${new Intl.NumberFormat('fr-FR').format(montantInteret)} Ar`}
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>/ mois</span>
             </div>
             <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px', lineHeight: 1.5 }}>
               Crédités automatiquement sur le compte 30 jours après sa création,
-              puis tous les mois. Valable pour les comptes courants et d'épargne.
+              puis tous les mois, selon le type de compte.
             </div>
+            {erreurInterets && (
+              <div style={{ marginTop: '8px', color: '#dc2626', fontSize: '12px' }}>
+                {erreurInterets}
+              </div>
+            )}
             {isEditing && (
               <div style={{ marginTop: '12px' }}>
                 <label style={labelStyle}>Dernier versement d'intérêts</label>
@@ -319,102 +432,6 @@ const handleCardChange = (e) => {
         </button>
       </div>
 
-      {/* ===== CARTE BANCAIRE ===== */}
-<div
-  style={{
-    ...cardStyle,
-    marginTop: '24px',
-  }}
->
-  {/* En-tête avec case à cocher */}
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: hasCard ? '20px' : '0',
-    }}
-  >
-    <div style={cardTitleStyle}>
-      Carte bancaire
-    </div>
-
-    <label
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        cursor: 'pointer',
-        fontSize: '14px',
-        fontWeight: '500',
-        color: 'var(--text-primary)',
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={hasCard}
-        onChange={(e) => setHasCard(e.target.checked)}
-        style={{
-          width: '16px',
-          height: '16px',
-          cursor: 'pointer',
-        }}
-      />
-
-      Ce compte possède une carte bancaire
-    </label>
-  </div>
-
-  {/* ===== FORMULAIRE CARTE ===== */}
-  {hasCard && (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '16px',
-        paddingTop: '4px',
-      }}
-    >
-      {/* Type de carte */}
-      <div>
-        <label style={labelStyle}>
-          Type de carte
-        </label>
-
-        <select
-          name="typeCarte"
-          value={cardData.typeCarte}
-          onChange={handleCardChange}
-          style={{
-            ...inputStyle,
-            backgroundColor: 'var(--card-bg)',
-          }}
-        >
-          <option value="VISA">VISA</option>
-          <option value="MASTERCARD">Mastercard</option>
-        </select>
-      </div>
-
-      {/* Compte associé */}
-      <div>
-        <label style={labelStyle}>
-          Compte associé
-        </label>
-
-        <input
-          type="text"
-          value={formData.numeroCompte || '-'}
-          disabled
-          style={{
-            ...inputStyle,
-            ...disabledStyle,
-            fontFamily: 'monospace',
-          }}
-        />
-      </div>
-    </div>
-  )}
-</div>
     </form>
   );
 }

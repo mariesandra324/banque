@@ -1,4 +1,4 @@
-import { UserCircle, Menu, LogOut, Sun, Moon, Settings } from "lucide-react";
+import { UserCircle, Menu, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
@@ -50,18 +50,6 @@ function Navbar({ toggleSidebar }) {
             <Sun className="icon theme-icon" size={20} style={{ color: '#f59e0b' }}/>
           )}
         </button>
-        <div className="divider"></div>
-
-        {/* Paramétrage : guichets, rôles & permissions */}
-        <button
-          className="theme-toggle-btn"
-          onClick={() => navigate("/parametres")}
-          title="Paramètres"
-        >
-          <Settings className="icon theme-icon" size={20} />
-        </button>
-
-        <div className="divider"></div>
 
         {/* Profil Utilisateur : clic → page Paramètres */}
         <button

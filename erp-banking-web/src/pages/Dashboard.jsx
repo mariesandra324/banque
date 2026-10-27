@@ -12,6 +12,9 @@ import {
   Inbox,
   WalletCards,
   Activity,
+  Store,
+  DoorOpen,
+  DoorClosed,
 } from 'lucide-react';
 import {
   BarChart,
@@ -46,6 +49,9 @@ import {
   serieCredits,
   seriePerformance,
 } from '../utils/evolution';
+import { getMonGuichet, ouvrirSession, fermerSession } from '../service/caisseService';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import '../styles/dashboard.css';
 
 // ============ Couleurs (variables du thème clair/sombre) ============
@@ -157,6 +163,52 @@ function EmptyState({ message, icon: Icon = Inbox }) {
 }
 
 function Dashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const role = user?.role;
+  const [monGuichetData, setMonGuichetData] = useState(null);
+  const [erreurGuichet, setErreurGuichet] = useState(false);
+  const [soldeOuverture, setSoldeOuverture] = useState('');
+  const [soldeFermeture, setSoldeFermeture] = useState('');
+
+  const handleOuvrirSession = async () => {
+    try {
+      await ouvrirSession({ guichetId: monGuichetData?.guichetId, soldeOuverture: Number(soldeOuverture) || 0 });
+      const res = await getMonGuichet();
+      setMonGuichetData(res.data);
+      setErreurGuichet(false);
+      setSoldeOuverture('');
+    } catch (e) {
+      alert(e.response?.data?.message || "Erreur ouverture session");
+    }
+  };
+
+  const handleFermerSession = async () => {
+    try {
+      await fermerSession({ soldeFermeture: Number(soldeFermeture) || 0 });
+      const res = await getMonGuichet();
+      setMonGuichetData(res.data);
+      setErreurGuichet(false);
+      setSoldeFermeture('');
+    } catch (e) {
+      alert(e.response?.data?.message || "Erreur fermeture session");
+    }
+  };
+
+  useEffect(() => {
+    const chargerGuichet = async () => {
+      if (role !== 'AGENT') return;
+      try {
+        const res = await getMonGuichet();
+        setMonGuichetData(res.data);
+        setErreurGuichet(false);
+      } catch {
+        setErreurGuichet(true);
+      }
+    };
+    chargerGuichet();
+  }, [role]);
+
   const [stats, setStats] = useState({
     totalClients: 0,
     totalComptes: 0,
@@ -519,7 +571,7 @@ function Dashboard() {
           <button
             type="button"
             className={`dash-refresh ${chargement ? 'dash-refresh--spinning' : ''}`}
-            onClick={() => chargerStatsRef.current?.()}
+            onClick={() => { chargerStatsRef.current?.(); if(role==='AGENT'){ getMonGuichet().then(r=>{ setMonGuichetData(r.data); setErreurGuichet(false); }).catch(()=>setErreurGuichet(true)); } }}
             disabled={chargement}
           >
             <RefreshCw size={14} />
@@ -540,51 +592,111 @@ function Dashboard() {
       )}
 
       {/* ===== Indicateurs ===== */}
-      <section className="dash-stats">
-        {chargement ? (
-          <>
-            <div className="dash-skeleton dash-skeleton--stat" />
-            <div className="dash-skeleton dash-skeleton--stat" />
-            <div className="dash-skeleton dash-skeleton--stat" />
-            <div className="dash-skeleton dash-skeleton--stat" />
-          </>
-        ) : (
-          <>
-            <StatCard
-              label="Total clients"
-              value={formatNombre(stats.totalClients)}
-              foot="Clients enregistrés"
-              variant="blue"
-              icon={Users}
-            />
-            <StatCard
-              label="Comptes"
-              value={formatNombre(stats.totalComptes)}
-              foot={`${repartitionComptes.length} type(s) de compte`}
-              variant="green"
-              icon={Landmark}
-            />
-            <StatCard
-              label="Encours de crédit"
-              value={formatMontant(stats.encoursCredit)}
-              foot="Capital restant dû"
-              variant="gold"
-              icon={Wallet}
-            />
-            <StatCard
-              label="Demandes"
-              value={formatNombre(stats.totalDemandes)}
-              foot={
-                stats.demandesEnAttente > 0
-                  ? `${stats.demandesEnAttente} en attente de traitement`
-                  : 'Aucune demande en attente'
-              }
-              variant="purple"
-              icon={ArrowLeftRight}
-            />
-          </>
-        )}
-      </section>
+      {role !== 'AGENT' && (
+        <section className="dash-stats">
+          {chargement ? (
+            <>
+              <div className="dash-skeleton dash-skeleton--stat" />
+              <div className="dash-skeleton dash-skeleton--stat" />
+              <div className="dash-skeleton dash-skeleton--stat" />
+              <div className="dash-skeleton dash-skeleton--stat" />
+            </>
+          ) : (
+            <>
+              <StatCard
+                label="Total clients"
+                value={formatNombre(stats.totalClients)}
+                foot="Clients enregistrés"
+                variant="blue"
+                icon={Users}
+              />
+              <StatCard
+                label="Comptes"
+                value={formatNombre(stats.totalComptes)}
+                foot={`${repartitionComptes.length} type(s) de compte`}
+                variant="green"
+                icon={Landmark}
+              />
+              <StatCard
+                label="Encours de crédit"
+                value={formatMontant(stats.encoursCredit)}
+                foot="Capital restant dû"
+                variant="gold"
+                icon={Wallet}
+              />
+              <StatCard
+                label="Demandes"
+                value={formatNombre(stats.totalDemandes)}
+                foot={
+                  stats.demandesEnAttente > 0
+                    ? `${stats.demandesEnAttente} en attente de traitement`
+                    : 'Aucune demande en attente'
+                }
+                variant="purple"
+                icon={ArrowLeftRight}
+              />
+            </>
+          )}
+        </section>
+      )}
+
+      {/* ===== Dashboard AGENT - Mon Guichet ===== */}
+      {role === 'AGENT' && (
+        <section className="dash-panel" style={{ marginBottom: 24 }}>
+          <div className="dash-panel-head">
+            <span className="dash-panel-title">
+              <Store size={17} />
+              Mon Guichet
+            </span>
+            <button onClick={() => navigate('/mon-guichet')} style={{ background: 'transparent', border: 'none', color: '#2563eb', cursor: 'pointer', fontWeight: 500 }}>Gérer mon guichet</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16, padding: '16px' }}>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Guichet</div>
+              <div style={{ fontSize: 18, fontWeight: 600, marginTop: 4 }}>{monGuichetData?.codeGuichet || '-'}</div>
+              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {monGuichetData?.sessionOuverte ? <><DoorOpen size={16} color={c.accentGreen}/><span style={{ color: c.accentGreen, fontWeight: 500 }}>Ouvert</span></> : <><DoorClosed size={16} color={c.accentGold}/><span style={{ color: c.accentGold, fontWeight: 500 }}>Fermé</span></>}
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Solde disponible (estimé)</div>
+              <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
+                {erreurGuichet ? 'Indisponible' : monGuichetData ? formatMontant(monGuichetData.soldeDisponible) : 'Chargement...'}
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>Gestion session</div>
+              {!monGuichetData?.sessionOuverte ? (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="number" placeholder="Solde ouverture" value={soldeOuverture} onChange={(e)=>setSoldeOuverture(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--input-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}/>
+                  <button onClick={handleOuvrirSession} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: c.accentGreen, color: 'white', cursor: 'pointer' }}>Ouvrir</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="number" placeholder="Solde fermeture" value={soldeFermeture} onChange={(e)=>setSoldeFermeture(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--input-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}/>
+                  <button onClick={handleFermerSession} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: c.accentGold, color: 'white', cursor: 'pointer' }}>Fermer</button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <div style={{ fontWeight: 600, marginBottom: 10 }}>5 dernières transactions du guichet</div>
+            {(monGuichetData?.dernieresTransactions||[]).length === 0 ? <div style={{ color: 'var(--text-secondary)' }}>Aucune transaction</div> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {(monGuichetData?.dernieresTransactions||[]).map(tx => (
+                  <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--faint)' }}>
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{tx.reference}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tx.type} • {tx.dateTransaction ? new Date(tx.dateTransaction).toLocaleString('fr-FR') : ''}</div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>{formatMontant(tx.montant)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ===== Courbe d'évolution ===== */}
       <section className="dash-panel dash-panel--evolution">
@@ -656,14 +768,17 @@ function Dashboard() {
           )}
         </div>
       </section>
+      
 
       {/* ===== Graphiques ===== */}
-      <section className="dash-grid">
-        <Panel
-          title="Demandes par statut"
-          icon={TrendingUp}
-          hint={majLe ? `Mis à jour à ${formatHeure(majLe)}` : null}
-        >
+      {role !== 'AGENT' && (
+        <>
+        <section className="dash-grid">
+          <Panel
+            title="Demandes par statut"
+            icon={TrendingUp}
+            hint={majLe ? `Mis à jour à ${formatHeure(majLe)}` : null}
+          >
           {chargement ? (
             <div className="dash-skeleton dash-skeleton--chart" />
           ) : demandesParStatut.length > 0 ? (
@@ -842,6 +957,8 @@ function Dashboard() {
           )}
         </Panel>
       </section>
+        </>
+      )}
     </div>
   );
 }

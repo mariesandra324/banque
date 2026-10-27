@@ -25,15 +25,8 @@ const extraireMessageErreur = async (response, messageParDefaut) => {
 export const clientService = {
   // 1. Récupérer tous les clients (GET)
   getAllClients: async () => {
-    const response = await fetch(API_URL, {
-      method: "GET",
-      headers: getHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error("Erreur lors de la récupération des clients");
-    }
-    return response.json();
+    const response = await api.get("/clients");
+    return response.data;
   },
 
   // 2. Ajouter un client (POST)
