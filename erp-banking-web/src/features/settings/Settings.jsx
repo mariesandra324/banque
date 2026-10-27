@@ -20,6 +20,7 @@ import {
   Save,
   Power,
   RefreshCw,
+  Coins,
 } from "lucide-react";
 
 import { useTheme } from "../../hooks/useTheme";
@@ -32,6 +33,7 @@ import { getGuichets, createGuichet, updateGuichet } from "../../service/guichet
 import { PERMISSIONS_PAR_MODULE } from "../../config/permissions";
 import "../../styles/settings.css";
 import { useAuth } from "../../hooks/useAuth";
+import { getInteretsMensuels, updateInteretsMensuels } from "../../service/interetService";
 
 const Settings = () => {
   const [section, setSection] = useState("profil");
@@ -68,6 +70,11 @@ const Settings = () => {
     },
     ...(isAdmin
       ? [
+          {
+            id: "interets",
+            label: "Intérêts des comptes",
+            icon: Coins,
+          },
           {
             id: "guichets",
             label: "Guichets",
@@ -163,6 +170,10 @@ const Settings = () => {
               <Guichets />
             )}
 
+            {isAdmin && section === "interets" && (
+              <InteretsMensuels />
+            )}
+
             {isAdmin && section === "roles" && (
               <RolesPermissions />
             )}
@@ -170,6 +181,116 @@ const Settings = () => {
           </div>
         </section>
       </div>
+    </div>
+  );
+};
+
+
+const InteretsMensuels = () => {
+  const [form, setForm] = useState({ montantCourant: "", montantEpargne: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    getInteretsMensuels()
+      .then(({ data }) => {
+        setForm({
+          montantCourant: String(data.montantCourant),
+          montantEpargne: String(data.montantEpargne),
+        });
+      })
+      .catch(() => setErrorMessage("Impossible de charger les paramètres des intérêts."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleChange = (event) => {
+    setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+    setSuccessMessage("");
+    setErrorMessage("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+    try {
+      const { data } = await updateInteretsMensuels({
+        montantCourant: Number(form.montantCourant),
+        montantEpargne: Number(form.montantEpargne),
+      });
+      setForm({
+        montantCourant: String(data.montantCourant),
+        montantEpargne: String(data.montantEpargne),
+      });
+      setSuccessMessage("Les montants des intérêts mensuels ont été enregistrés.");
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Impossible d'enregistrer les paramètres.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="settings-section-header">
+        <div className="settings-icon">
+          <Coins size={22} />
+        </div>
+        <div>
+          <h2>Intérêts mensuels des comptes</h2>
+          <p>Définissez le montant crédité après chaque période de 30 jours.</p>
+        </div>
+      </div>
+
+      {successMessage && (
+        <div className="alert alert-success">
+          <Check size={15} />
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && <div className="alert alert-error">{errorMessage}</div>}
+
+      {loading ? (
+        <div className="profile-loading">Chargement des paramètres...</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="montantInteretCourant">Compte courant (Ar / mois)</label>
+              <input
+                id="montantInteretCourant"
+                name="montantCourant"
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={form.montantCourant}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="montantInteretEpargne">Compte épargne (Ar / mois)</label>
+              <input
+                id="montantInteretEpargne"
+                name="montantEpargne"
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={form.montantEpargne}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          <button className="btn-primary" type="submit" disabled={saving}>
+            <Save size={16} />
+            {saving ? "Enregistrement..." : "Enregistrer les montants"}
+          </button>
+        </form>
+      )}
     </div>
   );
 };

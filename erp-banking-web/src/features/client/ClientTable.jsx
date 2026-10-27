@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pencil, Search, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const PAR_PAGE_OPTIONS = [10, 25, 50];
 
@@ -27,10 +28,20 @@ const libelleStatutMobile = (statut) => {
   return libelles[statut] || statut || 'Aucun accès';
 };
 
-function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
-  const [recherche, setRecherche] = useState('');
+function ClientTable({ clients, comptes = [], recherche = '', onEdit, onDelete, onCreateMobile }) {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [parPage, setParPage] = useState(10);
+
+  const comptesParClient = useMemo(() => {
+    const map = new Map();
+    (Array.isArray(comptes) ? comptes : []).forEach((compte) => {
+      if (compte.clientId == null) return;
+      if (!map.has(compte.clientId)) map.set(compte.clientId, []);
+      map.get(compte.clientId).push(compte);
+    });
+    return map;
+  }, [comptes]);
 
   const clientsFiltres = useMemo(() => {
     const liste = Array.isArray(clients) ? clients : [];
@@ -39,12 +50,14 @@ function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
     const filtres = !q
       ? liste
       : liste.filter((c) => {
-          const texte = `${c.nom} ${c.prenom} ${c.email} ${c.telephone} ${c.cin || ''}`.toLowerCase();
+          const comptesClient = comptesParClient.get(c.id) || [];
+          const numerosComptes = comptesClient.map((compte) => compte.numeroCompte || '').join(' ');
+          const texte = `${c.nom || ''} ${c.prenom || ''} ${c.prenom || ''} ${c.nom || ''} ${numerosComptes}`.toLowerCase();
           return texte.includes(q);
         });
 
     return [...filtres].sort((a, b) => b.id - a.id);
-  }, [clients, recherche]);
+  }, [clients, recherche, comptesParClient]);
 
   const totalPages = Math.max(1, Math.ceil(clientsFiltres.length / parPage));
   const pageActuelle = Math.min(page, totalPages);
@@ -52,22 +65,6 @@ function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
 
   return (
     <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
-        <div style={{ position: 'relative', width: '280px' }}>
-          <Search size={16} color="#94a3b8" style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Rechercher par nom, email, téléphone..."
-            value={recherche}
-            onChange={(e) => { setRecherche(e.target.value); setPage(1); }}
-            style={{ width: '100%', padding: '8px 10px 8px 32px', borderRadius: '6px', border: '1px solid var(--input-border)', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
-          />
-        </div>
-        <button style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)', cursor: 'pointer', display: 'flex' }}>
-          <SlidersHorizontal size={16} color="#64748b" />
-        </button>
-      </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -92,7 +89,7 @@ function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
               </tr>
             ) : (
               clientsPage.map((client) => (
-                <tr key={client.id} style={{ borderBottom: '1px solid var(--faint)' }}>
+                <tr key={client.id} onClick={() => navigate(`/clients/${client.id}`)} style={{ borderBottom: '1px solid var(--faint)', cursor: 'pointer' }}>
                   <td style={{ padding: '12px 16px', fontWeight: '500', color: 'var(--text-primary)', fontSize: '14px' }}>{client.nom}</td>
                   <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{client.prenom}</td>
                   <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px' }}>{client.email}</td>
@@ -102,6 +99,7 @@ function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
                   <td style={{ padding: '12px 16px' }}>
                     {client.mobileStatut ? (
                       <span
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
                           backgroundColor: styleStatutMobile(client.mobileStatut).bg,
@@ -112,27 +110,27 @@ function ClientTable({ clients, onEdit, onDelete, onCreateMobile }) {
                       </span>
                     ) : (
                       <button
-                        onClick={() => onCreateMobile(client)}
+                        onClick={(e) => { e.stopPropagation(); onCreateMobile(client); }}
                         style={{
                           padding: '5px 12px', borderRadius: '6px', border: '1px solid #2563eb',
                           backgroundColor: 'transparent', color: '#2563eb', cursor: 'pointer',
                           fontWeight: '500', fontSize: '12px', whiteSpace: 'nowrap',
                         }}
                       >
-                        + Créer l'accès
+                        accès mobile
                       </button>
                     )}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <button
-                      onClick={() => onEdit(client)}
+                      onClick={(e) => { e.stopPropagation(); onEdit(client); }}
                       title='modifier'
                       style={{ marginRight: '12px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
                     >
                       <Pencil size={17}/>
                     </button>
                     <button
-                      onClick={() => onDelete(client.id)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(client.id); }}
                       title='supprimer'
                       style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
                     >

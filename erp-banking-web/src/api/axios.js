@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const backendUrl = (import.meta.env.VITE_API_URL || "http://localhost:8080")
+    .replace(/\/$/, "");
+
 const api = axios.create({
-    baseURL: "http://localhost:8080/api"
+    baseURL: `${backendUrl}/api`
 });
 
 api.interceptors.request.use((config) => {
