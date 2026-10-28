@@ -35,7 +35,10 @@ public class TransactionController {
         // Rattache la transaction au guichet de l'agent, pour le rapport de guichet.
         Guichet guichet = utilisateur != null ? utilisateur.getGuichet() : null;
 
-        TransactionResponse response = transactionService.effectuerTransaction(request, guichet);
+        TransactionResponse response = transactionService.effectuerTransaction(
+                request,
+                guichet,
+                utilisateur != null ? utilisateur.getId() : null);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

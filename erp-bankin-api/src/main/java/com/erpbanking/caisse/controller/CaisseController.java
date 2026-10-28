@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.erpbanking.caisse.dto.ClotureCaisseResponse;
 import com.erpbanking.caisse.dto.ComptageCaisseResponse;
 import com.erpbanking.caisse.dto.ComptageRequest;
 import com.erpbanking.caisse.dto.DemandeTransfertCoffreResponse;
@@ -19,6 +20,8 @@ import com.erpbanking.caisse.dto.DemandeTransfertRequest;
 import com.erpbanking.caisse.dto.FermerSessionRequest;
 import com.erpbanking.caisse.dto.MonGuichetResponse;
 import com.erpbanking.caisse.dto.OuvrirSessionRequest;
+import com.erpbanking.caisse.dto.PositionCashResponse;
+import com.erpbanking.caisse.dto.RejeterClotureRequest;
 import com.erpbanking.caisse.dto.SessionCaisseResponse;
 import com.erpbanking.caisse.dto.TraitementDemandeRequest;
 import com.erpbanking.caisse.service.CaisseService;
@@ -37,6 +40,12 @@ public class CaisseController {
     @PreAuthorize("hasAnyRole('AGENT','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<MonGuichetResponse> monGuichet() {
         return ResponseEntity.ok(caisseService.monGuichet());
+    }
+
+    @GetMapping("/position-cash")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    public ResponseEntity<PositionCashResponse> positionCash() {
+        return ResponseEntity.ok(caisseService.positionCash());
     }
 
     @PostMapping("/ouvrir-session")
@@ -69,6 +78,12 @@ public class CaisseController {
         return ResponseEntity.ok(caisseService.demandesTransfertEnAttente());
     }
 
+    @GetMapping("/demandes-transfert")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    public ResponseEntity<List<DemandeTransfertCoffreResponse>> demandesTransfert() {
+        return ResponseEntity.ok(caisseService.demandesTransfert());
+    }
+
     @PostMapping("/demandes-transfert/{id}/traiter")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
     public ResponseEntity<DemandeTransfertCoffreResponse> traiterDemande(@PathVariable Long id, @RequestBody TraitementDemandeRequest request) {
@@ -85,5 +100,25 @@ public class CaisseController {
     @PreAuthorize("hasAnyRole('AGENT','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<List<ComptageCaisseResponse>> mesComptages() {
         return ResponseEntity.ok(caisseService.mesComptages());
+    }
+
+    @GetMapping("/clotures")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    public ResponseEntity<List<ClotureCaisseResponse>> clotures() {
+        return ResponseEntity.ok(caisseService.clotures());
+    }
+
+    @PostMapping("/clotures/{sessionId}/valider")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    public ResponseEntity<ClotureCaisseResponse> validerCloture(@PathVariable Long sessionId) {
+        return ResponseEntity.ok(caisseService.validerCloture(sessionId));
+    }
+
+    @PostMapping("/clotures/{sessionId}/rejeter")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    public ResponseEntity<ClotureCaisseResponse> rejeterCloture(
+            @PathVariable Long sessionId,
+            @RequestBody RejeterClotureRequest request) {
+        return ResponseEntity.ok(caisseService.rejeterCloture(sessionId, request));
     }
 }

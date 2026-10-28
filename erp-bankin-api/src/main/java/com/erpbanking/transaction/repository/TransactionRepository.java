@@ -6,6 +6,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.erpbanking.comptabilite.dto.RapportGuichetLigne;
 import com.erpbanking.transaction.entity.Transaction;
+import com.erpbanking.transaction.entity.TypeTransaction;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -44,6 +46,17 @@ public interface TransactionRepository  extends JpaRepository<Transaction, Long>
             + "ELSE 0 END), 0) "
             + "FROM transactions WHERE guichet_id = :guichetId AND statut = 'SUCCES'", nativeQuery = true)
     java.math.BigDecimal calculerSoldeGuichet(@Param("guichetId") Long guichetId);
+
+    @Query("SELECT COALESCE(SUM(t.montant), 0) FROM Transaction t "
+            + "WHERE t.guichet.id = :guichetId "
+            + "AND t.type = :type "
+            + "AND t.statut = com.erpbanking.transaction.entity.StatutTransaction.SUCCES "
+            + "AND t.dateTransaction BETWEEN :debut AND :fin")
+    java.math.BigDecimal totalParGuichetEtTypePeriode(
+            @Param("guichetId") Long guichetId,
+            @Param("type") TypeTransaction type,
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin);
 
     Transaction findByReference(String reference);
 

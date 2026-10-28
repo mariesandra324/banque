@@ -67,6 +67,21 @@ public class SessionCaisse {
     @Column(name = "date_fermeture")
     private LocalDateTime dateFermeture;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_validation", nullable = false)
+    @Builder.Default
+    private StatutValidationCloture statutValidation = StatutValidationCloture.EN_ATTENTE;
+
+    @Column(name = "date_validation")
+    private LocalDateTime dateValidation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "valide_par_id")
+    private Utilisateur validePar;
+
+    @Column(name = "motif_rejet", length = 500)
+    private String motifRejet;
+
     @Column(length = 500)
     private String observation;
 }

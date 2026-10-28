@@ -11,9 +11,15 @@ public enum AuditAction {
     DEPOT("Dépôt"),
     RETRAIT("Retrait"),
     VIREMENT("Virement"),
+    TRANSFERT("Transfert vers le coffre"),
     VALIDATION("Validation"),
+    ACCEPTATION("Acceptation"),
     REFUS("Refus"),
     DESACTIVATION("Désactivation"),
+    OUVERTURE_SESSION("Ouverture de session"),
+    FERMETURE_SESSION("Fermeture de session"),
+    VALIDATION_CLOTURE("Validation de clôture"),
+    REJET_CLOTURE("Rejet de clôture"),
     MODIFICATION_STATUT("Changement de statut");
 
     private final String libelle;

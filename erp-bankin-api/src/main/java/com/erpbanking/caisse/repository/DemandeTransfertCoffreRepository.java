@@ -1,6 +1,7 @@
 package com.erpbanking.caisse.repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,9 +16,20 @@ public interface DemandeTransfertCoffreRepository extends JpaRepository<DemandeT
     List<DemandeTransfertCoffre> findByGuichetIdOrderByDateDemandeDesc(Long guichetId);
     List<DemandeTransfertCoffre> findByStatutOrderByDateDemandeDesc(StatutDemandeTransfert statut);
 
+    List<DemandeTransfertCoffre> findAllByOrderByDateDemandeDesc();
+
     @Query("SELECT COALESCE(SUM(d.montant), 0) FROM DemandeTransfertCoffre d "
             + "WHERE d.guichet.id = :guichetId AND d.statut = :statut")
     BigDecimal totalTransfertsParGuichetEtStatut(
             @Param("guichetId") Long guichetId,
             @Param("statut") StatutDemandeTransfert statut);
+
+    @Query("SELECT COALESCE(SUM(d.montant), 0) FROM DemandeTransfertCoffre d "
+            + "WHERE d.guichet.id = :guichetId AND d.statut = :statut "
+            + "AND d.dateTraitement BETWEEN :debut AND :fin")
+    BigDecimal totalTransfertsParGuichetEtStatutPeriode(
+            @Param("guichetId") Long guichetId,
+            @Param("statut") StatutDemandeTransfert statut,
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin);
 }
