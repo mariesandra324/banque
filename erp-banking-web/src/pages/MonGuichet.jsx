@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Store,
   DoorOpen,
@@ -27,9 +28,14 @@ const formatMontant = (montant) =>
 
 function MonGuichet() {
   const { user } = useAuth();
+  const location = useLocation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [onglet, setOnglet] = useState("aperçu");
+  const [onglet, setOnglet] = useState(
+    ["aperçu", "transfert", "comptage", "historique"].includes(location.state?.tab)
+      ? location.state.tab
+      : "aperçu"
+  );
   const [notification, setNotification] = useState(null);
 
   const [soldeOuverture, setSoldeOuverture] = useState("");
@@ -105,6 +111,10 @@ function MonGuichet() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     charger();
+    if (location.state?.tab === "historique") {
+      chargerDemandes();
+      chargerComptages();
+    }
     // Load only the summary on first render; transaction histories are loaded when requested.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

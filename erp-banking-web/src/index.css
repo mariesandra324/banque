@@ -166,17 +166,27 @@ body.dark-mode .search-result-item:hover {
 }
 
 body.dark-mode [class*="pagination"] button,
-body.dark-mode .pagination-btn,
+body.dark-mode .pagination-btn {
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
+  border-color: #1e3a8a !important;
+}
+
+body.dark-mode [class*="pagination"] button:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode [class*="pagination"] button.page-active {
+  background-color: #172554 !important;
+  border-color: #172554 !important;
+}
+
 body.dark-mode [class*="filter"],
 body.dark-mode [class*="tab"] {
   background-color: var(--card-bg) !important;
   color: var(--text-secondary) !important;
   border-color: var(--border-color) !important;
-}
-
-body.dark-mode [class*="pagination"] button:hover {
-  background-color: #2563eb !important;
-  color: #ffffff !important;
 }
 
 /* --- TABLEAUX ÉLÉGANTS -------------------------------------------------

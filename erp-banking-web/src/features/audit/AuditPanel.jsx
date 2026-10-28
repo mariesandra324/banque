@@ -38,9 +38,15 @@ const STYLES_ACTION = {
   DEPOT: { bg: '#dcfce7', fg: '#15803d' },
   RETRAIT: { bg: '#fef3c7', fg: '#92400e' },
   VIREMENT: { bg: '#ede9fe', fg: '#6d28d9' },
+  TRANSFERT: { bg: '#ede9fe', fg: '#6d28d9' },
   VALIDATION: { bg: '#dcfce7', fg: '#15803d' },
+  ACCEPTATION: { bg: '#dcfce7', fg: '#15803d' },
   REFUS: { bg: '#fee2e2', fg: '#b91c1c' },
   DESACTIVATION: { bg: '#fee2e2', fg: '#b91c1c' },
+  OUVERTURE_SESSION: { bg: '#dbeafe', fg: '#1e40af' },
+  FERMETURE_SESSION: { bg: '#fef3c7', fg: '#92400e' },
+  VALIDATION_CLOTURE: { bg: '#dcfce7', fg: '#15803d' },
+  REJET_CLOTURE: { bg: '#fee2e2', fg: '#b91c1c' },
   MODIFICATION_STATUT: { bg: '#dbeafe', fg: '#1e40af' },
 };
 
@@ -50,6 +56,7 @@ const MODULES_CONNUS = [
   { value: 'TRANSACTIONS', libelle: 'Transactions' },
   { value: 'CREDITS', libelle: 'Crédits' },
   { value: 'CARTES', libelle: 'Cartes' },
+  { value: 'CAISSE', libelle: 'Caisse' },
   { value: 'UTILISATEURS', libelle: 'Utilisateurs' },
   { value: 'SYSTEME', libelle: 'Système' },
 ];
@@ -61,9 +68,15 @@ const ACTIONS_CONNUES = [
   { value: 'DEPOT', libelle: 'Dépôt' },
   { value: 'RETRAIT', libelle: 'Retrait' },
   { value: 'VIREMENT', libelle: 'Virement' },
+  { value: 'TRANSFERT', libelle: 'Transfert vers le coffre' },
   { value: 'VALIDATION', libelle: 'Validation' },
+  { value: 'ACCEPTATION', libelle: 'Acceptation' },
   { value: 'REFUS', libelle: 'Refus' },
-  { value: 'DESACTIVATION', libelle: 'Désactivation' },
+  { value: 'DESACTIVATION', libelle: 'DǸsactivation' },
+  { value: 'OUVERTURE_SESSION', libelle: 'Ouverture de session' },
+  { value: 'FERMETURE_SESSION', libelle: 'Fermeture de session' },
+  { value: 'VALIDATION_CLOTURE', libelle: 'Validation de clôture' },
+  { value: 'REJET_CLOTURE', libelle: 'Rejet de clôture' },
 ];
 
 const libelleDe = (liste, valeur, defaut) =>
@@ -616,9 +629,9 @@ function AuditPanel() {
                   style={{
                     padding: '5px 10px',
                     borderRadius: '6px',
-                    border: `1px solid ${c.inputBorder}`,
-                    backgroundColor: c.panel,
-                    color: page === 0 ? c.textFaint : c.text,
+                    border: '1px solid #1e3a8a',
+                    backgroundColor: page === 0 ? 'rgba(30, 58, 138, 0.45)' : '#1e3a8a',
+                    color: page === 0 ? 'rgba(255, 255, 255, 0.7)' : '#ffffff',
                     cursor: page === 0 ? 'not-allowed' : 'pointer',
                     fontSize: '13px',
                   }}
@@ -636,9 +649,9 @@ function AuditPanel() {
                   style={{
                     padding: '5px 10px',
                     borderRadius: '6px',
-                    border: `1px solid ${c.inputBorder}`,
-                    backgroundColor: c.panel,
-                    color: totalPages === 0 || page >= totalPages - 1 ? c.textFaint : c.text,
+                    border: '1px solid #1e3a8a',
+                    backgroundColor: totalPages === 0 || page >= totalPages - 1 ? 'rgba(30, 58, 138, 0.45)' : '#1e3a8a',
+                    color: totalPages === 0 || page >= totalPages - 1 ? 'rgba(255, 255, 255, 0.7)' : '#ffffff',
                     cursor: totalPages === 0 || page >= totalPages - 1 ? 'not-allowed' : 'pointer',
                     fontSize: '13px',
                   }}

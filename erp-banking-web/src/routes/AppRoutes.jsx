@@ -123,7 +123,7 @@ const AppRoutes = () => {
             <Route
               path="audit"
               element={
-                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE"]}>
+                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE", "GESTIONNAIRE"]}>
                   <Audit />
                 </RoleRoute>
               }

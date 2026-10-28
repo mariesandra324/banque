@@ -4,8 +4,6 @@ import {
   Wallet,
   ArrowLeftRight,
   Landmark,
-  TrendingUp,
-  PieChart as PieChartIcon,
   AlertTriangle,
   RefreshCw,
   CalendarDays,
@@ -15,18 +13,20 @@ import {
   Store,
   DoorOpen,
   DoorClosed,
+  ArrowRight,
+  History,
+  BookOpen,
+  BarChart3,
+  ClipboardList,
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import {
-  BarChart,
   Bar,
-  LabelList,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  PieChart,
-  Pie,
   Cell,
   Area,
   AreaChart,
@@ -49,7 +49,7 @@ import {
   serieCredits,
   seriePerformance,
 } from '../utils/evolution';
-import { getMonGuichet, ouvrirSession, fermerSession } from '../service/caisseService';
+import { getMonGuichet, getPositionCash, ouvrirSession, fermerSession } from '../service/caisseService';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import '../styles/dashboard.css';
@@ -68,16 +68,6 @@ const c = {
   accentRed: '#ef4444',
   accentPurple: '#8b5cf6',
   accentSlate: '#64748b',
-};
-
-const PIE_COLORS = [c.accentBlue, c.accentGreen, c.accentGold, c.accentRed, c.accentPurple];
-
-// Couleur d'un statut de demande de crédit
-const COULEUR_STATUT_DEMANDE = {
-  EN_ATTENTE: c.accentGold,
-  ACCEPTER: c.accentGreen,
-  REJETER: c.accentRed,
-  ANNULER: c.accentSlate,
 };
 
 // Variante de badge associée à un statut de demande
@@ -166,32 +156,60 @@ function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const role = user?.role;
+  const peutVoirPositionCash = role === 'ADMIN' || role === 'GESTIONNAIRE';
   const [monGuichetData, setMonGuichetData] = useState(null);
   const [erreurGuichet, setErreurGuichet] = useState(false);
-  const [soldeOuverture, setSoldeOuverture] = useState('');
-  const [soldeFermeture, setSoldeFermeture] = useState('');
+
+  const rafraichirGuichet = async () => {
+    const res = await getMonGuichet();
+    setMonGuichetData(res.data);
+    setErreurGuichet(false);
+  };
 
   const handleOuvrirSession = async () => {
+    const { value } = await Swal.fire({
+      title: 'Ouvrir la session',
+      text: 'Saisissez le fonds de caisse présent à l’ouverture.',
+      input: 'number',
+      inputLabel: 'Montant (Ar)',
+      inputAttributes: { min: 0, step: 1 },
+      showCancelButton: true,
+      confirmButtonText: 'Ouvrir',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#1d4ed8',
+    });
+    if (value === undefined || value === null) return;
+
     try {
-      await ouvrirSession({ guichetId: monGuichetData?.guichetId, soldeOuverture: Number(soldeOuverture) || 0 });
-      const res = await getMonGuichet();
-      setMonGuichetData(res.data);
-      setErreurGuichet(false);
-      setSoldeOuverture('');
+      await ouvrirSession({
+        guichetId: monGuichetData?.guichetId,
+        soldeOuverture: Number(value) || 0,
+      });
+      await rafraichirGuichet();
     } catch (e) {
-      alert(e.response?.data?.message || "Erreur ouverture session");
+      alert(e.response?.data?.message || 'Erreur ouverture session');
     }
   };
 
   const handleFermerSession = async () => {
+    const { value } = await Swal.fire({
+      title: 'Clôturer la session',
+      text: 'Saisissez le solde compté en caisse à la fermeture.',
+      input: 'number',
+      inputLabel: 'Montant (Ar)',
+      inputAttributes: { min: 0, step: 1 },
+      showCancelButton: true,
+      confirmButtonText: 'Fermer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#1d4ed8',
+    });
+    if (value === undefined || value === null) return;
+
     try {
-      await fermerSession({ soldeFermeture: Number(soldeFermeture) || 0 });
-      const res = await getMonGuichet();
-      setMonGuichetData(res.data);
-      setErreurGuichet(false);
-      setSoldeFermeture('');
+      await fermerSession({ soldeFermeture: Number(value) || 0 });
+      await rafraichirGuichet();
     } catch (e) {
-      alert(e.response?.data?.message || "Erreur fermeture session");
+      alert(e.response?.data?.message || 'Erreur fermeture session');
     }
   };
 
@@ -217,7 +235,7 @@ function Dashboard() {
     demandesEnAttente: 0,
     creditsEnRetard: 0,
   });
-  const [demandesParStatut, setDemandesParStatut] = useState([]);
+  const [positionCash, setPositionCash] = useState({ positionTotale: 0, guichets: [] });
   const [dernieresDemandes, setDernieresDemandes] = useState([]);
   const [encoursParStatut, setEncoursParStatut] = useState([]);
   const [comptes, setComptes] = useState([]);
@@ -225,7 +243,6 @@ function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [sourcesErreur, setSourcesErreur] = useState({});
   const [chargement, setChargement] = useState(true);
-  const [majLe, setMajLe] = useState(null);
 
   // Sélecteurs de la courbe d'évolution
   const [periode, setPeriode] = useState('1M');
@@ -248,6 +265,7 @@ function Dashboard() {
         demandeCreditService.getAll(),
         getCredits(),
         getAllTransactions(),
+        ...(peutVoirPositionCash ? [getPositionCash()] : []),
       ]);
 
       const valeur = (i) => (results[i].status === 'fulfilled' ? results[i].value : null);
@@ -257,6 +275,7 @@ function Dashboard() {
       const demandes = valeur(2)?.data || valeur(2) || [];
       const creditsData = valeur(3)?.data || valeur(3) || [];
       const transactionsData = valeur(4)?.data || valeur(4) || [];
+      const positionCashData = peutVoirPositionCash ? valeur(5)?.data || valeur(5) : null;
 
       setComptes(Array.isArray(comptesData) ? comptesData : []);
       setCredits(Array.isArray(creditsData) ? creditsData : []);
@@ -269,6 +288,7 @@ function Dashboard() {
         ['demandes', 2],
         ['credits', 3],
         ['transactions', 4],
+        ...(peutVoirPositionCash ? [['caisse', 5]] : []),
       ];
       SOURCES.forEach(([source, i]) => {
         if (results[i].status === 'rejected') {
@@ -283,12 +303,6 @@ function Dashboard() {
         const s = d.statut || 'INCONNU';
         statuts[s] = (statuts[s] || 0) + 1;
       });
-
-      const statsArray = Object.keys(statuts).map((s) => ({
-        statut: s,
-        libelle: libelleStatut(s),
-        valeur: statuts[s],
-      }));
 
       // Encours = capital restant des crédits actifs / en cours.
       // On ne peut pas se fier au statut des DEMANDES : StatutDemandeCredit
@@ -330,21 +344,18 @@ function Dashboard() {
         creditsEnRetard: detailEncours.find((l) => l.code === 'EN_RETARD')?.nombre || 0,
       });
 
-      setDemandesParStatut(statsArray);
-      setMajLe(new Date());
+      setPositionCash({
+        positionTotale: Number(positionCashData?.positionTotale) || 0,
+        guichets: Array.isArray(positionCashData?.guichets) ? positionCashData.guichets : [],
+      });
       setChargement(false);
     };
 
     chargerStatsRef.current = chargerStats;
     chargerStats();
-  }, []);
+  }, [role, peutVoirPositionCash]);
 
   const repartitionComptes = useMemo(() => repartitionTypeComptes(comptes), [comptes]);
-
-  const totalComptesRepartition = useMemo(
-    () => repartitionComptes.reduce((sum, item) => sum + item.valeur, 0),
-    [repartitionComptes]
-  );
 
   const aujourdhui = useMemo(
     () =>
@@ -360,14 +371,29 @@ function Dashboard() {
   // ===== Courbe d'évolution =====
   const buckets = useMemo(() => construireBuckets(periode), [periode]);
 
+  // Un agent ne visualise que les opérations de son propre guichet.
+  const transactionsCourbe = useMemo(() => {
+    if (role !== 'AGENT' || !monGuichetData?.codeGuichet) return transactions;
+    return transactions.filter((tx) => tx.codeGuichet === monGuichetData.codeGuichet);
+  }, [role, monGuichetData, transactions]);
+
+  // L'agent n'a pas accès au module crédit : on masque ces indicateurs.
+  const metriquesDisponibles = useMemo(
+    () =>
+      role === 'AGENT'
+        ? METRIQUES.filter((m) => m.code === 'solde' || m.code === 'transactions')
+        : METRIQUES,
+    [role]
+  );
+
   const serieSoldeCourbe = useMemo(
-    () => serieSolde(buckets, transactions, comptes, compteSelectionne || null),
-    [buckets, transactions, comptes, compteSelectionne]
+    () => serieSolde(buckets, transactionsCourbe, comptes, compteSelectionne || null),
+    [buckets, transactionsCourbe, comptes, compteSelectionne]
   );
 
   const serieTransactionsCourbe = useMemo(
-    () => serieTransactions(buckets, transactions),
-    [buckets, transactions]
+    () => serieTransactions(buckets, transactionsCourbe),
+    [buckets, transactionsCourbe]
   );
 
   const serieCreditsCourbe = useMemo(
@@ -376,8 +402,8 @@ function Dashboard() {
   );
 
   const seriePerformanceCourbe = useMemo(
-    () => seriePerformance(buckets, transactions, credits),
-    [buckets, transactions, credits]
+    () => seriePerformance(buckets, transactionsCourbe, credits),
+    [buckets, transactionsCourbe, credits]
   );
 
   const serieCourbe = useMemo(() => {
@@ -439,12 +465,22 @@ function Dashboard() {
   const evolutionVide = useMemo(
     () =>
       metrique === 'solde'
-        ? transactions.length === 0 && comptes.length === 0
+        ? transactionsCourbe.length === 0 && comptes.length === 0
         : metrique === 'credits'
           ? credits.length === 0
-          : transactions.length === 0,
-    [metrique, transactions.length, credits.length, comptes.length]
+          : transactionsCourbe.length === 0,
+    [metrique, transactionsCourbe.length, credits.length, comptes.length]
   );
+
+  // ===== Vue agent : guichet =====
+  const sessionGuichet = monGuichetData?.sessionOuverte || null;
+  const sessionActive = Boolean(sessionGuichet);
+  const transactionsGuichet = monGuichetData?.dernieresTransactions || [];
+  const debutJour = new Date();
+  debutJour.setHours(0, 0, 0, 0);
+  const transactionsJour = transactionsGuichet.filter(
+    (tx) => tx.dateTransaction && new Date(tx.dateTransaction) >= debutJour
+  ).length;
 
   const tooltipStyle = {
     backgroundColor: c.panel,
@@ -560,8 +596,16 @@ function Dashboard() {
       {/* ===== En-tête ===== */}
       <header className="dash-header">
         <div>
-          <h1 className="dash-title">Tableau de bord</h1>
-          <p className="dash-subtitle">Vue d'ensemble de votre activité bancaire</p>
+          <h1 className="dash-title">
+            {role === 'AGENT'
+              ? `Bonjour, ${user?.prenom || user?.nom || ''}`.trim()
+              : 'Tableau de bord'}
+          </h1>
+          <p className="dash-subtitle">
+            {role === 'AGENT'
+              ? "Voici l'activité de votre guichet aujourd'hui"
+              : "Vue d'ensemble de votre activité bancaire"}
+          </p>
         </div>
         <div className="dash-header-actions">
           <span className="dash-date">
@@ -596,13 +640,21 @@ function Dashboard() {
         <section className="dash-stats">
           {chargement ? (
             <>
-              <div className="dash-skeleton dash-skeleton--stat" />
-              <div className="dash-skeleton dash-skeleton--stat" />
-              <div className="dash-skeleton dash-skeleton--stat" />
-              <div className="dash-skeleton dash-skeleton--stat" />
+              {Array.from({ length: peutVoirPositionCash ? 5 : 4 }, (_, index) => (
+                <div key={index} className="dash-skeleton dash-skeleton--stat" />
+              ))}
             </>
           ) : (
             <>
+              {peutVoirPositionCash && (
+                <StatCard
+                  label="Position de cash totale"
+                  value={formatMontant(positionCash.positionTotale)}
+                  foot={`Structure · ${positionCash.guichets.length} guichet(s)`}
+                  variant="blue"
+                  icon={WalletCards}
+                />
+              )}
               <StatCard
                 label="Total clients"
                 value={formatNombre(stats.totalClients)}
@@ -640,61 +692,246 @@ function Dashboard() {
         </section>
       )}
 
-      {/* ===== Dashboard AGENT - Mon Guichet ===== */}
-      {role === 'AGENT' && (
-        <section className="dash-panel" style={{ marginBottom: 24 }}>
+      {/* ===== Guichets & agents (gestionnaire/admin) ===== */}
+      {peutVoirPositionCash && (
+        <section className="dash-panel dash-cash-panel">
           <div className="dash-panel-head">
             <span className="dash-panel-title">
               <Store size={17} />
-              Mon Guichet
+              Guichets et agents
             </span>
-            <button onClick={() => navigate('/mon-guichet')} style={{ background: 'transparent', border: 'none', color: '#2563eb', cursor: 'pointer', fontWeight: 500 }}>Gérer mon guichet</button>
+            <span className="dash-panel-hint">
+              {positionCash.guichets.length} guichet(s)
+            </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16, padding: '16px' }}>
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Guichet</div>
-              <div style={{ fontSize: 18, fontWeight: 600, marginTop: 4 }}>{monGuichetData?.codeGuichet || '-'}</div>
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                {monGuichetData?.sessionOuverte ? <><DoorOpen size={16} color={c.accentGreen}/><span style={{ color: c.accentGreen, fontWeight: 500 }}>Ouvert</span></> : <><DoorClosed size={16} color={c.accentGold}/><span style={{ color: c.accentGold, fontWeight: 500 }}>Fermé</span></>}
-              </div>
+
+          {chargement ? (
+            <div className="dash-bars">
+              <div className="dash-skeleton dash-skeleton--row" />
+              <div className="dash-skeleton dash-skeleton--row" />
+              <div className="dash-skeleton dash-skeleton--row" />
             </div>
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Solde disponible (estimé)</div>
-              <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
-                {erreurGuichet ? 'Indisponible' : monGuichetData ? formatMontant(monGuichetData.soldeDisponible) : 'Chargement...'}
-              </div>
+          ) : positionCash.guichets.length > 0 ? (
+            <div className="dash-cash-table-wrap">
+              <table className="dash-cash-table">
+                <thead>
+                  <tr>
+                    <th>Utilisateur</th>
+                    <th>Guichet</th>
+                    <th className="is-right">Solde théorique</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {positionCash.guichets.map((guichet) => (
+                    <tr key={`${guichet.utilisateurId}-${guichet.guichetId}`}>
+                      <td>
+                        <span className="dash-cash-agent">
+                          <strong>{guichet.agentNom || 'Agent'}</strong>
+                        </span>
+                      </td>
+                      <td>
+                        <span className="dash-cash-code">{guichet.codeGuichet || '—'}</span>
+                      </td>
+                      <td className="is-right dash-cash-amount">
+                        {formatMontant(guichet.soldeTheorique)}
+                      </td>
+                      <td>
+                        <span
+                          className={`dash-badge dash-badge--${
+                            guichet.statut === 'OUVERT' ? 'green' : 'slate'
+                          }`}
+                        >
+                          {guichet.statut === 'OUVERT' ? 'Ouvert' : 'Fermé'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>Gestion session</div>
-              {!monGuichetData?.sessionOuverte ? (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input type="number" placeholder="Solde ouverture" value={soldeOuverture} onChange={(e)=>setSoldeOuverture(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--input-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}/>
-                  <button onClick={handleOuvrirSession} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: c.accentGreen, color: 'white', cursor: 'pointer' }}>Ouvrir</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input type="number" placeholder="Solde fermeture" value={soldeFermeture} onChange={(e)=>setSoldeFermeture(e.target.value)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--input-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}/>
-                  <button onClick={handleFermerSession} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: c.accentGold, color: 'white', cursor: 'pointer' }}>Fermer</button>
-                </div>
-              )}
+          ) : (
+            <EmptyState message="Aucun agent affecté à un guichet" />
+          )}
+        </section>
+      )}
+
+      {/* ===== Dashboard AGENT - Mon Guichet ===== */}
+      {role === 'AGENT' && (
+        <section className="dash-agent">
+          <div className="dash-agent-hero">
+            <div className="dash-agent-hero-info">
+              <span className="dash-agent-eyebrow">
+                <Store size={14} />
+                Mon guichet
+              </span>
+              <div className="dash-agent-hero-title">
+                <h2>{monGuichetData?.codeGuichet || '—'}</h2>
+                <span className={`dash-agent-pill ${sessionActive ? 'is-open' : 'is-closed'}`}>
+                  <span className="dash-agent-pill-dot" />
+                  {sessionActive ? 'Session ouverte' : 'Session fermée'}
+                </span>
+              </div>
+              <p className="dash-agent-hero-sub">
+                {sessionActive
+                  ? `Ouverte ${
+                      sessionGuichet?.dateOuverture
+                        ? `le ${formatDate(sessionGuichet.dateOuverture)} à ${formatHeure(new Date(sessionGuichet.dateOuverture))}`
+                        : 'aujourd’hui'
+                    }`
+                  : 'Ouvrez une session pour commencer à encaisser'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="dash-agent-manage"
+              onClick={() => navigate('/mon-guichet')}
+            >
+              Gérer mon guichet
+              <ArrowRight size={15} />
+            </button>
+          </div>
+
+          <div className="dash-agent-grid">
+            <article className="dash-agent-kpi">
+              <span className="dash-agent-kpi-icon is-blue">
+                <Wallet size={18} />
+              </span>
+              <div className="dash-agent-kpi-body">
+                <span className="dash-agent-kpi-label">Solde disponible (estimé)</span>
+                <strong className="dash-agent-kpi-value">
+                  {erreurGuichet
+                    ? 'Indisponible'
+                    : monGuichetData
+                      ? formatMontant(monGuichetData.soldeDisponible)
+                      : '…'}
+                </strong>
+              </div>
+            </article>
+
+            <article className="dash-agent-kpi">
+              <span className="dash-agent-kpi-icon is-gold">
+                <Landmark size={18} />
+              </span>
+              <div className="dash-agent-kpi-body">
+                <span className="dash-agent-kpi-label">Solde théorique du guichet</span>
+                <strong className="dash-agent-kpi-value">
+                  {erreurGuichet
+                    ? 'Indisponible'
+                    : sessionGuichet
+                      ? formatMontant(sessionGuichet.soldeTheorique)
+                      : '—'}
+                </strong>
+              </div>
+            </article>
+
+            <article className="dash-agent-kpi">
+              <span className="dash-agent-kpi-icon is-purple">
+                <Activity size={18} />
+              </span>
+              <div className="dash-agent-kpi-body">
+                <span className="dash-agent-kpi-label">Transactions aujourd'hui</span>
+                <strong className="dash-agent-kpi-value">{formatNombre(transactionsJour)}</strong>
+              </div>
+            </article>
+
+            <article className="dash-agent-kpi">
+              <span className={`dash-agent-kpi-icon ${sessionActive ? 'is-green' : 'is-gold'}`}>
+                {sessionActive ? <DoorOpen size={18} /> : <DoorClosed size={18} />}
+              </span>
+              <div className="dash-agent-kpi-body">
+                <span className="dash-agent-kpi-label">Statut de la caisse</span>
+                <strong className="dash-agent-kpi-value">
+                  {sessionActive ? 'Ouverte' : 'Fermée'}
+                </strong>
+              </div>
+            </article>
+          </div>
+
+          <div className="dash-panel dash-agent-actionbar">
+            <div className="dash-agent-actionbar-copy">
+              <span className="dash-agent-actionbar-title">
+                {sessionActive ? <DoorClosed size={17} /> : <DoorOpen size={17} />}
+                {sessionActive ? 'Session en cours' : 'Aucune session ouverte'}
+              </span>
+              <span className="dash-agent-actionbar-sub">
+                {sessionActive
+                  ? 'Clôturez la caisse en fin de journée.'
+                  : 'Ouvrez la caisse pour commencer les opérations.'}
+              </span>
+            </div>
+            <div className="dash-agent-actions-buttons">
+              <button
+                type="button"
+                className={`dash-agent-btn ${sessionActive ? 'is-gold' : 'is-green'}`}
+                onClick={sessionActive ? handleFermerSession : handleOuvrirSession}
+              >
+                {sessionActive ? <DoorClosed size={15} /> : <DoorOpen size={15} />}
+                {sessionActive ? 'Fermer la session' : 'Ouvrir la session'}
+              </button>
+              <button
+                type="button"
+                className="dash-agent-shortcut"
+                onClick={() => navigate('/transactions')}
+              >
+                <ArrowLeftRight size={16} />
+                Transactions
+                <ArrowRight size={14} />
+              </button>
+              <button
+                type="button"
+                className="dash-agent-shortcut"
+                onClick={() => navigate('/mon-guichet', { state: { tab: 'historique' } })}
+              >
+                <History size={16} />
+                Historique
+                <ArrowRight size={14} />
+              </button>
             </div>
           </div>
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <div style={{ fontWeight: 600, marginBottom: 10 }}>5 dernières transactions du guichet</div>
-            {(monGuichetData?.dernieresTransactions||[]).length === 0 ? <div style={{ color: 'var(--text-secondary)' }}>Aucune transaction</div> : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(monGuichetData?.dernieresTransactions||[]).map(tx => (
-                  <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--faint)' }}>
-                    <div>
-                      <div style={{ fontWeight: 500 }}>{tx.reference}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tx.type} • {tx.dateTransaction ? new Date(tx.dateTransaction).toLocaleString('fr-FR') : ''}</div>
-                    </div>
-                    <div style={{ fontWeight: 600 }}>{formatMontant(tx.montant)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        </section>
+      )}
+
+      {role === 'COMPTABLE' && (
+        <section
+          aria-label="Raccourcis comptable"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: '14px',
+            marginBottom: '20px',
+          }}
+        >
+          {[
+            { label: 'Comptabilité', detail: 'Journal et échéancier', icon: BookOpen, path: '/comptabilite' },
+            { label: 'Rapports', detail: 'Consulter les rapports', icon: BarChart3, path: '/rapports' },
+            { label: 'Audit', detail: 'Consulter les événements', icon: ClipboardList, path: '/audit' },
+          ].map(({ label, detail, icon: Icon, path }) => (
+            <button
+              key={path}
+              type="button"
+              onClick={() => navigate(path)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '18px',
+                textAlign: 'left',
+                backgroundColor: 'var(--card-bg)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              <Icon size={20} color={c.accentBlue} />
+              <span style={{ display: 'grid', gap: '4px', flex: 1 }}>
+                <strong style={{ fontSize: '14px' }}>{label}</strong>
+                <span style={{ color: 'var(--muted)', fontSize: '12px' }}>{detail}</span>
+              </span>
+              <ArrowRight size={16} color="var(--muted)" />
+            </button>
+          ))}
         </section>
       )}
 
@@ -702,7 +939,7 @@ function Dashboard() {
       <section className="dash-panel dash-panel--evolution">
         <div className="dash-panel-head">
           <div className="dash-tabs" role="tablist" aria-label="Indicateur affiché">
-            {METRIQUES.map((item) => (
+            {metriquesDisponibles.map((item) => (
               <button
                 key={item.code}
                 type="button"
@@ -768,122 +1005,48 @@ function Dashboard() {
           )}
         </div>
       </section>
-      
+
+      {/* ===== Transactions AGENT — sous la courbe ===== */}
+      {role === 'AGENT' && (
+        <section className="dash-agent-actions">
+          <section className="dash-panel dash-agent-activity">
+            <div className="dash-panel-head">
+              <span className="dash-panel-title">
+                <ArrowLeftRight size={17} />
+                Dernières transactions du guichet
+              </span>
+              <span className="dash-panel-hint">5 plus récentes</span>
+            </div>
+            {transactionsGuichet.length === 0 ? (
+              <EmptyState message="Aucune transaction sur ce guichet" />
+            ) : (
+              <div className="dash-agent-tx-list">
+                {transactionsGuichet.map((tx) => (
+                  <div className="dash-agent-tx" key={tx.id}>
+                    <span className="dash-agent-tx-icon">
+                      <ArrowLeftRight size={15} />
+                    </span>
+                    <div className="dash-agent-tx-main">
+                      <span className="dash-agent-tx-ref">{tx.reference || 'Transaction'}</span>
+                      <span className="dash-agent-tx-meta">
+                        {libelleStatut(tx.type)}
+                        {tx.dateTransaction
+                          ? ` · ${new Date(tx.dateTransaction).toLocaleString('fr-FR')}`
+                          : ''}
+                      </span>
+                    </div>
+                    <span className="dash-agent-tx-amount">{formatMontant(tx.montant)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </section>
+      )}
 
       {/* ===== Graphiques ===== */}
       {role !== 'AGENT' && (
         <>
-        <section className="dash-grid">
-          <Panel
-            title="Demandes par statut"
-            icon={TrendingUp}
-            hint={majLe ? `Mis à jour à ${formatHeure(majLe)}` : null}
-          >
-          {chargement ? (
-            <div className="dash-skeleton dash-skeleton--chart" />
-          ) : demandesParStatut.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={demandesParStatut} margin={{ top: 18, right: 6, left: -18, bottom: 0 }}>
-                <CartesianGrid stroke={c.panelBorder} vertical={false} />
-                <XAxis
-                  dataKey="libelle"
-                  tick={{ fill: c.textDim, fontSize: 11 }}
-                  axisLine={{ stroke: c.panelBorder }}
-                  tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fill: c.textDim, fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  labelStyle={{ color: c.text, fontWeight: '600' }}
-                  cursor={{ fill: 'rgba(59, 130, 246, 0.08)' }}
-                />
-                <Bar dataKey="valeur" radius={[6, 6, 0, 0]} maxBarSize={56}>
-                  {demandesParStatut.map((item) => (
-                    <Cell
-                      key={item.statut}
-                      fill={COULEUR_STATUT_DEMANDE[item.statut] || c.accentBlue}
-                    />
-                  ))}
-                  <LabelList
-                    dataKey="valeur"
-                    position="top"
-                    fill={c.textDim}
-                    fontSize={11}
-                    fontWeight={600}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyState message="Aucune demande enregistrée pour le moment" />
-          )}
-        </Panel>
-
-        <Panel title="Répartition des comptes" icon={PieChartIcon} hint={`${formatNombre(totalComptesRepartition)} comptes`}>
-          {chargement ? (
-            <div className="dash-skeleton dash-skeleton--chart" />
-          ) : sourcesErreur.comptes ? (
-            <EmptyState
-              message={
-                sourcesErreur.comptes === 403
-                  ? "Vous n'avez pas les droits pour consulter les comptes."
-                  : `Répartition indisponible (erreur ${sourcesErreur.comptes}).`
-              }
-            />
-          ) : repartitionComptes.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={210}>
-                <PieChart>
-                  <Pie
-                    data={repartitionComptes}
-                    dataKey="valeur"
-                    nameKey="type"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={52}
-                    outerRadius={82}
-                    paddingAngle={2}
-                    stroke="none"
-                  >
-                    {repartitionComptes.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="dash-legend">
-                {repartitionComptes.map((item, i) => (
-                  <span className="dash-legend-item" key={item.type}>
-                    <span
-                      className="dash-legend-swatch"
-                      style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
-                    />
-                    {item.type}
-                    <span className="dash-legend-value">
-                      {formatNombre(item.valeur)}
-                      {totalComptesRepartition > 0 && (
-                        <span style={{ color: c.textFaint, fontWeight: '500' }}>
-                          {' '}
-                          ({Math.round((item.valeur / totalComptesRepartition) * 100)}%)
-                        </span>
-                      )}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <EmptyState message="Aucun compte enregistré" />
-          )}
-        </Panel>
-      </section>
-
       {/* ===== Encours & activité récente ===== */}
       <section className="dash-grid dash-grid--even">
         <Panel title="Encours par statut" icon={WalletCards} hint={`${formatMontant(stats.encoursCredit)} au total`}>
