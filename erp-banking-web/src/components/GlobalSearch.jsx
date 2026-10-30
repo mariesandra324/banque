@@ -8,6 +8,7 @@ const LIMITE_SUGGESTIONS = 6;
 function GlobalSearch() {
   const navigate = useNavigate();
   const conteneurRef = useRef(null);
+  const rechercheIdRef = useRef(0);
 
   const [requete, setRequete] = useState('');
   const [ouvert, setOuvert] = useState(false);
@@ -26,27 +27,39 @@ function GlobalSearch() {
 
   useEffect(() => {
     const texte = requete.trim();
+    const rechercheId = ++rechercheIdRef.current;
     if (texte.length < 2) return;
+    let annulee = false;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChargement(true);
     const minuteur = setTimeout(async () => {
       try {
         const res = await clientService.searchClients(texte);
-        setClients((Array.isArray(res) ? res : []).slice(0, LIMITE_SUGGESTIONS));
+        if (annulee || rechercheId !== rechercheIdRef.current) return;
+        const resultats = (Array.isArray(res) ? res : []).slice(0, LIMITE_SUGGESTIONS);
+        setClients(resultats);
       } catch {
-        setClients([]);
+        if (!annulee && rechercheId === rechercheIdRef.current) {
+          setClients([]);
+        }
       } finally {
-        setChargement(false);
+        if (!annulee && rechercheId === rechercheIdRef.current) {
+          setChargement(false);
+        }
       }
     }, 300);
-    return () => clearTimeout(minuteur);
+    return () => {
+      clearTimeout(minuteur);
+      annulee = true;
+    };
   }, [requete]);
 
   const surSaisie = (e) => {
     const valeur = e.target.value;
     setRequete(valeur);
     if (valeur.trim().length < 2) {
+      rechercheIdRef.current++;
       setClients([]);
       setChargement(false);
     }
@@ -150,24 +163,27 @@ function GlobalSearch() {
           {!chargement && clients.length > 0 && (
             <div>
               {clients.map((c, i) => (
-                <button
+                <div
                   key={`client-${c.id}`}
-                  onClick={() => allerAuDossier(c)}
-                  style={{
-                    ...styles.ligne,
-                    ...(i === clients.length - 1 && styles.ligneDerniere),
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--hover-bg, #334155)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  <div style={styles.titre}>
-                    {`${c.prenom ?? ''} ${c.nom ?? ''}`.trim()}
-                  </div>
-                  <div style={styles.sousTitre}>
-                    <Hash size={11} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
-                    CIN : {c.cin || '-'}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => allerAuDossier(c)}
+                    style={{
+                      ...styles.ligne,
+                      ...(i === clients.length - 1 && styles.ligneDerniere),
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--hover-bg, #334155)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <div style={styles.titre}>
+                      {`${c.prenom ?? ''} ${c.nom ?? ''}`.trim()}
+                    </div>
+                    <div style={styles.sousTitre}>
+                      <Hash size={11} style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                      CIN : {c.cin || '-'}
+                    </div>
+                  </button>
+                </div>
               ))}
             </div>
           )}

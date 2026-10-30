@@ -22,6 +22,15 @@ const carteService = {
     return response.data;
   },
 
+  getByClientId: async (clientId) => {
+    const response = await api.get(`/cartes/client/${clientId}`);
+    return response.data;
+  },
+
+  requestPinReset: async (carteId) => {
+    await api.post(`/cartes/${carteId}/reinitialiser-pin`);
+  },
+
   update: async (id, data) => {
     const response = await api.put(`/cartes/${id}`, data);
     return response.data;
