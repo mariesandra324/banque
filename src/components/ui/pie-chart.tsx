@@ -14,14 +14,14 @@ export interface PieSlice {
 
 /** Palette du graphique : contraste suffisant entre deux parts voisines. */
 export const PIE_PALETTE = [
-  "#1557A6",
-  "#20B26B",
-  "#F2A93B",
-  "#E05252",
-  "#2F80ED",
-  "#7B61FF",
-  "#00A6A6",
-  "#B4708C",
+  "#1B5FD0",
+  "#16A34A",
+  "#F59E0B",
+  "#E45B57",
+  "#3B82F6",
+  "#7C5CFC",
+  "#06B6D4",
+  "#EC4899",
 ] as const;
 
 const SIZE = 188;
@@ -99,14 +99,26 @@ export function PieChart({ slices, emptyLabel = "Aucune donnée à représenter.
 
   if (total <= 0) {
     return (
-      <View style={[styles.card, styles.cardEmpty, { backgroundColor: theme.backgroundElement }]}>
+      <View
+        style={[
+          styles.card,
+          styles.cardEmpty,
+          { backgroundColor: theme.surface, borderColor: theme.line },
+        ]}
+      >
         <Text style={[styles.empty, { color: theme.textSecondary }]}>{emptyLabel}</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.card, Shadows.card, { backgroundColor: theme.backgroundElement }]}>
+    <View
+      style={[
+        styles.card,
+        Shadows.card,
+        { backgroundColor: theme.surface, borderColor: theme.line },
+      ]}
+    >
       <View style={styles.body}>
         <View style={[styles.disc, { backgroundColor: segments[0].color }]}>
           {segments.map((segment) => (
@@ -143,6 +155,7 @@ export function PieChart({ slices, emptyLabel = "Aucune donnée à représenter.
 const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.xl,
+    borderWidth: 1,
     padding: Spacing.three,
   },
   cardEmpty: {

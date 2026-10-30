@@ -9,6 +9,7 @@ export interface CarteInfo {
   typeCarte: string;
   statut: string;
   compteId: number;
+  pinResetPending?: boolean;
 }
 
 export async function fetchCardByCompteId(compteId: string | number): Promise<CarteInfo | null> {
@@ -32,4 +33,14 @@ export async function fetchCardsForAccounts(accounts: Account[]): Promise<Map<st
     if (carte) result.set(accountId, carte);
   });
   return result;
+}
+
+export async function resetCartePin(
+  carteId: string | number,
+  request: { code: string; nouveauPin: string; confirmationPin: string }
+): Promise<void> {
+  await apiRequest<void>(`/cartes/${carteId}/confirmer-reinitialisation-pin`, {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 }

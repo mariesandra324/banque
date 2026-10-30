@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,10 +11,14 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { mobileForgotPassword } from "@/modules/auth/authService";
 import { buildIdentifierPayload, isIdentifierValid } from "@/modules/auth/identifier";
+import { AuthBrand } from "@/components/ui/auth-brand";
+import { Shadows } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { notify } from "@/utils/notify";
 
@@ -27,11 +32,11 @@ export default function ForgotPasswordForm() {
   const handleSubmit = async () => {
     const value = identifier.trim();
     if (!value) {
-      notify("Erreur", "Veuillez saisir votre adresse e-mail, votre numÃ©ro de tÃ©lÃ©phone ou votre CIN.");
+      notify("Erreur", "Veuillez saisir votre adresse e-mail, votre numéro de téléphone ou votre CIN.");
       return;
     }
     if (!isIdentifierValid(value)) {
-      notify("Erreur", "Veuillez saisir un e-mail, un numÃ©ro de tÃ©lÃ©phone ou un CIN valide.");
+      notify("Erreur", "Veuillez saisir un e-mail, un numéro de téléphone ou un CIN valide.");
       return;
     }
 
@@ -41,8 +46,8 @@ export default function ForgotPasswordForm() {
       setLoading(true);
       const result = await mobileForgotPassword(payload);
       notify(
-        "Code envoyÃ©",
-        result.message ?? "Un code temporaire a Ã©tÃ© envoyÃ© Ã  l'adresse e-mail associÃ©e au compte.",
+        "Code envoyé",
+        result.message ?? "Un code temporaire a été envoyé à l'adresse e-mail associée au compte.",
         [
           {
             text: "OK",
@@ -66,44 +71,71 @@ export default function ForgotPasswordForm() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: theme.background }]}
+      style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <LinearGradient
+        colors={[theme.backgroundTop, theme.backgroundBottom]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView
         contentContainerStyle={[styles.scroll, isWide && styles.scrollWide]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.formContainer, isWide && styles.formContainerWide]}>
-          <Text style={[styles.title, { color: theme.text }]}>Mot de passe oubliÃ©</Text>
+        <View
+          style={[
+            styles.formContainer,
+            isWide && styles.formContainerWide,
+            isWide && { backgroundColor: theme.surface, borderColor: theme.line, borderWidth: 1 },
+          ]}
+        >
+          <AuthBrand />
+
+          <Text style={[styles.title, { color: theme.text }]}>Mot de passe oublié</Text>
 
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Saisissez votre adresse e-mail, votre numÃ©ro de tÃ©lÃ©phone ou votre CIN enregistrÃ© dans votre compte.
+            Saisissez votre adresse e-mail, votre numéro de téléphone ou votre CIN enregistré
+            dans votre compte.
           </Text>
 
-          <Text style={[styles.label, { color: theme.textSecondary }]}>E-mail, tÃ©lÃ©phone ou CIN</Text>
-          <TextInput
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Identifiant</Text>
+          <View
             style={[
-              styles.input,
-              { backgroundColor: theme.backgroundElement, color: theme.text },
+              styles.inputWrap,
+              { backgroundColor: theme.surface, borderColor: theme.line },
             ]}
-            placeholder="Ex : nom@domaine.com, 0341234567 ou CIN"
-            placeholderTextColor={theme.textSecondary}
-            value={identifier}
-            onChangeText={setIdentifier}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-          />
+          >
+            <Ionicons name="at-outline" size={18} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.input, { color: theme.text }]}
+              placeholder="E-mail, téléphone ou CIN"
+              placeholderTextColor={theme.textSecondary}
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+            />
+          </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.primary }, loading && styles.buttonDisabled]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              Shadows.card,
+              { backgroundColor: theme.primary },
+              pressed && styles.buttonPressed,
+              loading && styles.buttonDisabled,
+            ]}
             onPress={handleSubmit}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Envoi..." : "Envoyer le code"}
+              {loading ? "Envoi…" : "Envoyer le code"}
             </Text>
-          </TouchableOpacity>
+            {!loading && <Ionicons name="arrow-forward" size={18} color="#ffffff" />}
+          </Pressable>
 
           <TouchableOpacity
             style={styles.link}
@@ -111,7 +143,7 @@ export default function ForgotPasswordForm() {
             disabled={loading}
           >
             <Text style={[styles.linkText, { color: theme.textSecondary }]}>
-              Retour Ã  la <Text style={[styles.linkTextBold, { color: theme.primary }]}>connexion</Text>
+              Retour à la <Text style={[styles.linkTextBold, { color: theme.primary }]}>connexion</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -128,7 +160,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 25,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
   },
   scrollWide: {
     paddingHorizontal: 48,
@@ -139,47 +172,61 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   formContainerWide: {
-    maxWidth: 480,
+    maxWidth: 460,
     padding: 40,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 20 },
+    borderRadius: 28,
+    shadowColor: "#0B1220",
+    shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.12,
-    shadowRadius: 40,
-    elevation: 8,
-    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 60px -30px rgba(15,23,42,0.25)" } as any) : {}),
+    shadowRadius: 48,
+    elevation: 10,
+    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 70px -30px rgba(15,23,42,0.28)" } as any) : {}),
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
+    fontWeight: "800",
+    letterSpacing: -0.7,
     marginBottom: 8,
   },
   subtitle: {
-    textAlign: "center",
     fontSize: 14,
-    marginBottom: 32,
+    lineHeight: 20,
+    marginBottom: 26,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
     marginBottom: 8,
   },
-  input: {
-    height: 55,
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 56,
     borderWidth: 1,
-    borderColor: "transparent",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 20,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+  },
+  input: {
+    flex: 1,
+    height: "100%",
+    fontSize: 15,
+    padding: 0,
   },
   button: {
-    height: 55,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 16,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
+    gap: 8,
+    marginTop: 24,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
   buttonDisabled: {
     opacity: 0.6,

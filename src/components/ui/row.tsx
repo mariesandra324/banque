@@ -6,6 +6,8 @@ import { useTheme } from "@/hooks/use-theme";
 
 interface RowProps {
   left?: ReactNode;
+  /** Couleur du cercle derrière l'icône de gauche (défaut : accent doux). */
+  leftBackground?: string;
   title: string;
   subtitle?: string;
   right?: ReactNode;
@@ -13,11 +15,15 @@ interface RowProps {
 }
 
 /** Ligne-carte premium : surface claire, coin arrondi, ombre douce. */
-export function Row({ left, title, subtitle, right, onPress }: RowProps) {
+export function Row({ left, leftBackground, title, subtitle, right, onPress }: RowProps) {
   const theme = useTheme();
   const body = (
     <View style={[styles.row, Shadows.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-      {left ? <View style={[styles.left, { backgroundColor: theme.backgroundElement }]}>{left}</View> : null}
+      {left ? (
+        <View style={[styles.left, { backgroundColor: leftBackground ?? theme.primarySoft }]}>
+          {left}
+        </View>
+      ) : null}
       <View style={styles.textBody}>
         <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
           {title}
@@ -53,9 +59,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   left: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.pill,
+    width: 46,
+    height: 46,
+    borderRadius: Radius.md,
     alignItems: "center",
     justifyContent: "center",
   },

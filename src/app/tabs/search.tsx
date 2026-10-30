@@ -98,8 +98,8 @@ export default function SearchScreen() {
       <BackButton />
       <Section title="Recherche" />
 
-      <View style={[styles.searchBox, { backgroundColor: theme.backgroundElement, borderColor: theme.line }]}>
-        <Ionicons name="search-outline" size={20} color={theme.textSecondary} />
+      <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+        <Ionicons name="search-outline" size={20} color={theme.primary} />
         <TextInput
           style={[styles.input, { color: theme.text }]}
           value={query}
@@ -133,7 +133,7 @@ export default function SearchScreen() {
           <Pressable
             key={`${r.kind}-${r.id}`}
             onPress={() => onPressResult(r)}
-            style={[styles.result, { backgroundColor: theme.backgroundElement }]}
+            style={[styles.result, { backgroundColor: theme.surface, borderColor: theme.line }]}
           >
             <View style={[styles.resultIcon, { backgroundColor: theme.primarySoft }]}>
               <Ionicons
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
-    height: 52,
-    borderRadius: 14,
+    height: 54,
+    borderRadius: 16,
     borderWidth: 1,
   },
   input: {
@@ -181,7 +181,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.three,
     padding: Spacing.two + Spacing.half,
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   resultIcon: {
     width: 40,

@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { LinearGradient } from "expo-linear-gradient";
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,7 +21,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { usePinGate } from "@/hooks/use-pin-gate";
 import { PinModal } from "@/components/ui/pin-modal";
 import { IconButton } from "@/components/ui/icon-button";
-import { Radius, Shadows, Spacing } from "@/constants/theme";
+import { Gradients, Radius, Shadows, Spacing } from "@/constants/theme";
 import { fetchAccounts, fetchAllOperations, verifyPin } from "@/services/accountsService";
 import { fetchDashboard } from "@/services/dashboardService";
 import { fetchUnreadNotificationsCount } from "@/services/notificationsService";
@@ -24,7 +33,7 @@ import { Section } from "@/components/ui/section";
 import { Row } from "@/components/ui/row";
 import { formatAr, formatDate, formatMoney, maskNumber } from "@/utils/format";
 
-const BALANCE_GRADIENT = ["#0B2A5B", "#071A3A", "#061024"] as const;
+const BALANCE_GRADIENT = Gradients.hero;
 
 function getInitials(prenom?: string, nom?: string): string {
   return `${prenom?.[0] ?? ""}${nom?.[0] ?? ""}`.toUpperCase();
@@ -33,6 +42,8 @@ function getInitials(prenom?: string, nom?: string): string {
 export default function DashboardScreen() {
   const { user } = useAuth();
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isWideWeb = Platform.OS === "web" && width >= 1024;
   const { visible: pinVisible, requestPin, handleConfirm, handleCancel } = usePinGate();
 
   const { data: dashboard, reload: reloadDashboard } = useAsyncData(fetchDashboard, []);
@@ -107,6 +118,12 @@ export default function DashboardScreen() {
         ]}
       >
         <View style={[styles.accountCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <LinearGradient
+            colors={Gradients.heroAccent}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.accountAccent}
+          />
           <View style={styles.accountCardTop}>
             <View
               style={[
@@ -116,11 +133,31 @@ export default function DashboardScreen() {
             >
               <Ionicons
                 name={isEpargne ? "leaf-outline" : "wallet-outline"}
-                size={18}
+                size={19}
                 color={theme.primary}
               />
             </View>
-            <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+            <View
+              style={[
+                styles.accountStatusChip,
+                { backgroundColor: isEpargne ? theme.successSoft : theme.primarySoft },
+              ]}
+            >
+              <View
+                style={[
+                  styles.accountStatusDot,
+                  { backgroundColor: isEpargne ? theme.success : theme.primary },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.accountStatusChipText,
+                  { color: isEpargne ? theme.success : theme.primary },
+                ]}
+              >
+                {isEpargne ? "Épargne" : "Actif"}
+              </Text>
+            </View>
           </View>
           <Text style={[styles.accountCardType, { color: theme.text }]} numberOfLines={1}>
             {isEpargne ? "Compte épargne" : "Compte courant"}
@@ -131,13 +168,47 @@ export default function DashboardScreen() {
           <Text style={[styles.accountCardBalance, { color: theme.text }]}>
             {balanceHidden ? "••••••" : formatAr(item.balance)}
           </Text>
-          <Text style={[styles.accountCardStatus, { color: theme.primary }]}>
-            {isEpargne ? "Épargne" : "Disponible"} · {item.currency}
-          </Text>
+          <View style={styles.accountFooter}>
+            <Text style={[styles.accountCardStatus, { color: theme.textSecondary }]}>
+              Disponible · {item.currency}
+            </Text>
+            <Ionicons name="arrow-forward" size={15} color={theme.primary} />
+          </View>
         </View>
       </Pressable>
     );
   };
+
+  const quickActions = [
+    {
+      label: "Virement",
+      icon: "swap-horizontal" as const,
+      color: theme.primary,
+      background: theme.primarySoft,
+      onPress: () => router.push("/tabs/movements/transfer/new"),
+    },
+    {
+      label: "Dépôt",
+      icon: "arrow-down-circle-outline" as const,
+      color: theme.success,
+      background: theme.successSoft,
+      onPress: () => router.push("/tabs/movements/deposit"),
+    },
+    {
+      label: "Cartes",
+      icon: "card-outline" as const,
+      color: theme.accent,
+      background: theme.accentSoft,
+      onPress: () => router.navigate("/tabs/cartes"),
+    },
+    {
+      label: "Crédits",
+      icon: "pricetags-outline" as const,
+      color: theme.warning,
+      background: theme.warningSoft,
+      onPress: () => router.push("/tabs/credits"),
+    },
+  ];
 
   return (
     <Screen>
@@ -220,9 +291,10 @@ export default function DashboardScreen() {
         locations={[0, 0.55, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.balanceCard}
+        style={[styles.balanceCard, isWideWeb && styles.balanceCardWide]}
       >
         <View style={styles.balanceSheen} />
+        <View style={styles.balanceSheenSoft} />
         <View style={styles.balanceCardTop}>
           <View style={styles.balanceLabelChip}>
             <Ionicons name="wallet-outline" size={13} color="#E8F1FC" />
@@ -237,7 +309,7 @@ export default function DashboardScreen() {
             <Text style={styles.eyeText}>{balanceHidden ? "Afficher" : "Masquer"}</Text>
           </Pressable>
         </View>
-        <Text style={styles.balanceAmount}>
+        <Text style={[styles.balanceAmount, isWideWeb && styles.balanceAmountWide]}>
           {balanceHidden ? "••••••" : formatAr(totalBalance)}
         </Text>
         <View style={styles.balanceMeta}>
@@ -247,6 +319,32 @@ export default function DashboardScreen() {
           </Text>
         </View>
       </LinearGradient>
+
+      {/* Actions rapides */}
+      <View
+        style={[
+          styles.quickCard,
+          Shadows.card,
+          { backgroundColor: theme.surface, borderColor: theme.line },
+        ]}
+      >
+        {quickActions.map((action) => (
+          <Pressable
+            key={action.label}
+            onPress={action.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+            style={({ pressed }) => [styles.quickItem, pressed && styles.quickItemPressed]}
+          >
+            <View style={[styles.quickIcon, { backgroundColor: action.background }]}>
+              <Ionicons name={action.icon} size={21} color={action.color} />
+            </View>
+            <Text style={[styles.quickLabel, { color: theme.text }]} numberOfLines={1}>
+              {action.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       {/* Mes comptes */}
       <Section
@@ -286,23 +384,27 @@ export default function DashboardScreen() {
           key={op.id}
           title={op.label}
           subtitle={`${op.reference} · ${formatDate(op.date)}`}
-left={
+          leftBackground={op.direction === "entrant" ? theme.successSoft : theme.dangerSoft}
+          left={
             <Ionicons
               name={op.direction === "entrant" ? "arrow-down-outline" : "arrow-up-outline"}
-              size={18}
+              size={19}
               color={op.direction === "entrant" ? theme.success : theme.danger}
             />
           }
           right={
-            <Text
-              style={[
-                styles.txAmount,
-                { color: op.direction === "entrant" ? theme.success : theme.danger },
-              ]}
-            >
-              {op.direction === "entrant" ? "+" : "-"}
-              {formatMoney(op.amount)}
-            </Text>
+            <View style={styles.txRight}>
+              <Text
+                style={[
+                  styles.txAmount,
+                  { color: op.direction === "entrant" ? theme.success : theme.danger },
+                ]}
+              >
+                {op.direction === "entrant" ? "+" : "-"}
+                {formatMoney(op.amount)}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={theme.textSecondary} />
+            </View>
           }
           onPress={() => router.push("/tabs/movements/history")}
         />
@@ -388,12 +490,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   greeting: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "800",
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   subGreeting: {
     fontSize: 13,
+    marginTop: 1,
   },
   headerIcons: {
     flexDirection: "row",
@@ -419,6 +522,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     overflow: "hidden",
   },
+  balanceCardWide: {
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "flex-start",
+    padding: Spacing.three,
+  },
   balanceSheen: {
     position: "absolute",
     top: -70,
@@ -427,6 +536,15 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     backgroundColor: "rgba(255,255,255,0.09)",
+  },
+  balanceSheenSoft: {
+    position: "absolute",
+    bottom: -90,
+    left: -50,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: "rgba(98,166,255,0.20)",
   },
   balanceCardTop: {
     flexDirection: "row",
@@ -469,6 +587,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginTop: Spacing.one,
   },
+  balanceAmountWide: {
+    fontSize: 30,
+  },
   balanceMeta: {
     flexDirection: "row",
     alignItems: "center",
@@ -480,11 +601,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
+  quickCard: {
+    flexDirection: "row",
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.two,
+  },
+  quickItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  quickItemPressed: {
+    opacity: 0.65,
+    transform: [{ scale: 0.97 }],
+  },
+  quickIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
+
   seeAll: {
     fontSize: 14,
     fontWeight: "700",
   },
 
+  txRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.one,
+  },
   txAmount: {
     fontSize: 14,
     fontWeight: "800",
@@ -496,20 +652,29 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   accountCard: {
-    width: 206,
+    width: 218,
     borderRadius: Radius.lg,
     borderWidth: 1,
     padding: Spacing.three,
-    gap: Spacing.one,
+    paddingTop: Spacing.three + Spacing.one,
+    gap: 2,
+    overflow: "hidden",
+  },
+  accountAccent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
   },
   accountCardPressed: {
     transform: [{ scale: 0.985 }],
     opacity: 0.9,
   },
   accountIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -518,22 +683,48 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  accountStatusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  accountStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  accountStatusChipText: {
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
   accountCardType: {
     fontSize: 15,
     fontWeight: "700",
     marginTop: Spacing.two,
   },
   accountCardNumber: {
-    fontSize: 13,
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   accountCardBalance: {
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: "800",
     marginTop: Spacing.one,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
+  },
+  accountFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: Spacing.two,
   },
   accountCardStatus: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "600",
   },
 });

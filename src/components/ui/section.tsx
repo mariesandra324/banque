@@ -33,20 +33,21 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     gap: Spacing.two,
+    marginTop: Spacing.one,
   },
   body: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   caption: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+    fontSize: 21,
+    fontWeight: "700",
+    letterSpacing: -0.4,
   },
 });

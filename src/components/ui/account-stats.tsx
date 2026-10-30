@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { Spacing } from "@/constants/theme";
+import { Shadows, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { KpiTile } from "@/components/ui/kpi-tile";
 import { PieChart } from "@/components/ui/pie-chart";
@@ -102,7 +102,7 @@ export function AccountStatsModal({
             {maskNumber(accountNumero)}
           </Text>
 
-          <View style={[styles.segment, { backgroundColor: theme.backgroundSelected }]}>
+          <View style={[styles.segment, { backgroundColor: theme.backgroundElement }]}>
             {PERIODS.map((item) => {
               const active = item.key === period;
               return (
@@ -111,14 +111,15 @@ export function AccountStatsModal({
                   onPress={() => setPeriod(item.key)}
                   style={[
                     styles.segmentItem,
-                    active && { backgroundColor: theme.backgroundElement },
+                    active && Shadows.card,
+                    active && { backgroundColor: theme.surface },
                   ]}
                 >
                   <Text
                     style={[
                       styles.segmentText,
                       { color: theme.textSecondary },
-                      active && { color: theme.text, fontWeight: "700" },
+                      active && { color: theme.primary, fontWeight: "700" },
                     ]}
                   >
                     {item.label}

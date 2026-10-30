@@ -1,4 +1,4 @@
-﻿import { Redirect } from "expo-router";
+import { Redirect } from "expo-router";
 import ResetPasswordForm from "@/modules/auth/ResetPasswordForm";
 import { useAuth } from "@/contexte/AuthContext";
 

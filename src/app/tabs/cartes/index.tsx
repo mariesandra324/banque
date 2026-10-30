@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,18 +10,14 @@ import { useAsyncData } from "@/hooks/use-async-data";
 import { useTheme } from "@/hooks/use-theme";
 import { usePinGate } from "@/hooks/use-pin-gate";
 import { PinModal } from "@/components/ui/pin-modal";
-import { Spacing, Shadows, Radius } from "@/constants/theme";
+import { Gradients, Spacing, Shadows, Radius } from "@/constants/theme";
 import { fetchAccounts, verifyPin } from "@/services/accountsService";
 import { CarteInfo, fetchCardsForAccounts } from "@/services/cartesService";
 import { Account } from "@/constants/types";
 import { Screen } from "@/components/ui/screen";
 import { Section } from "@/components/ui/section";
 
-const GRADIENTS: readonly (readonly [string, string])[] = [
-  ["#1557A6", "#0B2A5B"],
-  ["#0B2A5B", "#071A3A"],
-  ["#2F80ED", "#1557A6"],
-];
+const GRADIENTS = Gradients.cards;
 
 function groupDigits(value: string, size = 4): string {
   const clean = value.replace(/\D/g, "");
@@ -35,6 +31,8 @@ function formatExpiry(iso: string): string {
 
 export default function CartesScreen() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isWideWeb = Platform.OS === "web" && width >= 1024;
   const { visible: pinVisible, requestPin, handleConfirm, handleCancel } = usePinGate();
   const { data, loading, reload } = useAsyncData(async () => {
     const accounts = await fetchAccounts();
@@ -74,10 +72,20 @@ export default function CartesScreen() {
         return (
           <Pressable
             key={account.id}
-            onPress={() => openAccount(account)}
+            onPress={() => {
+              if (carte?.pinResetPending) {
+                router.push({
+                  pathname: "/tabs/cartes/reinitialiser-pin",
+                  params: { carteId: String(carte.id) },
+                });
+                return;
+              }
+              openAccount(account);
+            }}
             style={({ pressed }) => [
               styles.pressScale,
               Shadows.floating,
+              isWideWeb && styles.pressScaleWide,
               pressed && styles.cardPressed,
             ]}
           >
@@ -87,34 +95,52 @@ export default function CartesScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.card}
             >
+              <View style={styles.cardGlow} pointerEvents="none" />
+              <View style={styles.cardGlowSoft} pointerEvents="none" />
+
               <View style={styles.cardTop}>
-                <Text style={styles.cardLabel}>{account.label}</Text>
-                <Ionicons name="wifi-outline" size={22} color="#E8F1FC" />
-              </View>
-
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>ERP</Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Numéro de compte</Text>
-                <Text style={styles.fieldValue}>{groupDigits(account.numero)}</Text>
-              </View>
-
-              {carte ? (
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Carte associée</Text>
-                  <Text style={styles.fieldValue}>{groupDigits(carte.numeroCarte)}</Text>
+                <View style={styles.cardTopText}>
+                  <Text style={styles.cardLabel}>
+                    {account.type === "epargne" ? "Compte épargne" : "Compte courant"}
+                  </Text>
+                  <Text style={styles.cardNumber} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                    {groupDigits(account.numero)}
+                  </Text>
                 </View>
-              ) : (
-                <Text style={styles.noCard}>Aucune carte associée</Text>
-              )}
+                <Ionicons name="wifi" size={20} color="#E8F1FC" style={styles.contactless} />
+              </View>
+
+              <View style={styles.cardMiddle}>
+                <LinearGradient
+                  colors={["#F7DE9B", "#D8AD4A"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.chip}
+                >
+                  <View style={styles.chipLine} />
+                  <View style={styles.chipLine} />
+                </LinearGradient>
+                <Text style={styles.cardSecondary} numberOfLines={1}>
+                  {carte?.pinResetPending
+                    ? "Code reçu par e-mail — appuyez pour choisir un nouveau PIN"
+                    : carte ? `Carte ${groupDigits(carte.numeroCarte)}` : "Aucune carte associée"}
+                </Text>
+              </View>
 
               <View style={styles.cardBottom}>
-                <Text style={styles.cardHolder}>{account.holder}</Text>
-                {carte?.dateExpiration && (
-                  <Text style={styles.cardExpiry}>Exp. {formatExpiry(carte.dateExpiration)}</Text>
-                )}
+                <View style={styles.cardBottomBlock}>
+                  <Text style={styles.fieldLabel}>Titulaire</Text>
+                  <Text style={styles.cardHolder} numberOfLines={1}>
+                    {account.holder}
+                  </Text>
+                </View>
+                <View style={[styles.cardBottomBlock, styles.cardBottomRight]}>
+                  <Text style={styles.fieldLabel}>Expiration</Text>
+                  <Text style={styles.cardExpiry}>
+                    {carte?.dateExpiration ? formatExpiry(carte.dateExpiration) : "—"}
+                  </Text>
+                </View>
+                <Text style={styles.cardBrand}>ERP</Text>
               </View>
             </LinearGradient>
           </Pressable>
@@ -139,65 +165,126 @@ const styles = StyleSheet.create({
   pressScale: {
     marginBottom: Spacing.three,
   },
+  pressScaleWide: {
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center",
+  },
   cardPressed: {
     transform: [{ scale: 0.985 }],
   },
   card: {
     borderRadius: Radius.lg,
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: Spacing.three + Spacing.one,
     aspectRatio: 1.58,
     justifyContent: "space-between",
+    overflow: "hidden",
+  },
+  cardGlow: {
+    position: "absolute",
+    top: -80,
+    right: -50,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: "rgba(255,255,255,0.10)",
+  },
+  cardGlowSoft: {
+    position: "absolute",
+    bottom: -90,
+    left: -40,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: "rgba(98,166,255,0.18)",
   },
   cardTop: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
   },
-  cardLabel: { color: "#E8F1FC", fontSize: 14, fontWeight: "600" },
-  chip: {
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderRadius: 6,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-    alignSelf: "flex-start",
-  },
-  chipText: { color: "#ffffff", fontSize: 12, fontWeight: "700", letterSpacing: 1 },
-  field: {
+  cardTopText: {
+    flex: 1,
     gap: 2,
   },
-  fieldLabel: {
-    color: "#E8F1FC",
-    fontSize: 11,
-    fontWeight: "600",
+  cardLabel: {
+    color: "rgba(232,241,252,0.8)",
+    fontSize: 10,
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
-  fieldValue: {
+  cardNumber: {
     color: "#ffffff",
     fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: 1.5,
+    fontWeight: "700",
+    letterSpacing: 1.4,
   },
-  noCard: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 13,
-    fontStyle: "italic",
+  contactless: {
+    transform: [{ rotate: "90deg" }],
+  },
+  cardMiddle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
+  chip: {
+    width: 42,
+    height: 30,
+    borderRadius: 7,
+    paddingHorizontal: 5,
+    justifyContent: "center",
+    gap: 3,
+  },
+  chipLine: {
+    height: 1.5,
+    borderRadius: 1,
+    backgroundColor: "rgba(105,75,15,0.55)",
+  },
+  cardSecondary: {
+    flex: 1,
+    color: "rgba(232,241,252,0.85)",
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.4,
   },
   cardBottom: {
     flexDirection: "row",
     alignItems: "flex-end",
-    justifyContent: "space-between",
+    gap: Spacing.three,
+  },
+  cardBottomBlock: {
+    gap: 2,
+  },
+  cardBottomRight: {
+    alignItems: "flex-end",
+  },
+  fieldLabel: {
+    color: "rgba(232,241,252,0.7)",
+    fontSize: 9,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   cardHolder: {
-    color: "#E8F1FC",
-    fontSize: 13,
-    fontWeight: "600",
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
+    maxWidth: 150,
   },
   cardExpiry: {
-    color: "#E8F1FC",
+    color: "#ffffff",
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+  cardBrand: {
+    marginLeft: "auto",
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 2,
   },
 });

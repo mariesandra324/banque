@@ -1,61 +1,116 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  Keyframe,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+
+import { Gradients } from '@/constants/theme';
 
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
-const DURATION = 600;
+const HOLD_DURATION = 1500;
+const DURATION = 650;
+
+const logoEnter = new Keyframe({
+  0: {
+    opacity: 0,
+    transform: [{ scale: 0.6 }],
+  },
+  100: {
+    opacity: 1,
+    transform: [{ scale: 1 }],
+    easing: Easing.elastic(0.9),
+  },
+});
+
+const textEnter = new Keyframe({
+  0: {
+    opacity: 0,
+    transform: [{ translateY: 14 }],
+  },
+  100: {
+    opacity: 1,
+    transform: [{ translateY: 0 }],
+    easing: Easing.out(Easing.cubic),
+  },
+});
+
+function SplashContent() {
+  return (
+    <>
+      <View style={styles.decorTop} />
+      <View style={styles.decorBottom} />
+
+      <View style={styles.center}>
+        <Animated.View entering={logoEnter.duration(800)} style={styles.logoCard}>
+          <Image
+            style={styles.logo}
+            source={require('@/assets/images/erp.png')}
+            contentFit="contain"
+          />
+        </Animated.View>
+
+        <Animated.View entering={textEnter.duration(600).delay(250)} style={styles.textBlock}>
+          <Text style={styles.brand}>ERP Banking</Text>
+          <Text style={styles.caption}>Veuillez patienter</Text>
+          <ActivityIndicator color="rgba(255,255,255,0.85)" style={styles.spinner} />
+        </Animated.View>
+      </View>
+
+      <Animated.View entering={textEnter.duration(600).delay(450)} style={styles.footer}>
+        <Text style={styles.footerText}>Espace client sécurisé</Text>
+      </Animated.View>
+    </>
+  );
+}
 
 export function AnimatedSplashOverlay() {
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+  const hidden = useRef(false);
+  const exit = useSharedValue(0);
+
+  useEffect(() => {
+    if (!animate) return;
+    exit.value = withTiming(
+      1,
+      { duration: DURATION, easing: Easing.in(Easing.cubic) },
+      (finished) => {
+        if (finished) {
+          runOnJS(setVisible)(false);
+        }
+      }
+    );
+  }, [animate, exit]);
+
+  const exitStyle = useAnimatedStyle(() => ({
+    opacity: 1 - exit.value,
+    transform: [{ scale: 1 + exit.value * 0.04 }],
+  }));
 
   if (!visible) return null;
 
-  const splashKeyframe = new Keyframe({
-    0: {
-      transform: [{ scale: 1 }],
-      opacity: 1,
-    },
-    20: {
-      opacity: 1,
-    },
-    70: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
-    100: {
-      opacity: 0,
-      transform: [{ scale: 1 }],
-      easing: Easing.elastic(0.7),
-    },
-  });
+  const handleReady = () => {
+    if (hidden.current) return;
+    hidden.current = true;
 
-  const image = <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />;
+    SplashScreen.hideAsync().finally(() => {
+      setTimeout(() => setAnimate(true), HOLD_DURATION);
+    });
+  };
 
-  return animate ? (
-    <Animated.View
-      entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
-        'worklet';
-        if (finished) {
-          scheduleOnRN(setVisible, false);
-        }
-      })}
-      style={styles.splashOverlay}>
-      {image}
+  return (
+    <Animated.View onLayout={handleReady} style={[styles.splashOverlay, exitStyle]}>
+      <LinearGradient colors={Gradients.hero} style={StyleSheet.absoluteFill} />
+      <SplashContent />
     </Animated.View>
-  ) : (
-    <View
-      onLayout={() => {
-        SplashScreen.hideAsync().finally(() => {
-          setAnimate(true);
-        });
-      }}
-      style={styles.splashOverlay}>
-      {image}
-    </View>
   );
 }
 
@@ -104,13 +159,91 @@ export function AnimatedIcon() {
 
       <Animated.View entering={keyframe.duration(DURATION)} style={styles.background} />
       <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
-        <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />
+        <Image
+          style={styles.iconLogo}
+          source={require('@/assets/images/erp.png')}
+          contentFit="contain"
+        />
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  splashOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#0B2A5B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    overflow: 'hidden',
+  },
+  decorTop: {
+    position: 'absolute',
+    top: -140,
+    right: -110,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(98,166,255,0.16)',
+  },
+  decorBottom: {
+    position: 'absolute',
+    bottom: -160,
+    left: -120,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(21,87,184,0.28)',
+  },
+  center: {
+    alignItems: 'center',
+  },
+  logoCard: {
+    width: 112,
+    height: 112,
+    borderRadius: 32,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#04122B',
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 12,
+  },
+  logo: {
+    width: 74,
+    height: 74,
+  },
+  textBlock: {
+    alignItems: 'center',
+    marginTop: 26,
+  },
+  brand: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+  },
+  caption: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 14,
+    letterSpacing: 0.6,
+    marginTop: 8,
+  },
+  spinner: {
+    marginTop: 22,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 56,
+  },
+  footerText: {
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 12,
+    letterSpacing: 0.8,
+  },
   imageContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -127,9 +260,9 @@ const styles = StyleSheet.create({
     height: 128,
     zIndex: 100,
   },
-  image: {
+  iconLogo: {
     width: 76,
-    height: 71,
+    height: 76,
   },
   background: {
     borderRadius: 40,
@@ -137,12 +270,5 @@ const styles = StyleSheet.create({
     width: 128,
     height: 128,
     position: 'absolute',
-  },
-  splashOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#0B2A5B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
   },
 });

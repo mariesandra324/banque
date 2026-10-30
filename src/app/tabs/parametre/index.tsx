@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexte/AuthContext";
 import { ThemeMode, useThemeMode } from "@/contexte/ThemeContext";
 import { useTheme } from "@/hooks/use-theme";
-import { Spacing } from "@/constants/theme";
+import { Shadows, Spacing } from "@/constants/theme";
 import { Screen } from "@/components/ui/screen";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export default function ParametreScreen() {
       </Card>
 
       <Section title="Apparence" />
-      <View style={styles.modeRow}>
+      <View style={[styles.modeRow, { backgroundColor: theme.backgroundElement }]}>
         {MODE_OPTIONS.map((option) => {
           const active = mode === option.value;
           return (
@@ -62,16 +62,14 @@ export default function ParametreScreen() {
               onPress={() => setMode(option.value)}
               style={[
                 styles.modeOption,
-                {
-                  backgroundColor: active ? theme.primary : theme.backgroundElement,
-                  borderColor: active ? theme.primary : theme.line,
-                },
+                active && { backgroundColor: theme.surface },
+                active && Shadows.card,
               ]}
             >
               <Text
                 style={[
                   styles.modeLabel,
-                  { color: active ? "#ffffff" : theme.text },
+                  { color: active ? theme.primary : theme.textSecondary },
                 ]}
               >
                 {option.label}
@@ -130,14 +128,15 @@ const styles = StyleSheet.create({
   userSub: { fontSize: 13 },
   modeRow: {
     flexDirection: "row",
-    gap: Spacing.two,
+    borderRadius: 16,
+    padding: Spacing.one,
+    gap: Spacing.one,
   },
   modeOption: {
     flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: Spacing.three,
+    borderRadius: 12,
+    paddingVertical: Spacing.two + Spacing.one,
     alignItems: "center",
   },
-  modeLabel: { fontSize: 14, fontWeight: "600" },
+  modeLabel: { fontSize: 14, fontWeight: "700" },
 });

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -63,28 +63,64 @@ export default function DepositScreen() {
       <BackButton />
       <Section title="Versement" />
 
-      <Text style={styles.label}>Type de versement</Text>
-      <View style={styles.types}>
-        {TYPES.map((t) => (
-          <Button
-            key={t.key}
-            title={t.label}
-            variant={type === t.key ? "primary" : "secondary"}
-            onPress={() => setType(t.key)}
-          />
-        ))}
+      <Text style={[styles.label, { color: theme.textSecondary }]}>Type de versement</Text>
+      <View style={[styles.types, { backgroundColor: theme.backgroundElement }]}>
+        {TYPES.map((t) => {
+          const active = type === t.key;
+          return (
+            <Pressable
+              key={t.key}
+              onPress={() => setType(t.key)}
+              style={[
+                styles.typeOption,
+                active && { backgroundColor: theme.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.typeText,
+                  { color: active ? "#ffffff" : theme.textSecondary },
+                ]}
+              >
+                {t.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={styles.label}>Montant (MGA)</Text>
-      <TextInput style={[styles.input, { borderColor: theme.line }]} value={montant} onChangeText={setMontant} keyboardType="numeric" placeholder="0" />
+      <Text style={[styles.label, { color: theme.textSecondary }]}>Montant (MGA)</Text>
+      <TextInput
+        style={[
+          styles.input,
+          { borderColor: theme.line, backgroundColor: theme.surface, color: theme.text },
+        ]}
+        value={montant}
+        onChangeText={setMontant}
+        keyboardType="numeric"
+        placeholder="0"
+        placeholderTextColor={theme.textSecondary}
+      />
 
-      <Text style={styles.label}>Agence</Text>
-      <TextInput style={[styles.input, { borderColor: theme.line }]} value={agence} onChangeText={setAgence} placeholder="Agence (optionnel)" />
+      <Text style={[styles.label, { color: theme.textSecondary }]}>Agence</Text>
+      <TextInput
+        style={[
+          styles.input,
+          { borderColor: theme.line, backgroundColor: theme.surface, color: theme.text },
+        ]}
+        value={agence}
+        onChangeText={setAgence}
+        placeholder="Agence (optionnel)"
+        placeholderTextColor={theme.textSecondary}
+      />
 
       {selectedAccount && (
-        <Text style={{ color: theme.textSecondary }}>
-          Compte crédité : {selectedAccount.label}
-        </Text>
+        <View style={[styles.infoRow, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Compte crédité</Text>
+          <Text style={[styles.infoValue, { color: theme.text }]} numberOfLines={1}>
+            {selectedAccount.label}
+          </Text>
+        </View>
       )}
 
       <Button title="Demander le versement" loading={loading} onPress={handleSubmit} />
@@ -93,7 +129,39 @@ export default function DepositScreen() {
 }
 
 const styles = StyleSheet.create({
-  types: { flexDirection: "row", gap: Spacing.two },
-  label: { fontSize: 14, fontWeight: "600", marginBottom: 4 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, height: 48, fontSize: 15, marginBottom: 8 },
+  types: { flexDirection: "row", gap: Spacing.one, borderRadius: 16, padding: Spacing.one },
+  typeOption: {
+    flex: 1,
+    paddingVertical: Spacing.two + Spacing.one,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  typeText: { fontSize: 13, fontWeight: "700" },
+  label: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    marginTop: Spacing.one,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 54,
+    fontSize: 15,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.three,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+  },
+  infoLabel: { fontSize: 12, fontWeight: "600" },
+  infoValue: { flex: 1, fontSize: 13, fontWeight: "700", textAlign: "right" },
 });

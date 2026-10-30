@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,10 +11,14 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { mobileResetPassword, mobileVerifyOtp } from "@/modules/auth/authService";
 import { buildIdentifierPayload } from "@/modules/auth/identifier";
+import { AuthBrand } from "@/components/ui/auth-brand";
+import { Shadows } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { notify } from "@/utils/notify";
 
@@ -56,7 +61,7 @@ export default function ResetPasswordForm() {
       return;
     }
     if (!code.trim()) {
-      notify("Erreur", "Veuillez saisir le code reÃ§u par e-mail.");
+      notify("Erreur", "Veuillez saisir le code reçu par e-mail.");
       return;
     }
     const payload = { ...buildPayload(), code: code.trim() };
@@ -70,12 +75,12 @@ export default function ResetPasswordForm() {
       const result = await mobileVerifyOtp(payload);
       if (result.valid) {
         setVerified(true);
-        notify("VÃ©rification rÃ©ussie", "Vous pouvez maintenant choisir votre nouveau mot de passe.");
+        notify("Vérification réussie", "Vous pouvez maintenant choisir votre nouveau mot de passe.");
       } else {
-        notify("Erreur", result.message ?? "Code invalide ou expirÃ©.");
+        notify("Erreur", result.message ?? "Code invalide ou expiré.");
       }
     } catch (error) {
-      notify("Erreur", error instanceof Error ? error.message : "Code invalide ou expirÃ©.");
+      notify("Erreur", error instanceof Error ? error.message : "Code invalide ou expiré.");
     } finally {
       setVerifying(false);
     }
@@ -83,11 +88,11 @@ export default function ResetPasswordForm() {
 
   const handleSubmit = async () => {
     if (!verified) {
-      notify("VÃ©rification requise", "Veuillez d'abord vÃ©rifier le code OTP.");
+      notify("Vérification requise", "Veuillez d'abord vérifier le code OTP.");
       return;
     }
     if (nouveauMotDePasse.length < 6) {
-      notify("Erreur", "Le mot de passe doit contenir au moins 6 caractÃ¨res.");
+      notify("Erreur", "Le mot de passe doit contenir au moins 6 caractères.");
       return;
     }
     if (nouveauMotDePasse !== confirmation) {
@@ -104,7 +109,7 @@ export default function ResetPasswordForm() {
     try {
       setLoading(true);
       const result = await mobileResetPassword(payload);
-      notify("RÃ©initialisation rÃ©ussie", result.message ?? "Votre mot de passe a Ã©tÃ© rÃ©initialisÃ©.", [
+      notify("Réinitialisation réussie", result.message ?? "Votre mot de passe a été réinitialisé.", [
         {
           text: "OK",
           onPress: () => router.replace("/auth/login"),
@@ -119,33 +124,61 @@ export default function ResetPasswordForm() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: theme.background }]}
+      style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <LinearGradient
+        colors={[theme.backgroundTop, theme.backgroundBottom]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView
         contentContainerStyle={[styles.scroll, isWide && styles.scrollWide]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.formContainer, isWide && styles.formContainerWide]}>
-          <Text style={[styles.title, { color: theme.text }]}>VÃ©rification & Nouveau mot de passe</Text>
+        <View
+          style={[
+            styles.formContainer,
+            isWide && styles.formContainerWide,
+            isWide && { backgroundColor: theme.surface, borderColor: theme.line, borderWidth: 1 },
+          ]}
+        >
+          <AuthBrand caption="Sécurisation du compte" />
 
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Ã‰tape 1 : saisissez le code envoyÃ© par e-mail. Ã‰tape 2 : dÃ©finissez votre nouveau mot de passe.
+          <Text style={[styles.title, { color: theme.text }]}>
+            Vérification & nouveau mot de passe
           </Text>
 
-          <Text style={[styles.label, { color: theme.textSecondary }]}>E-mail, tÃ©lÃ©phone ou CIN</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: theme.backgroundElement, color: theme.text }]}
-            placeholder="Identifiant utilisÃ© pour la demande"
-            placeholderTextColor={theme.textSecondary}
-            value={identifier}
-            onChangeText={setIdentifier}
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!verified}
-          />
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+            Étape 1 : saisissez le code envoyé par e-mail. Étape 2 : définissez votre nouveau
+            mot de passe.
+          </Text>
 
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Code OTP reÃ§u par e-mail</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>E-mail, téléphone ou CIN</Text>
+          <View
+            style={[
+              styles.inputWrap,
+              { backgroundColor: theme.surface, borderColor: theme.line },
+              verified && { borderColor: theme.success },
+            ]}
+          >
+            <Ionicons name="at-outline" size={18} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.input, { color: theme.text }]}
+              placeholder="Identifiant utilisé pour la demande"
+              placeholderTextColor={theme.textSecondary}
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!verified}
+            />
+          </View>
+
+          <Text style={[styles.label, { color: theme.textSecondary, marginTop: 18 }]}>
+            Code OTP reçu par e-mail
+          </Text>
           <View style={styles.codeRow}>
             {codeDigits.map((digit, index) => (
               <TextInput
@@ -153,7 +186,14 @@ export default function ResetPasswordForm() {
                 ref={(ref) => {
                   inputsRef.current[index] = ref;
                 }}
-                style={[styles.codeBox, { backgroundColor: theme.backgroundElement, color: theme.text, borderColor: verified ? "#22C55E" : "transparent" }]}
+                style={[
+                  styles.codeBox,
+                  {
+                    backgroundColor: theme.surface,
+                    borderColor: verified ? theme.success : theme.line,
+                    color: theme.text,
+                  },
+                ]}
                 value={digit}
                 onChangeText={(value) => updateCodeAt(index, value)}
                 onKeyPress={({ nativeEvent }) => handleCodeKeyPress(index, nativeEvent.key)}
@@ -165,55 +205,97 @@ export default function ResetPasswordForm() {
             ))}
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.primary }, (verifying || verified) && styles.buttonDisabled]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              Shadows.card,
+              { backgroundColor: verifying || verified ? theme.success : theme.primary },
+              pressed && styles.buttonPressed,
+              (verifying || verified) && styles.buttonDisabled,
+            ]}
             onPress={handleVerify}
             disabled={verifying || verified}
           >
+            {verified && <Ionicons name="checkmark-circle" size={18} color="#ffffff" />}
             <Text style={styles.buttonText}>
-              {verified ? "Code vÃ©rifiÃ©" : verifying ? "VÃ©rification..." : "VÃ©rifier le code"}
+              {verified ? "Code vérifié" : verifying ? "Vérification…" : "Vérifier le code"}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {verified && (
             <>
-              <Text style={[styles.label, { color: theme.textSecondary, marginTop: 12 }]}>Nouveau mot de passe</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.backgroundElement, color: theme.text }]}
-                placeholder="Au moins 6 caractÃ¨res"
-                placeholderTextColor={theme.textSecondary}
-                secureTextEntry
-                value={nouveauMotDePasse}
-                onChangeText={setNouveauMotDePasse}
-                autoCapitalize="none"
-              />
+              <Text
+                style={[styles.label, { color: theme.textSecondary, marginTop: 22 }]}
+              >
+                Nouveau mot de passe
+              </Text>
+              <View
+                style={[
+                  styles.inputWrap,
+                  { backgroundColor: theme.surface, borderColor: theme.line },
+                ]}
+              >
+                <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} />
+                <TextInput
+                  style={[styles.input, { color: theme.text }]}
+                  placeholder="Au moins 6 caractères"
+                  placeholderTextColor={theme.textSecondary}
+                  secureTextEntry
+                  value={nouveauMotDePasse}
+                  onChangeText={setNouveauMotDePasse}
+                  autoCapitalize="none"
+                />
+              </View>
 
-              <Text style={[styles.label, { color: theme.textSecondary }]}>Confirmer le nouveau mot de passe</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.backgroundElement, color: theme.text }]}
-                placeholder="Re-saisissez le mot de passe"
-                placeholderTextColor={theme.textSecondary}
-                secureTextEntry
-                value={confirmation}
-                onChangeText={setConfirmation}
-                autoCapitalize="none"
-              />
+              <Text
+                style={[styles.label, { color: theme.textSecondary, marginTop: 18 }]}
+              >
+                Confirmer le nouveau mot de passe
+              </Text>
+              <View
+                style={[
+                  styles.inputWrap,
+                  { backgroundColor: theme.surface, borderColor: theme.line },
+                ]}
+              >
+                <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} />
+                <TextInput
+                  style={[styles.input, { color: theme.text }]}
+                  placeholder="Re-saisissez le mot de passe"
+                  placeholderTextColor={theme.textSecondary}
+                  secureTextEntry
+                  value={confirmation}
+                  onChangeText={setConfirmation}
+                  autoCapitalize="none"
+                />
+              </View>
 
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary }, loading && styles.buttonDisabled]}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  Shadows.card,
+                  { backgroundColor: theme.primary },
+                  pressed && styles.buttonPressed,
+                  loading && styles.buttonDisabled,
+                ]}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? "Enregistrement..." : "Enregistrer le nouveau mot de passe"}
+                  {loading ? "Enregistrement…" : "Enregistrer le mot de passe"}
                 </Text>
-              </TouchableOpacity>
+                {!loading && <Ionicons name="arrow-forward" size={18} color="#ffffff" />}
+              </Pressable>
             </>
           )}
 
-          <TouchableOpacity style={styles.link} onPress={() => router.replace("/auth/login")} disabled={loading}>
+          <TouchableOpacity
+            style={styles.link}
+            onPress={() => router.replace("/auth/login")}
+            disabled={loading}
+          >
             <Text style={[styles.linkText, { color: theme.textSecondary }]}>
-              Retour Ã  la <Text style={[styles.linkTextBold, { color: theme.primary }]}>connexion</Text>
+              Retour à la <Text style={[styles.linkTextBold, { color: theme.primary }]}>connexion</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -224,30 +306,73 @@ export default function ResetPasswordForm() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 25, paddingVertical: 30 },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
   scrollWide: { paddingHorizontal: 48 },
-  formContainer: { width: "100%", maxWidth: 420, alignSelf: "center" },
+  formContainer: { width: "100%", maxWidth: 440, alignSelf: "center" },
   formContainerWide: {
     maxWidth: 480,
     padding: 40,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 20 },
+    borderRadius: 28,
+    shadowColor: "#0B1220",
+    shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.12,
-    shadowRadius: 40,
-    elevation: 8,
-    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 60px -30px rgba(15,23,42,0.25)" } as any) : {}),
+    shadowRadius: 48,
+    elevation: 10,
+    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 70px -30px rgba(15,23,42,0.28)" } as any) : {}),
   },
-  title: { fontSize: 26, fontWeight: "700", textAlign: "center", marginBottom: 8 },
-  subtitle: { textAlign: "center", fontSize: 14, marginBottom: 28 },
-  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-  input: { height: 55, borderWidth: 1, borderColor: "transparent", borderRadius: 12, paddingHorizontal: 15, fontSize: 16, marginBottom: 18 },
-  codeRow: { flexDirection: "row", justifyContent: "space-between", gap: 8, marginBottom: 18 },
-  codeBox: { flex: 1, height: 56, borderWidth: 1, borderRadius: 12, fontSize: 22, fontWeight: "700" },
-  button: { height: 55, borderRadius: 12, justifyContent: "center", alignItems: "center", marginTop: 10 },
-  buttonDisabled: { opacity: 0.6 },
+  title: {
+    fontSize: 26,
+    fontWeight: "800",
+    letterSpacing: -0.7,
+    lineHeight: 32,
+    marginBottom: 8,
+  },
+  subtitle: { fontSize: 14, lineHeight: 20, marginBottom: 24 },
+  label: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 56,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+  },
+  input: { flex: 1, height: "100%", fontSize: 15, padding: 0 },
+  codeRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  codeBox: {
+    flex: 1,
+    height: 56,
+    borderWidth: 1,
+    borderRadius: 14,
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  button: {
+    height: 56,
+    borderRadius: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 22,
+  },
+  buttonPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
+  buttonDisabled: { opacity: 0.65 },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "700" },
-  link: { marginTop: 18, alignItems: "center" },
+  link: { marginTop: 20, alignItems: "center" },
   linkText: { fontSize: 14, textAlign: "center" },
   linkTextBold: { fontWeight: "700" },
 });

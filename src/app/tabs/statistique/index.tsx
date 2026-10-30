@@ -5,11 +5,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useAsyncData } from "@/hooks/use-async-data";
 import { useTheme } from "@/hooks/use-theme";
-import { Spacing } from "@/constants/theme";
+import { Shadows, Spacing } from "@/constants/theme";
 import { fetchAccounts, fetchAllOperations } from "@/services/accountsService";
 import { fetchDashboard } from "@/services/dashboardService";
 import { Screen } from "@/components/ui/screen";
 import { Section } from "@/components/ui/section";
+import { KpiTile } from "@/components/ui/kpi-tile";
 import { PieChart } from "@/components/ui/pie-chart";
 import { formatAr, formatCompactAr, maskNumber } from "@/utils/format";
 import {
@@ -66,6 +67,7 @@ export default function StatistiqueScreen() {
   );
   const maxValue = Math.max(...series.map((p) => p.value), 0);
   const hasExpenses = maxValue > 0;
+  const periodExpenses = series.reduce((sum, point) => sum + point.value, 0);
 
   const availableBalance = selectedAccount?.balance ?? dashboard?.soldeTotal ?? 0;
 
@@ -125,7 +127,7 @@ export default function StatistiqueScreen() {
               onPress={() => setAccountId(chip.id)}
               style={[
                 styles.chip,
-                { borderColor: theme.line, backgroundColor: theme.backgroundElement },
+                { borderColor: theme.line, backgroundColor: theme.surface },
                 active && { backgroundColor: theme.primary, borderColor: theme.primary },
               ]}
             >
@@ -138,7 +140,7 @@ export default function StatistiqueScreen() {
       </ScrollView>
 
       {/* Sélecteur de période */}
-      <View style={[styles.segment, { backgroundColor: theme.backgroundSelected }]}>
+      <View style={[styles.segment, { backgroundColor: theme.backgroundElement }]}>
         {PERIODS.map((p) => {
           const active = period === p.key;
           return (
@@ -147,14 +149,15 @@ export default function StatistiqueScreen() {
               onPress={() => setPeriod(p.key)}
               style={[
                 styles.segmentItem,
-                active && { backgroundColor: theme.backgroundElement },
+                active && Shadows.card,
+                active && { backgroundColor: theme.surface },
               ]}
             >
               <Text
                 style={[
                   styles.segmentText,
                   { color: theme.textSecondary },
-                  active && { color: theme.text, fontWeight: "700" },
+                  active && { color: theme.primary, fontWeight: "700" },
                 ]}
               >
                 {p.label}
@@ -164,9 +167,22 @@ export default function StatistiqueScreen() {
         })}
       </View>
 
+      {/* Indicateurs de la période */}
+      <View style={styles.kpiRow}>
+        <KpiTile label="Dépenses" value={formatAr(periodExpenses)} tone="danger" />
+        <KpiTile label="Opérations" value={`${visibleOps.length}`} tone="primary" />
+        <KpiTile label="Comptes" value={`${allAccounts.length}`} />
+      </View>
+
       {/* Graphique des dépenses */}
       <Section title="Dépenses" />
-      <View style={[styles.chartCard, { backgroundColor: theme.backgroundElement }]}>
+      <View
+        style={[
+          styles.chartCard,
+          Shadows.card,
+          { backgroundColor: theme.surface, borderColor: theme.line },
+        ]}
+      >
         <View style={styles.chartRow}>
           {series.map((p, i) => {
             const heightPct = p.value > 0 ? Math.max((p.value / maxValue) * 100, 4) : 0;
@@ -176,13 +192,15 @@ export default function StatistiqueScreen() {
                   {p.value > 0 ? formatCompactAr(p.value) : ""}
                 </Text>
                 <View
-                  style={[styles.barTrack, { height: CHART_HEIGHT, backgroundColor: theme.background }]}
+                  style={[styles.barTrack, { height: CHART_HEIGHT, backgroundColor: theme.backgroundElement }]}
                 >
-                  <View
+                  <LinearGradient
+                    colors={[theme.accent, theme.primary]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
                     style={[
                       styles.barFill,
                       {
-                        backgroundColor: theme.primary,
                         height: `${heightPct}%`,
                         borderRadius: p.value > 0 ? 6 : 0,
                       },
@@ -255,13 +273,13 @@ const styles = StyleSheet.create({
 
   segment: {
     flexDirection: "row",
-    borderRadius: 14,
+    borderRadius: 16,
     padding: Spacing.one,
   },
   segmentItem: {
     flex: 1,
     paddingVertical: Spacing.two,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
   },
   segmentText: {
@@ -269,8 +287,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  kpiRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
   chartCard: {
-    borderRadius: 20,
+    borderRadius: 22,
+    borderWidth: 1,
     padding: Spacing.three,
     gap: Spacing.two,
   },

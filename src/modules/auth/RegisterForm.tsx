@@ -4,6 +4,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,12 +14,18 @@ import {
   useWindowDimensions,
 } from "react-native";
 
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { mobileInscription } from "@/modules/auth/authService";
+import { AuthBrand } from "@/components/ui/auth-brand";
+import { Shadows } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function RegisterForm() {
   const { width } = useWindowDimensions();
+  const theme = useTheme();
   const isWide = width >= 1024;
   const [nomComplet, setNomComplet] = useState("");
   const [cin, setCin] = useState("");
@@ -71,79 +78,138 @@ export default function RegisterForm() {
     }
   };
 
+  const fields = [
+    {
+      key: "nom",
+      label: "Nom complet *",
+      icon: "person-outline" as const,
+      placeholder: "Ex : Jean Rakoto",
+      value: nomComplet,
+      onChangeText: setNomComplet,
+      autoCapitalize: "words" as const,
+      secureTextEntry: false,
+      keyboardType: "default" as const,
+      maxLength: undefined,
+    },
+    {
+      key: "cin",
+      label: "CIN (12 chiffres) *",
+      icon: "card-outline" as const,
+      placeholder: "Ex : 101054123456",
+      value: cin,
+      onChangeText: setCin,
+      autoCapitalize: "none" as const,
+      secureTextEntry: false,
+      keyboardType: "numeric" as const,
+      maxLength: 12,
+    },
+    {
+      key: "password",
+      label: "Mot de passe (code personnel) *",
+      icon: "lock-closed-outline" as const,
+      placeholder: "Au moins 6 caractères",
+      value: motDePasse,
+      onChangeText: setMotDePasse,
+      autoCapitalize: "none" as const,
+      secureTextEntry: true,
+      keyboardType: "default" as const,
+      maxLength: undefined,
+    },
+    {
+      key: "confirmation",
+      label: "Confirmer le mot de passe *",
+      icon: "lock-closed-outline" as const,
+      placeholder: "Re-saisissez le mot de passe",
+      value: confirmation,
+      onChangeText: setConfirmation,
+      autoCapitalize: "none" as const,
+      secureTextEntry: true,
+      keyboardType: "default" as const,
+      maxLength: undefined,
+    },
+  ];
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <LinearGradient
+        colors={[theme.backgroundTop, theme.backgroundBottom]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView
         contentContainerStyle={[styles.container, isWide && styles.containerWide]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.formContainer, isWide && styles.formContainerWide]}>
-          <Text style={styles.title}>{"S'inscrire"}</Text>
+        <View
+          style={[
+            styles.formContainer,
+            isWide && styles.formContainerWide,
+            isWide && { backgroundColor: theme.surface, borderColor: theme.line, borderWidth: 1 },
+          ]}
+        >
+          <AuthBrand caption="Demande d'accès mobile" />
 
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.text }]}>{"S'inscrire"}</Text>
+
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             {"Demande d'accès mobile liée à votre dossier client existant."}
           </Text>
 
-          <Text style={styles.label}>Nom complet *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex : Jean Rakoto"
-            value={nomComplet}
-            onChangeText={setNomComplet}
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
+          {fields.map((field) => (
+            <View key={field.key} style={styles.field}>
+              <Text style={[styles.label, { color: theme.textSecondary }]}>{field.label}</Text>
+              <View
+                style={[
+                  styles.inputWrap,
+                  { backgroundColor: theme.surface, borderColor: theme.line },
+                ]}
+              >
+                <Ionicons name={field.icon} size={18} color={theme.textSecondary} />
+                <TextInput
+                  style={[styles.input, { color: theme.text }]}
+                  placeholder={field.placeholder}
+                  placeholderTextColor={theme.textSecondary}
+                  value={field.value}
+                  onChangeText={field.onChangeText}
+                  autoCapitalize={field.autoCapitalize}
+                  autoCorrect={false}
+                  secureTextEntry={field.secureTextEntry}
+                  keyboardType={field.keyboardType}
+                  maxLength={field.maxLength}
+                />
+              </View>
+            </View>
+          ))}
 
-          <Text style={styles.label}>CIN (12 chiffres) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex : 101054123456"
-            value={cin}
-            onChangeText={setCin}
-            keyboardType="numeric"
-            maxLength={12}
-          />
-
-          <Text style={styles.label}>Mot de passe (code personnel) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Au moins 6 caractères"
-            secureTextEntry
-            value={motDePasse}
-            onChangeText={setMotDePasse}
-            autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>Confirmer le mot de passe *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-saisissez le mot de passe"
-            secureTextEntry
-            value={confirmation}
-            onChangeText={setConfirmation}
-            autoCapitalize="none"
-          />
-
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              Shadows.card,
+              { backgroundColor: theme.primary },
+              pressed && styles.buttonPressed,
+              loading && styles.buttonDisabled,
+            ]}
             onPress={handleInscription}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Envoi..." : "Envoyer la demande"}
+              {loading ? "Envoi…" : "Envoyer la demande"}
             </Text>
-          </TouchableOpacity>
+            {!loading && <Ionicons name="arrow-forward" size={18} color="#ffffff" />}
+          </Pressable>
 
           <TouchableOpacity
             style={styles.backLink}
             onPress={() => router.back()}
             disabled={loading}
           >
-            <Text style={styles.backText}>
-              Déjà inscrit ? <Text style={styles.backTextBold}>Se connecter</Text>
+            <Text style={[styles.backText, { color: theme.textSecondary }]}>
+              Déjà inscrit ?{" "}
+              <Text style={[styles.backTextBold, { color: theme.primary }]}>Se connecter</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -155,14 +221,13 @@ export default function RegisterForm() {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-    backgroundColor: "#F5F7FC",
   },
   container: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 25,
-    paddingVertical: 30,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
   },
   containerWide: {
     paddingHorizontal: 48,
@@ -173,52 +238,64 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   formContainerWide: {
-    maxWidth: 520,
+    maxWidth: 480,
     padding: 40,
-    borderRadius: 20,
-    backgroundColor: "#ffffff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.08,
-    shadowRadius: 40,
-    elevation: 6,
-    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 60px -30px rgba(15,23,42,0.18)" } as any) : {}),
+    borderRadius: 28,
+    shadowColor: "#0B1220",
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.12,
+    shadowRadius: 48,
+    elevation: 10,
+    ...(Platform.OS === "web" ? ({ boxShadow: "0 30px 70px -30px rgba(15,23,42,0.28)" } as any) : {}),
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
+    fontWeight: "800",
+    letterSpacing: -0.7,
     marginBottom: 8,
   },
   subtitle: {
-    textAlign: "center",
-    color: "#7A8499",
     fontSize: 14,
-    marginBottom: 32,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  field: {
+    marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
     marginBottom: 8,
-    color: "#172033",
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 56,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
   },
   input: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#E1E7F0",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 18,
-    backgroundColor: "#ffffff",
+    flex: 1,
+    height: "100%",
+    fontSize: 15,
+    padding: 0,
   },
   button: {
-    height: 55,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 16,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#1557A6",
-    marginTop: 8,
+    gap: 8,
+    marginTop: 10,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -233,12 +310,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backText: {
-    color: "#7A8499",
     fontSize: 14,
     textAlign: "center",
   },
   backTextBold: {
-    color: "#1557A6",
     fontWeight: "700",
   },
 });
