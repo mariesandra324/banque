@@ -74,8 +74,18 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
       setErreurChargement('');
 
       try {
-        const data = await demandeCreditService.getByStatut('ACCEPTER');
-        setDemandes(Array.isArray(data) ? data : []);
+        const [demandesData, offresData] = await Promise.all([
+          demandeCreditService.getByStatut('ACCEPTER'),
+          offreCreditService.getAll(),
+        ]);
+        const demandesAvecOffre = new Set(
+          (Array.isArray(offresData) ? offresData : [])
+            .map((offre) => String(offre.demandeCreditId))
+        );
+        setDemandes(
+          (Array.isArray(demandesData) ? demandesData : [])
+            .filter((demande) => !demandesAvecOffre.has(String(demande.id)))
+        );
       } catch (err) {
         console.error(
           'Erreur chargement demandes :',
@@ -331,7 +341,7 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
 
               {!chargementDemandes && demandes.length === 0 && (
                 <option value="" disabled>
-                  Aucune demande de crédit validée
+                  Aucune demande validée sans offre existante
                 </option>
               )}
 
