@@ -13,6 +13,8 @@ public interface TransactionService {
     // Les mouvements automatiques de credit utilisent la version sans guichet.
     TransactionResponse effectuerTransaction(TransactionRequest request, Guichet guichet);
 
+    TransactionResponse effectuerTransaction(TransactionRequest request, Guichet guichet, Long agentId);
+
     List<TransactionResponse> obtenirHistoriqueCompte(String numeroCompte);
     List<TransactionResponse> obtenirToutesTransactions();
     TransactionResponse obtenirReference(String reference);

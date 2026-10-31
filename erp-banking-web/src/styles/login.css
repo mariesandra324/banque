@@ -25,9 +25,7 @@ body {
     justify-content: center;
     padding: 32px 20px;
 
-    background:
-        radial-gradient(1200px 600px at 15% 10%, #1e3a8a 0%, transparent 60%),
-        linear-gradient(135deg, #0b1220 0%, #10275a 45%, #14306e 100%);
+    background: #ffffff;
 }
 
 .login-blob {
@@ -36,6 +34,7 @@ body {
     filter: blur(70px);
     opacity: 0.5;
     pointer-events: none;
+    display: none;
 }
 
 .login-blob--one {
@@ -43,7 +42,7 @@ body {
     height: 420px;
     top: -120px;
     right: -60px;
-    background: #3b82f6;
+    background: #1e40af;
 }
 
 .login-blob--two {
@@ -51,7 +50,7 @@ body {
     height: 360px;
     bottom: -140px;
     left: -80px;
-    background: #0ea5e9;
+    background: #1d4ed8;
 }
 
 /* --------------------------------------------------------------------------
@@ -66,7 +65,8 @@ body {
     border-radius: 24px;
     overflow: hidden;
     background: var(--card-bg);
-    box-shadow: 0 30px 70px rgba(2, 8, 23, 0.45);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
 }
 
 /* --------------------------------------------------------------------------
@@ -80,8 +80,8 @@ body {
     color: #e8eefc;
 
     background:
-        radial-gradient(600px 300px at 110% -10%, rgba(96, 165, 250, 0.45) 0%, transparent 60%),
-        linear-gradient(160deg, #1d4ed8 0%, #1e3a8a 55%, #172554 100%);
+        radial-gradient(600px 300px at 110% -10%, rgba(37, 99, 235, 0.4) 0%, transparent 60%),
+        linear-gradient(160deg, #1e3a8a 0%, #172554 55%, #0f172a 100%);
 }
 
 .login-brand {
@@ -98,10 +98,10 @@ body {
     height: 48px;
     flex-shrink: 0;
     border-radius: 14px;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(4px);
+    color: #1e3a8a;
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 6px 16px rgba(2, 8, 23, 0.25);
 }
 
 .login-logo-name {
@@ -265,12 +265,12 @@ body {
 }
 
 .login-input:focus-within {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.18);
 }
 
 .login-input:focus-within > svg {
-    color: #2563eb;
+    color: #1e3a8a;
 }
 
 .login-input input {
@@ -318,20 +318,20 @@ body {
     border: none;
     border-radius: 12px;
 
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #1e3a8a, #172554);
     color: #ffffff;
     font-size: 15px;
     font-weight: 600;
     font-family: inherit;
 
     cursor: pointer;
-    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+    box-shadow: 0 10px 22px rgba(30, 58, 138, 0.35);
     transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .login-btn:hover:not(:disabled) {
-    filter: brightness(1.07);
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
+    filter: brightness(1.12);
+    box-shadow: 0 14px 28px rgba(30, 58, 138, 0.42);
 }
 
 .login-btn:active:not(:disabled) {

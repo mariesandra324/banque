@@ -174,7 +174,7 @@ const Comptes = () => {
           peutCreerCompte && (
             <button
               onClick={voirFormulaireAjout}
-              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+              style={{ backgroundColor: '#1e3a8a', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
             >
               + Ajouter un compte
             </button>

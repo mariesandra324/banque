@@ -39,6 +39,7 @@ const Transactions = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     chargerHistorique();
   }, []);
 
@@ -70,7 +71,7 @@ const Transactions = () => {
           peutCreerTransaction && (
             <button
               onClick={voirFormulaire}
-              style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+              style={{ backgroundColor: '#1e3a8a', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
             >
               + Nouvelle transaction
             </button>

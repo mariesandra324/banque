@@ -199,8 +199,8 @@ function ClientMobileTable({ accesMobiles, isAdmin, onUpdateStatut }) {
                 onClick={() => setPage(n)}
                 style={{
                   minWidth: '28px', height: '28px', borderRadius: '6px', border: '1px solid var(--input-border)',
-                  backgroundColor: n === pageActuelle ? '#2563eb' : 'var(--card-bg)',
-                  color: n === pageActuelle ? 'white' : 'var(--text-primary)',
+                  backgroundColor: n === pageActuelle ? '#172554' : '#1e3a8a',
+                  color: 'white',
                   cursor: 'pointer', fontSize: '13px',
                 }}
               >

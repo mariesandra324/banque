@@ -3,24 +3,29 @@ package com.erpbanking.transaction.service;
 import com.erpbanking.compte.entity.Compte;
 import com.erpbanking.compte.repository.CompteRepository;
 import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.caisse.entity.SessionCaisse;
+import com.erpbanking.caisse.entity.StatutSessionCaisse;
+import com.erpbanking.caisse.repository.SessionCaisseRepository;
 import com.erpbanking.guichet.entity.Guichet;
 import com.erpbanking.audit.entity.AuditAction;
 import com.erpbanking.audit.entity.AuditModule;
 import com.erpbanking.audit.service.AuditService;
 import com.erpbanking.notification.entity.NotificationType;
 import com.erpbanking.notification.service.NotificationService;
-import com.erpbanking.notification.service.NotificationService;
 import com.erpbanking.transaction.dto.TransactionRequest;
 import com.erpbanking.transaction.dto.TransactionResponse;
 import com.erpbanking.transaction.entity.Transaction;
 import com.erpbanking.transaction.entity.StatutTransaction;
+import com.erpbanking.transaction.entity.TypeTransaction;
 import com.erpbanking.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -29,6 +34,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final CompteRepository compteRepository;
+    private final SessionCaisseRepository sessionCaisseRepository;
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final AuditService auditService;
@@ -140,54 +146,125 @@ private void envoyerNotificationTransactionDestination(
     @Override
     @Transactional
     public TransactionResponse effectuerTransaction(TransactionRequest request, Guichet guichet) {
+        return effectuerTransaction(request, guichet, null);
+    }
 
-        // 1. Récupération du compte source
-        Compte compteSource = compteRepository.findByNumeroCompte(request.getNumeroCompteSource())
-                .orElseThrow(() -> new RuntimeException("Compte source non trouvé : " + request.getNumeroCompteSource()));
+    @Override
+    @Transactional
+    public TransactionResponse effectuerTransaction(TransactionRequest request, Guichet guichet, Long agentId) {
+        if (request == null) {
+            throw new IllegalArgumentException("La requête de transaction est obligatoire.");
+        }
+        if (request.getType() == null) {
+            throw new IllegalArgumentException("Le type de transaction est obligatoire.");
+        }
+        if (request.getMontant() == null || request.getMontant().compareTo(new BigDecimal("1.00")) < 0) {
+            throw new IllegalArgumentException("Le montant minimum est de 1.00.");
+        }
+        String numeroCompteSource = request.getNumeroCompteSource();
+        if (numeroCompteSource == null || numeroCompteSource.isBlank()) {
+            throw new IllegalArgumentException("Le RIB/Numéro du compte source est obligatoire.");
+        }
 
-        // 2. Traitement selon le type de transaction
+        String numeroCompteDestination = request.getNumeroCompteDestination();
+        if (request.getType() == TypeTransaction.VIREMENT) {
+            if (numeroCompteDestination == null || numeroCompteDestination.isBlank()) {
+                throw new IllegalArgumentException("Le compte destinataire est obligatoire pour un virement.");
+            }
+            if (numeroCompteSource.equals(numeroCompteDestination)) {
+                throw new IllegalArgumentException("Impossible d'effectuer un virement vers le même compte.");
+            }
+        }
+
+        // Lock accounts in a stable order so concurrent transfers cannot overdraw
+        // an account or deadlock by acquiring the same pair in opposite orders.
+        Compte compteSource;
         Compte compteDestination = null;
+        if (request.getType() == TypeTransaction.VIREMENT) {
+            String firstNumero = numeroCompteSource.compareTo(numeroCompteDestination) < 0
+                    ? numeroCompteSource : numeroCompteDestination;
+            String secondNumero = Objects.equals(firstNumero, numeroCompteSource)
+                    ? numeroCompteDestination : numeroCompteSource;
+            Compte firstCompte = compteRepository.findByNumeroCompteForUpdate(firstNumero)
+                    .orElseThrow(() -> compteNotFound(firstNumero, numeroCompteSource, numeroCompteDestination));
+            Compte secondCompte = compteRepository.findByNumeroCompteForUpdate(secondNumero)
+                    .orElseThrow(() -> compteNotFound(secondNumero, numeroCompteSource, numeroCompteDestination));
+            compteSource = firstNumero.equals(numeroCompteSource) ? firstCompte : secondCompte;
+            compteDestination = firstNumero.equals(numeroCompteDestination) ? firstCompte : secondCompte;
+        } else {
+            compteSource = compteRepository.findByNumeroCompteForUpdate(numeroCompteSource)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Compte source non trouvé : " + numeroCompteSource));
+        }
 
+        verifierCompteActif(compteSource, "source");
+        if (compteDestination != null) {
+            verifierCompteActif(compteDestination, "destination");
+        }
+
+        SessionCaisse sessionCaisse = null;
+        if (guichet != null && (request.getType() == TypeTransaction.DEPOT
+                || request.getType() == TypeTransaction.RETRAIT)) {
+            if (agentId == null) {
+                throw new IllegalArgumentException("Impossible d'identifier l'agent de la session de caisse.");
+            }
+            sessionCaisse = sessionCaisseRepository
+                    .findByAgentIdAndStatutForUpdate(agentId, StatutSessionCaisse.OUVERT)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Aucune session de caisse ouverte pour ce guichet."));
+            if (sessionCaisse.getGuichet() == null
+                    || !Objects.equals(sessionCaisse.getGuichet().getId(), guichet.getId())) {
+                throw new IllegalArgumentException(
+                        "La session de caisse ouverte n'appartient pas à ce guichet.");
+            }
+        }
+
+        // Validate and calculate every balance change before persisting anything.
         switch (request.getType()) {
             case DEPOT:
+                verifierSoldeInitial(compteSource);
+                if (sessionCaisse != null) {
+                    sessionCaisse.setSoldeTheorique(soldeCaisse(sessionCaisse).add(request.getMontant()));
+                }
                 compteSource.setSolde(compteSource.getSolde().add(request.getMontant()));
                 break;
 
             case RETRAIT:
-                if (compteSource.getSolde().compareTo(request.getMontant()) < 0) {
+                if (compteSource.getSolde() == null || compteSource.getSolde().compareTo(request.getMontant()) < 0) {
                     throw new RuntimeException("Solde insuffisant pour effectuer ce retrait.");
+                }
+                if (sessionCaisse != null) {
+                    BigDecimal cashDisponible = soldeCaisse(sessionCaisse);
+                    if (cashDisponible.compareTo(request.getMontant()) < 0) {
+                        throw new RuntimeException("Cash physique insuffisant dans la caisse du guichet.");
+                    }
+                    sessionCaisse.setSoldeTheorique(cashDisponible.subtract(request.getMontant()));
                 }
                 compteSource.setSolde(compteSource.getSolde().subtract(request.getMontant()));
                 break;
 
             case VIREMENT:
-                if (request.getNumeroCompteDestination() == null || request.getNumeroCompteDestination().isBlank()) {
-                    throw new RuntimeException("Le compte destinataire est obligatoire pour un virement.");
-                }
-                if (request.getNumeroCompteSource().equals(request.getNumeroCompteDestination())) {
-                    throw new RuntimeException("Impossible d'effectuer un virement vers le même compte.");
-                }
-
-                compteDestination = compteRepository.findByNumeroCompte(request.getNumeroCompteDestination())
-                        .orElseThrow(() -> new RuntimeException("Compte destination non trouvé : " + request.getNumeroCompteDestination()));
-
-                if (compteSource.getSolde().compareTo(request.getMontant()) < 0) {
+                verifierSoldeInitial(compteDestination);
+                if (compteSource.getSolde() == null || compteSource.getSolde().compareTo(request.getMontant()) < 0) {
                     throw new RuntimeException("Solde insuffisant pour effectuer ce virement.");
                 }
 
-                // Débit / Crédit
                 compteSource.setSolde(compteSource.getSolde().subtract(request.getMontant()));
                 compteDestination.setSolde(compteDestination.getSolde().add(request.getMontant()));
-
-                compteRepository.save(compteDestination);
                 break;
 
             default:
                 throw new IllegalArgumentException("Type de transaction non valide.");
         }
 
-        // Sauvegarder la mise à jour du compte source
+        // These writes and the transaction record commit or roll back together.
         compteRepository.save(compteSource);
+        if (compteDestination != null) {
+            compteRepository.save(compteDestination);
+        }
+        if (sessionCaisse != null) {
+            sessionCaisseRepository.save(sessionCaisse);
+        }
 
         // 3. Création et enregistrement de la transaction
         Transaction transaction = Transaction.builder()
@@ -236,6 +313,34 @@ private void envoyerNotificationTransactionDestination(
         );
 
         return mapToResponse(savedTx);
+    }
+
+    private BigDecimal soldeCaisse(SessionCaisse sessionCaisse) {
+        return sessionCaisse.getSoldeTheorique() == null
+                ? BigDecimal.ZERO
+                : sessionCaisse.getSoldeTheorique();
+    }
+
+    private IllegalArgumentException compteNotFound(
+            String numeroCompte,
+            String numeroCompteSource,
+            String numeroCompteDestination
+    ) {
+        String role = numeroCompte.equals(numeroCompteSource) ? "source" : "destination";
+        return new IllegalArgumentException("Compte " + role + " non trouvé : " + numeroCompte);
+    }
+
+    private void verifierCompteActif(Compte compte, String role) {
+        String statut = compte.getStatut();
+        if (statut == null || !("ACTIVE".equalsIgnoreCase(statut) || "ACTIF".equalsIgnoreCase(statut))) {
+            throw new IllegalArgumentException("Le compte " + role + " doit être actif.");
+        }
+    }
+
+    private void verifierSoldeInitial(Compte compte) {
+        if (compte.getSolde() == null) {
+            throw new IllegalArgumentException("Le solde du compte doit être renseigné.");
+        }
     }
 
     @Override

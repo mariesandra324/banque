@@ -63,7 +63,7 @@ function Sidebar() {
         Transactions
       </NavLink>
 
-      {hasAccess(["ADMIN", "GESTIONNAIRE"]) && (
+      {hasAccess(["ADMIN", "GESTIONNAIRE","AGENT"]) && (
       <NavLink to="/credits">
         <Landmark size={18} />
         Crédits
@@ -83,7 +83,7 @@ function Sidebar() {
         </NavLink>
       )}
 
-      {hasAccess(["ADMIN", "COMPTABLE"]) && (
+      {hasAccess(["ADMIN", "COMPTABLE", "GESTIONNAIRE"]) && (
         <NavLink to="/audit" className={({ isActive }) => isActive ? "active" : ""}>
           <ScrollText size={18} />
           Audit

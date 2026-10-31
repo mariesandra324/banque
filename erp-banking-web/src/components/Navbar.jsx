@@ -13,6 +13,10 @@ function Navbar({ toggleSidebar }) {
   const darkMode = theme === 'dark';
 
   const handleLogout = () => {
+    if (!window.confirm("Voulez-vous vraiment vous déconnecter ?")) {
+      return;
+    }
+
     logout();
     navigate("/login");
   };

@@ -4,6 +4,7 @@ import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import ClientForm from '../features/client/ClientForm';
 import ClientTable from '../features/client/ClientTable';
+import ClientSearchResults from '../features/client/ClientSearchResults';
 import ClientMobileModal from '../features/client/ClientMobileModal';
 import { useAuth } from '../hooks/useAuth';
 import { extraireMessageErreur } from '../utils/messageErreur';
@@ -125,7 +126,8 @@ const Clients = () => {
             peutCreerClient && (
               <button
                 onClick={handleOpenAdd}
-                style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                className="add-client-btn"
+                style={{ backgroundColor: '#1e3a8a', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
               >
                 + Ajouter un client
               </button>
@@ -154,14 +156,22 @@ const Clients = () => {
           onCancel={handleCancel}
         />
       ) : (
-        <ClientTable
-          clients={clients}
-          comptes={comptes}
-          recherche={recherche}
-          onEdit={handleOpenEdit}
-          onDelete={handleDelete}
-          onCreateMobile={setClientMobileCible}
-        />
+        recherche.trim() ? (
+          <ClientSearchResults
+            clients={clients}
+            comptes={comptes}
+            recherche={recherche}
+          />
+        ) : (
+          <ClientTable
+            clients={clients}
+            comptes={comptes}
+            recherche={recherche}
+            onEdit={handleOpenEdit}
+            onDelete={handleDelete}
+            onCreateMobile={setClientMobileCible}
+          />
+        )
       )}
 
       {clientMobileCible && (

@@ -222,21 +222,22 @@
     min-width: 28px;
     height: 28px;
     border-radius: 6px;
-    border: 1px solid var(--input-border);
-    background-color: var(--card-bg);
-    color: var(--text-primary);
+    border: 1px solid #1e3a8a;
+    background-color: #1e3a8a;
+    color: #ffffff;
     cursor: pointer;
     font-size: 13px;
 }
 
 .offre-pagination-buttons button:hover {
-    background-color: var(--hover-bg);
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
 }
 
 .offre-pagination-buttons button.page-active {
-    background-color: #2563eb;
-    color: white;
-    border-color: #2563eb;
+    background-color: #172554;
+    color: #ffffff;
+    border-color: #172554;
 }
 
 /* =========================================================

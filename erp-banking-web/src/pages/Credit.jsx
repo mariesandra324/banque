@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, WandSparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import DemandeCreditTable from '../features/credit/DemandeCreditTable';
 import CreditTable from '../features/credit/CreditTable';
 import DemandeCreditForm from '../features/credit/DemandeCreditForm';
@@ -21,16 +22,18 @@ const ONGLETS = [
 ];
 
 function Credit() {
+  const { user } = useAuth();
+  const estAgent = user?.role === 'AGENT';
   const [searchParams] = useSearchParams();
   const demandeCreditId = searchParams.get('demandeCreditId') || '';
   const [ongletActif, setOngletActif] = useState(
-    demandeCreditId ? 'offres' : 'demandes'
+    !estAgent && demandeCreditId ? 'offres' : 'demandes'
   );
   const [demandes, setDemandes] = useState([]);
   const [credits, setCredits] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
-  const [formOuvert, setFormOuvert] = useState(!!demandeCreditId);
+  const [formOuvert, setFormOuvert] = useState(!estAgent && !!demandeCreditId);
   const [offres, setOffres] = useState([]);
   const [budgetOptimisation, setBudgetOptimisation] = useState('');
   const [optimisationEnCours, setOptimisationEnCours] = useState(false);
@@ -39,14 +42,20 @@ function Credit() {
     setChargement(true);
     setErreur(null);
     try {
-      const [demandesData,offresData, creditsData] = await Promise.all([
-        demandeCreditService.getAll(),
-        offreCreditService.getAll(),
-        getCredits(),
-      ]);
+      const demandesData = await demandeCreditService.getAll();
       setDemandes(demandesData);
-      setOffres(offresData);
-      setCredits(creditsData);
+
+      if (estAgent) {
+        setOffres([]);
+        setCredits([]);
+      } else {
+        const [offresData, creditsData] = await Promise.all([
+          offreCreditService.getAll(),
+          getCredits(),
+        ]);
+        setOffres(offresData);
+        setCredits(creditsData);
+      }
     } catch (err) {
       console.error(err);
       setErreur("Impossible de charger les données de crédit.");
@@ -58,6 +67,7 @@ function Credit() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     chargerDonnees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleApprouver = async (id) => {
@@ -186,7 +196,7 @@ function Credit() {
           Crédit
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {ongletActif === 'demandes' && (
+          {!estAgent && ongletActif === 'demandes' && (
             <>
               <label htmlFor="budget-optimisation" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                 Budget (Ar)
@@ -231,28 +241,36 @@ function Credit() {
             }}
           >
             <Plus size={16} />
-            {ongletActif === 'demandes' ? 'Nouvelle demande' : ongletActif === 'offres' ? 'Nouvelle offre' : 'Nouveau crédit'}
+            {estAgent
+              ? 'Nouvelle demande '
+              : ongletActif === 'demandes'
+                ? 'Nouvelle demande'
+                : ongletActif === 'offres'
+                  ? 'Nouvelle offre'
+                  : 'Nouveau crédit'}
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', overflowX: 'auto' }}>
-        {ONGLETS.map((onglet) => (
-          <button
-            key={onglet.id}
-            onClick={() => setOngletActif(onglet.id)}
-            style={{
-              padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0,
-              color: ongletActif === onglet.id ? '#2563eb' : 'var(--muted)',
-              borderBottom: ongletActif === onglet.id ? '2px solid #2563eb' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
-            {onglet.label}
-          </button>
-        ))}
-      </div>
+      {!estAgent && (
+        <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', overflowX: 'auto' }}>
+          {ONGLETS.map((onglet) => (
+            <button
+              key={onglet.id}
+              onClick={() => setOngletActif(onglet.id)}
+              style={{
+                padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0,
+                color: ongletActif === onglet.id ? '#2563eb' : 'var(--muted)',
+                borderBottom: ongletActif === onglet.id ? '2px solid #2563eb' : '2px solid transparent',
+                marginBottom: '-1px',
+              }}
+            >
+              {onglet.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {erreur && (
         <div style={{

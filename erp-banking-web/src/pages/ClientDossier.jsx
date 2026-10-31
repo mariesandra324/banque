@@ -19,16 +19,20 @@ import {
 } from "lucide-react";
 
 import api from "../service/api";
+import carteService from "../service/carteService";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/clientDossier.css";
 
 function ClientDossier() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [dossier, setDossier] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [notificationPin, setNotificationPin] = useState("");
   const [activeTab, setActiveTab] = useState("comptes");
 
   const chargerDossier = useCallback(async (isManualRefresh = false) => {
@@ -66,6 +70,31 @@ function ClientDossier() {
   const demandesCredit = useMemo(() => dossier?.demandesCredit || [], [dossier]);
   const offresCredit = useMemo(() => dossier?.offresCredit || [], [dossier]);
   const credits = useMemo(() => dossier?.credits || [], [dossier]);
+
+  const reinitialiserPin = async (carte) => {
+    if (user?.role !== "ADMIN") return;
+    const numeroMasque = `•••• ${carte.numeroCarte?.slice(-4) || ""}`;
+    if (!window.confirm(
+      `Voulez-vous réinitialiser le PIN de la carte ${numeroMasque} de ${client.prenom ?? ""} ${client.nom ?? ""} ?`
+    )) return;
+
+    try {
+      await carteService.requestPinReset(carte.id);
+      setNotificationPin(
+        `Demande envoyée. Un code de vérification a été envoyé au client pour la carte ${numeroMasque}.`
+      );
+      setDossier((current) => current && ({
+        ...current,
+        cartes: current.cartes.map((item) => item.id === carte.id
+          ? { ...item, pinResetPending: true }
+          : item),
+      }));
+    } catch (err) {
+      setNotificationPin(
+        err.response?.data?.message || "Impossible de lancer la réinitialisation du PIN."
+      );
+    }
+  };
 
   const formatMontant = (montant) => {
     if (montant === null || montant === undefined) return "0 Ar";
@@ -336,8 +365,17 @@ function ClientDossier() {
               <section>
                 <div className="section-header">
                   <h2>Cartes bancaires</h2>
-                  <p>Cartes associées aux comptes du client</p>
+                  <p>
+                    Cartes associées aux comptes du client
+                    {user?.role === "ADMIN" && " — double-cliquez sur une carte pour réinitialiser son PIN"}
+                  </p>
                 </div>
+
+                {notificationPin && (
+                  <div role="status" className="empty-state" style={{ marginBottom: 16 }}>
+                    {notificationPin}
+                  </div>
+                )}
 
                 {cartes.length === 0 ? (
                   <div className="empty-state">
@@ -347,7 +385,13 @@ function ClientDossier() {
                 ) : (
                   <div className="cards-grid">
                     {cartes.map((carte) => (
-                      <div className="bank-card" key={carte.id}>
+                      <div
+                        className="bank-card"
+                        key={carte.id}
+                        onDoubleClick={() => reinitialiserPin(carte)}
+                        title={user?.role === "ADMIN" ? "Double-cliquez pour réinitialiser le PIN" : undefined}
+                        style={user?.role === "ADMIN" ? { cursor: "pointer" } : undefined}
+                      >
                         <div className="bank-card-top">
                           <span>ERP BANKING</span>
                           <CreditCard size={28} />

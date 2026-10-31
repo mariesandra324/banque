@@ -10,6 +10,7 @@ public enum AuditModule {
     TRANSACTIONS("Transactions"),
     CREDITS("Crédits"),
     CARTES("Cartes"),
+    CAISSE("Caisse"),
     UTILISATEURS("Utilisateurs"),
     SYSTEME("Système");
 
