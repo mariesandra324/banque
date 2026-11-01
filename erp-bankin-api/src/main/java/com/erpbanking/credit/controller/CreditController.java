@@ -18,10 +18,6 @@ import com.erpbanking.credit.entity.StatutEcheance;
 import com.erpbanking.credit.service.CreditService;
 import com.erpbanking.credit.service.EcheancierService;
 import com.erpbanking.credit.service.RemboursementService;
-import com.erpbanking.credit.service.CreditOptimizationService;
-
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -30,18 +26,8 @@ import lombok.RequiredArgsConstructor;
 public class CreditController {
 
     private final CreditService creditService;
-    private final CreditOptimizationService creditOptimizationService;
     private final EcheancierService echeancierService;
     private final RemboursementService remboursementService;
-
-    @PostMapping("/optimize")
-    @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE')")
-    public ResponseEntity<List<DemandeCreditResponse>> optimize(
-            @RequestParam @Min(0) @Max(1_000_000) int budget) {
-        return ResponseEntity.ok(
-                creditOptimizationService.optimizePendingApplications(budget)
-        );
-    }
 
     // Créer un crédit
     @PostMapping

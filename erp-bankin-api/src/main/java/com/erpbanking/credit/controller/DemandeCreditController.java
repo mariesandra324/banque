@@ -143,14 +143,6 @@ public class DemandeCreditController {
 		);
 	}
 
-        @PostMapping("/optimize")
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE')")
-        public ResponseEntity<List<DemandeCreditResponse>> optimize() {
-                return ResponseEntity.ok(
-                        demandeCreditService.optimiserDemandes()
-                );
-        }
-
         @PutMapping("/{id}/ACCEPTER")
         @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> accepter(

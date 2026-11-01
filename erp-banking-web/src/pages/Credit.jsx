@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, WandSparkles } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import DemandeCreditTable from '../features/credit/DemandeCreditTable';
@@ -35,8 +35,6 @@ function Credit() {
   const [erreur, setErreur] = useState(null);
   const [formOuvert, setFormOuvert] = useState(!estAgent && !!demandeCreditId);
   const [offres, setOffres] = useState([]);
-  const [budgetOptimisation, setBudgetOptimisation] = useState('');
-  const [optimisationEnCours, setOptimisationEnCours] = useState(false);
 
   const chargerDonnees = async () => {
     setChargement(true);
@@ -85,35 +83,6 @@ function Credit() {
   }catch (err) {
     console.error('Erreur rejet:', err.response?.data || err.message);
   }};
-
-  const handleOptimiser = async () => {
-    const budgetAr = Number(budgetOptimisation);
-    if (!Number.isSafeInteger(budgetAr) || budgetAr < 0) {
-      setErreur('Saisissez un budget entier positif en Ariary.');
-      return;
-    }
-
-    setOptimisationEnCours(true);
-    setErreur(null);
-    try {
-      const demandesAcceptees = await demandeCreditService.optimiser(
-        Math.floor(budgetAr / 1000)
-      );
-      await chargerDonnees();
-      setErreur(
-        demandesAcceptees.length
-          ? `${demandesAcceptees.length} demande(s) acceptée(s) et offre(s) générée(s).`
-          : 'Aucune demande ne correspond à ce budget.'
-      );
-    } catch (err) {
-      console.error('Erreur optimisation des crédits:', err);
-      setErreur(
-        err.response?.data?.message || "Impossible d'optimiser les demandes."
-      );
-    } finally {
-      setOptimisationEnCours(false);
-    }
-  };
 
   const handleCreerDemande = async (donnees) => {
     await creerDemandeCredit(donnees);
@@ -196,42 +165,6 @@ function Credit() {
           Crédit
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {!estAgent && ongletActif === 'demandes' && (
-            <>
-              <label htmlFor="budget-optimisation" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Budget (Ar)
-              </label>
-              <input
-                id="budget-optimisation"
-                type="number"
-                min="0"
-                step="1000"
-                value={budgetOptimisation}
-                onChange={(event) => setBudgetOptimisation(event.target.value)}
-                placeholder="Ex. 100 000 000"
-                style={{
-                  width: '150px', padding: '9px 10px', borderRadius: '8px',
-                  border: '1px solid var(--input-border)', backgroundColor: 'var(--card-bg)',
-                  color: 'var(--text-primary)', fontSize: '13px',
-                }}
-              />
-              <button
-                onClick={handleOptimiser}
-                disabled={optimisationEnCours || budgetOptimisation === ''}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
-                  borderRadius: '8px', border: '1px solid #2563eb',
-                  backgroundColor: 'var(--card-bg)', color: '#2563eb',
-                  fontSize: '13px', fontWeight: '600',
-                  cursor: optimisationEnCours ? 'wait' : 'pointer',
-                  opacity: optimisationEnCours || budgetOptimisation === '' ? 0.6 : 1,
-                }}
-              >
-                <WandSparkles size={16} />
-                {optimisationEnCours ? 'Optimisation...' : 'Optimiser'}
-              </button>
-            </>
-          )}
           <button
             onClick={() => setFormOuvert(true)}
             style={{
