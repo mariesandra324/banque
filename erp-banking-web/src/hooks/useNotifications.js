@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import notificationService from "../service/notificationService";
 
-const API_BASE = "http://localhost:8080/api";
+// const API_BASE = "http://localhost:8080/api";
+import { API_BASE } from "../config";
 const RECONNECT_DELAY = 5000;
 const POLL_INTERVAL = 30000;
 

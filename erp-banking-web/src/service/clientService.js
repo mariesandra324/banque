@@ -1,7 +1,8 @@
 import api from "./api";
-// Remplace par l'URL de ton serveur Java (ex: Spring Boot tourne souvent sur le port 8080)
-const API_URL = "http://localhost:8080/api/clients"; 
-const API_URL_MOBILE = "http://localhost:8080/api/client-mobile"; 
+import { API_BASE } from "../config";
+
+const API_URL = `${API_BASE}/clients`; 
+const API_URL_MOBILE = `${API_BASE}/client-mobile`;
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
