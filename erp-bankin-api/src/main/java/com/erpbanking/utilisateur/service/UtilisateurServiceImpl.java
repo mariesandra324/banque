@@ -35,6 +35,19 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
 
+    private void verifierRoleAttribuable(Role role) {
+        if ("SUPER_ADMIN".equals(role.getNom())) {
+            throw new IllegalArgumentException("Le rôle SUPER_ADMIN est réservé à l'initialisation.");
+        }
+    }
+
+    private void verifierUtilisateurModifiable(Utilisateur utilisateur) {
+        if (utilisateur.getRole() != null
+                && "SUPER_ADMIN".equals(utilisateur.getRole().getNom())) {
+            throw new IllegalArgumentException("Le compte SUPER_ADMIN ne peut pas être modifié ici.");
+        }
+    }
+
     @Override
     public UtilisateurResponse create(UtilisateurRequest request) {
 
@@ -50,6 +63,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Rôle introuvable."));
+        verifierRoleAttribuable(role);
 
         Guichet guichet= guichetRepository.findById(request.getGuichetId())
                 .orElseThrow(() ->
@@ -83,7 +97,6 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
-
         return UtilisateurMapper.toResponse(utilisateur);
     }
 
@@ -102,10 +115,12 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     Utilisateur utilisateur = utilisateurRepository.findById(id)
             .orElseThrow(() ->
                     new ResourceNotFoundException("Utilisateur introuvable."));
+    verifierUtilisateurModifiable(utilisateur);
 
     Role role = roleRepository.findById(request.getRoleId())
             .orElseThrow(() ->
                     new ResourceNotFoundException("Rôle introuvable."));
+    verifierRoleAttribuable(role);
 
     Guichet guichet = null;
 
@@ -171,7 +186,6 @@ utilisateur.setGuichet(guichet);
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
-
         utilisateur.setNom(request.getNom());
         utilisateur.setPrenom(request.getPrenom());
 
@@ -193,7 +207,6 @@ utilisateur.setGuichet(guichet);
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
-
         if (!passwordEncoder.matches(request.getAncienMotDePasse(), utilisateur.getPassword())) {
             throw new RuntimeException("L'ancien mot de passe est incorrect.");
         }
@@ -223,6 +236,7 @@ utilisateur.setGuichet(guichet);
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
+        verifierUtilisateurModifiable(utilisateur);
 
         utilisateur.setActif(false);
 
@@ -246,6 +260,7 @@ utilisateur.setGuichet(guichet);
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
+        verifierUtilisateurModifiable(utilisateur);
 
         utilisateur.setActif(true);
 
@@ -266,6 +281,7 @@ utilisateur.setGuichet(guichet);
         Utilisateur utilisateur = utilisateurRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Utilisateur introuvable."));
+        verifierUtilisateurModifiable(utilisateur);
 
         utilisateur.setActif(false);
 

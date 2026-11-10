@@ -3,6 +3,8 @@ package com.erpbanking.auth.controller;
 
 import com.erpbanking.auth.dto.LoginRequest;
 import com.erpbanking.auth.dto.LoginResponse;
+import com.erpbanking.auth.dto.BootstrapAdminRequest;
+import com.erpbanking.auth.dto.BootstrapStatusResponse;
 import com.erpbanking.auth.dto.MeResponse;
 import com.erpbanking.auth.dto.MobileForgotPasswordRequest;
 import com.erpbanking.auth.dto.MobileForgotPasswordResponse;
@@ -37,6 +39,19 @@ public class AuthController {
     private final ClientMobileService clientMobileService;
 
     private final PasswordResetService passwordResetService;
+
+    @GetMapping("/bootstrap/status")
+    public ResponseEntity<BootstrapStatusResponse> bootstrapStatus() {
+        return ResponseEntity.ok(new BootstrapStatusResponse(authService.isBootstrapAvailable()));
+    }
+
+    @PostMapping("/bootstrap")
+    public ResponseEntity<LoginResponse> bootstrap(
+            @Valid @RequestBody BootstrapAdminRequest request,
+            @RequestHeader(value = "X-Bootstrap-Secret", required = false) String secret
+    ) {
+        return ResponseEntity.ok(authService.bootstrapAdmin(request, secret));
+    }
 
 
 

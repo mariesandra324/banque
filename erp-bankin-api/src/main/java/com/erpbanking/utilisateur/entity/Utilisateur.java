@@ -80,6 +80,12 @@ public Collection<? extends GrantedAuthority> getAuthorities() {
     authorities.add(
             new SimpleGrantedAuthority("ROLE_" + role.getNom())
     );
+    if ("SUPER_ADMIN".equals(role.getNom())) {
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_AGENT"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_GESTIONNAIRE"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_COMPTABLE"));
+    }
 
     if (role.getPermissions() != null) {
 

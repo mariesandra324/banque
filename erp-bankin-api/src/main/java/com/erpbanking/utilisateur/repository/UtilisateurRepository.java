@@ -19,4 +19,5 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur,Long>{
     Optional<Utilisateur> findByCodePersonnel( String codePersonnel);
 
     List<Utilisateur> findByRole_Nom(String roleNom);
+
 }

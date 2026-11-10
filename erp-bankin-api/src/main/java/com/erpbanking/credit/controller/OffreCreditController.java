@@ -201,7 +201,7 @@ public String confirmerAccepter(@PathVariable String token) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Confirmation - ERP Banking</title>
+                <title>Confirmation - Isalosys Bank</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;
@@ -418,7 +418,7 @@ public String confirmerRefuser(@PathVariable String token) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Confirmation - ERP Banking</title>
+                <title>Confirmation - Isalosys Bank</title>
 
                 <style>
                     body {

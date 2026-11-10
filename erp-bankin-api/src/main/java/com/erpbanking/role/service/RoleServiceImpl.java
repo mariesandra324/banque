@@ -29,6 +29,9 @@ public class RoleServiceImpl implements RoleService{
     @Transactional
     public RoleResponse create(RoleRequest request){
 
+        if ("SUPER_ADMIN".equalsIgnoreCase(request.getNom())) {
+            throw new IllegalArgumentException("Le rôle SUPER_ADMIN est réservé à l'initialisation.");
+        }
 
         if(roleRepository.existsByNom(request.getNom())){
 
@@ -99,6 +102,9 @@ public class RoleServiceImpl implements RoleService{
                     )
                 );
 
+        if ("SUPER_ADMIN".equals(role.getNom())) {
+            throw new IllegalArgumentException("Le rôle SUPER_ADMIN ne peut pas être modifié.");
+        }
 
         role.setNom(request.getNom());
 
@@ -136,6 +142,9 @@ public class RoleServiceImpl implements RoleService{
                     )
                 );
 
+        if ("SUPER_ADMIN".equals(role.getNom())) {
+            throw new IllegalArgumentException("Le rôle SUPER_ADMIN ne peut pas être désactivé.");
+        }
 
         role.setActif(false);
 

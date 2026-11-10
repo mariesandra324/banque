@@ -2,6 +2,7 @@ package com.erpbanking.auth.service;
 
 import com.erpbanking.auth.dto.LoginRequest;
 import com.erpbanking.auth.dto.LoginResponse;
+import com.erpbanking.auth.dto.BootstrapAdminRequest;
 import com.erpbanking.auth.dto.MobileLoginRequest;
 import com.erpbanking.auth.dto.MobileLoginResponse;
 import com.erpbanking.client.entity.Client;
@@ -15,17 +16,26 @@ import com.erpbanking.security.ClientUserDetails;
 import com.erpbanking.security.JwtService;
 import com.erpbanking.utilisateur.entity.Utilisateur;
 import com.erpbanking.utilisateur.repository.UtilisateurRepository;
+import com.erpbanking.role.entity.Role;
+import com.erpbanking.role.repository.RoleRepository;
 
 import lombok.RequiredArgsConstructor;
 import com.erpbanking.compte.repository.CarteRepository;
 import com.erpbanking.compte.repository.CompteRepository;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -38,10 +48,15 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final CarteRepository carteRepository;
     private final UtilisateurRepository utilisateurRepository; 
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final CompteRepository compteRepository;
     private final ClientRepository clientRepository;
     private final ClientMobileRepository clientMobileRepository;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Value("${app.bootstrap.secret:}")
+    private String bootstrapSecret;
 
     @Override
 public LoginResponse login(LoginRequest request) {
@@ -84,6 +99,67 @@ public LoginResponse login(LoginRequest request) {
         throw e;
     }
 }
+
+    @Override
+    @Transactional
+    public LoginResponse bootstrapAdmin(BootstrapAdminRequest request, String suppliedSecret) {
+        if (bootstrapSecret == null || bootstrapSecret.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "L'initialisation du premier administrateur n'est pas configurée."
+            );
+        }
+
+        if (suppliedSecret == null || !MessageDigest.isEqual(
+                bootstrapSecret.getBytes(StandardCharsets.UTF_8),
+                suppliedSecret.getBytes(StandardCharsets.UTF_8))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Secret d'initialisation invalide.");
+        }
+
+        jdbcTemplate.execute("SELECT pg_advisory_xact_lock(734921046)");
+        if (utilisateurRepository.count() != 0 || roleRepository.existsByNom("SUPER_ADMIN")) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "L'initialisation est déjà terminée."
+            );
+        }
+
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (utilisateurRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cet email est déjà utilisé.");
+        }
+
+        Role role = roleRepository.findByNom("SUPER_ADMIN")
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .nom("SUPER_ADMIN")
+                        .description("Administrateur initial avec tous les accès")
+                        .actif(true)
+                        .build()));
+        role.setActif(true);
+
+        Utilisateur utilisateur = utilisateurRepository.save(Utilisateur.builder()
+                .nom(request.getNom().trim())
+                .prenom(request.getPrenom().trim())
+                .email(email)
+                .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
+                .role(role)
+                .actif(true)
+                .build());
+
+        return LoginResponse.builder()
+                .token(jwtService.generateToken(utilisateur))
+                .email(utilisateur.getEmail())
+                .role(role.getNom())
+                .build();
+    }
+
+    @Override
+    public boolean isBootstrapAvailable() {
+        return bootstrapSecret != null
+                && !bootstrapSecret.isBlank()
+                && utilisateurRepository.count() == 0
+                && !roleRepository.existsByNom("SUPER_ADMIN");
+    }
 
 public MobileLoginResponse mobileLogin (MobileLoginRequest request) {
     String nomComplet = request.getNomComplet().trim();

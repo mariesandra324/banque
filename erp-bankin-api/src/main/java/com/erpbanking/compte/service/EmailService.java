@@ -133,7 +133,7 @@ public class EmailService {
         "Pour votre sécurité, ne communiquez jamais votre code PIN "
         + "à une autre personne.\n\n" +
         "Cordialement,\n" +
-        "L'équipe ERP Banking"
+        "L'équipe Isalosys Bank"
 );
 
             mailSender.send(message);
@@ -231,7 +231,7 @@ public void envoyerNotificationTransaction(
 
         contenu.append(
                 "Cordialement,\n"
-                + "L'équipe ERP Banking"
+                + "L'équipe Isalosys Bank"
         );
 
         message.setText(contenu.toString());
@@ -398,7 +398,7 @@ public void envoyerNotificationTransaction(
                                             <td style="background-color:#1e3a8a;padding:24px 32px;">
                                                 <div style="color:#ffffff;font-size:18px;
                                                     font-weight:bold;letter-spacing:1px;">
-                                                    BANQUE ERP BANKING
+                                                    ISALOSYS BANK
                                                 </div>
                                                 <div style="color:#c7d2fe;font-size:12px;margin-top:4px;">
                                                     Service Crédits
@@ -483,7 +483,7 @@ public void envoyerNotificationTransaction(
 
                                                 <p style="font-size:15px;line-height:1.6;margin:18px 0 0 0;">
                                                     <strong>Le Service Crédits</strong><br>
-                                                    Banque ERP Banking
+                                                    Isalosys Bank
                                                 </p>
 
                                             </td>
@@ -494,7 +494,7 @@ public void envoyerNotificationTransaction(
                                                 padding:18px 32px;">
                                                 <div style="font-size:11px;color:#94a3b8;line-height:1.5;">
                                                     Ce message est un courriel automatique émis par le système
-                                                    d'information de la Banque ERP Banking. Merci de ne pas y
+                                                    d'information de la Isalosys Bank. Merci de ne pas y
                                                     répondre directement.
                                                 </div>
                                             </td>
@@ -643,7 +643,7 @@ public void envoyerConfirmationDemandeCredit(
 
         helper.setTo(emailClient);
         helper.setFrom(mailUsername);
-        helper.setSubject("Confirmation de votre demande de crédit - ERP Banking");
+        helper.setSubject("Confirmation de votre demande de crédit - Isalosys Bank");
 
         String html = """
                 <html>
@@ -655,7 +655,7 @@ public void envoyerConfirmationDemandeCredit(
 
                     <p>
                         Nous vous confirmons que votre demande de crédit
-                        a bien été enregistrée dans notre système ERP Banking.
+                        a bien été enregistrée dans notre système Isalosys Bank.
                     </p>
 
                     <h3>Détails de votre demande</h3>
@@ -681,7 +681,7 @@ public void envoyerConfirmationDemandeCredit(
 
                     <p>
                         Cordialement,<br>
-                        <strong>ERP Banking</strong>
+                        <strong>Isalosys Bank</strong>
                     </p>
 
                 </body>
@@ -733,7 +733,7 @@ public void envoyerConfirmationDemandeCredit(
 
         message.setFrom(mailUsername);
         message.setTo(emailClient);
-        message.setSubject("Code de reinitialisation - ERP Banking");
+        message.setSubject("Code de reinitialisation - Isalosys Bank");
 
         message.setText(
                 "Bonjour " + nomClient + ",\n\n" +

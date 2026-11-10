@@ -165,7 +165,7 @@ public class OffrePdfService {
         Paragraph titre = new Paragraph("OFFRE DE CRÉDIT", titleFont);
         titre.setSpacingAfter(2);
         titreCell.addElement(titre);
-        titreCell.addElement(new Paragraph("Banque ERP Banking", brandFont));
+        titreCell.addElement(new Paragraph("Isalosys Bank", brandFont));
         header.addCell(titreCell);
 
         PdfPCell refCell = new PdfPCell();
@@ -410,7 +410,7 @@ public class OffrePdfService {
         PdfPTable table = new PdfPTable(new float[] { 50, 50 });
         table.setWidthPercentage(100);
 
-        PdfPCell left = new PdfPCell(new Paragraph("Banque ERP Banking", footerFont));
+        PdfPCell left = new PdfPCell(new Paragraph("Isalosys Bank", footerFont));
         left.setBorder(Rectangle.NO_BORDER);
         left.setPadding(0);
         table.addCell(left);
