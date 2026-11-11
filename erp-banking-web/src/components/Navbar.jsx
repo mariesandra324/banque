@@ -1,10 +1,9 @@
-import { UserCircle, Menu, LogOut, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
-import logoIS from "../assets/logo.png";
 import "../styles/navbar.css";
 
 function Navbar({ toggleSidebar }) {
@@ -36,9 +35,6 @@ function Navbar({ toggleSidebar }) {
           onClick={() => navigate("/dashboard")}
           aria-label="Isalosys Bank, retour au tableau de bord"
         >
-          <span className="navbar-logo">
-            <img src={logoIS} alt="" />
-          </span>
           <span className="navbar-brand-text">
             <span className="navbar-brand-name">Isalosys Bank</span>
             <span className="navbar-brand-tag">Plateforme de gestion bancaire</span>
@@ -69,15 +65,6 @@ function Navbar({ toggleSidebar }) {
           ) : (
             <Sun className="icon theme-icon" size={20} />
           )}
-        </button>
-
-        {/* Profil Utilisateur : clic → page Paramètres */}
-        <button
-          className="user-profile"
-          onClick={() => navigate("/parametres")}
-          title="Paramètres"
-        >
-          <UserCircle size={32} className="avatar-icon" />
         </button>
 
         <div className="divider"></div>
