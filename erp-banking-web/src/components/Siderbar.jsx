@@ -90,10 +90,18 @@ function Sidebar() {
         </NavLink>
       )}
 
-      <NavLink to="/parametres">
-        <Settings size={18} />
-        Paramètres
-      </NavLink>
+            <aside className="sidebar">
+        <nav className="sidebar-top">
+          {/* Tableau de bord, Clients, Mon guichet, Comptes, Transactions, Crédits */}
+        </nav>
+
+        <nav className="sidebar-bottom">
+          <NavLink to="/parametres" className="sidebar-link">
+            <Settings size={18} />
+            <span>Paramètres</span>
+          </NavLink>
+        </nav>
+      </aside>
     </aside>
   );
 }

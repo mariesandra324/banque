@@ -1,65 +1,87 @@
-.sidebar {
-    width: 250px;
-    /* Aligné exactement sous la Navbar de 70px */
-    height: calc(100vh - 70px); 
-    background: #1e293b; /* Couleur ardoise sombre moderne */
-    position: fixed;
-    top: 70px; /* S'aligne parfaitement sous les 70px de la Navbar */
-    left: 0;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    padding-top: 15px;
-    border-right: 1px solid #334155;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* À AJOUTER À LA FIN de ton CSS de barre latérale (ex. src/styles/sidebar.css).
+   ⚠️ Les noms de classes ci-dessous (.sidebar, .active...) sont les plus courants :
+   si les tiens sont différents, remplace-les (clic droit sur un élément du menu > Inspecter). */
+
+:root {
+    --ink: #244c74;        /* bleu du logo */
+    --ink-deep: #14304f;   /* bleu foncé du panneau de connexion */
+    --accent: #8db1d8;     /* bleu clair */
+    --sidebar-text: #b8c6d6;
 }
 
-.sidebar a {
-    color: #94a3b8;
-    text-decoration: none;
+/* Fond de la barre latérale */
+.sidebar {
+    background: var(--ink-deep);
+    color: var(--sidebar-text);
+    border-right: none;
+}
+
+/* Éléments du menu */
+.sidebar a,
+.sidebar .sidebar-link,
+.sidebar .sidebar-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 14px 24px;
-    transition: all 0.2s ease-in-out;
-    font-size: 15px;
+    gap: 12px;
+    padding: 11px 18px 11px 15px;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    color: var(--sidebar-text);
+    text-decoration: none;
     font-weight: 500;
+    transition: background 0.15s, color 0.15s;
 }
 
-.sidebar a:hover {
-    background: #334155;
-    color: #f8fafc;
+.sidebar a svg,
+.sidebar .sidebar-link svg,
+.sidebar .sidebar-item svg {
+    color: inherit;
+    flex-shrink: 0;
 }
 
-/* Style de la route active */
-.sidebar a.active {
-    background: #1d4ed8; /* Bleu banque profond et cohérent */
+/* Survol */
+.sidebar a:hover,
+.sidebar .sidebar-link:hover,
+.sidebar .sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.07);
     color: #ffffff;
+}
+
+/* Élément actif (React Router ajoute la classe "active" aux NavLink) */
+.sidebar a.active,
+.sidebar .sidebar-link.active,
+.sidebar .sidebar-item.active {
+    background: var(--ink);
+    color: #ffffff;
+    border-left-color: var(--accent);
     font-weight: 600;
-    border-left: 4px solid #3b82f6; /* Indicateur d'activité bleu vif */
 }
 
-/* ====================
-   RESPONSIVE (tiroir)
-==================== */
+/* Navigation au clavier */
+.sidebar a:focus-visible,
+.sidebar button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
 
-@media (max-width: 1024px) {
+/* Titres de sections éventuels (ex. « GESTION ») */
+.sidebar .sidebar-title,
+.sidebar .sidebar-section {
+    padding: 14px 18px 6px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    color: rgba(184, 198, 214, 0.7);
+}
+
+/* Mode sombre : un cran plus profond (adapte le sélecteur à ton useTheme) */
+[data-theme="dark"] .sidebar,
+.dark .sidebar {
+    background: #0c2036;
+}
+
+/* Mobile : le menu glisse par-dessus la page */
+@media (max-width: 860px) {
     .sidebar {
-        width: min(250px, 80vw);
-        top: 0;
-        height: 100vh;
-        z-index: 999;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
-        animation: sidebar-slide-in 0.25s ease;
-    }
-}
-
-@keyframes sidebar-slide-in {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
+        box-shadow: 0 0 40px rgba(12, 32, 54, 0.35);
     }
 }

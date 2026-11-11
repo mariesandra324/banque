@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import GlobalSearch from "./GlobalSearch";
 import NotificationBell from "./NotificationBell";
+import logoIS from "../assets/logo.png";
 import "../styles/navbar.css";
 
 function Navbar({ toggleSidebar }) {
@@ -24,10 +25,25 @@ function Navbar({ toggleSidebar }) {
   return (
     <header className="navbar">
       <div className="navbar-left">
-        <button className="menu-toggle-btn" onClick={toggleSidebar}>
+        <button className="menu-toggle-btn" onClick={toggleSidebar} aria-label="Ouvrir ou fermer le menu">
           <Menu className="icon" size={22} />
         </button>
-        <h2 className="navbar-brand"> ERP Banking</h2>
+
+        {/* Marque : même identité que la page de connexion */}
+        <button
+          type="button"
+          className="navbar-brand"
+          onClick={() => navigate("/dashboard")}
+          aria-label="Isalosys Bank, retour au tableau de bord"
+        >
+          <span className="navbar-logo">
+            <img src={logoIS} alt="" />
+          </span>
+          <span className="navbar-brand-text">
+            <span className="navbar-brand-name">Isalosys Bank</span>
+            <span className="navbar-brand-tag">Plateforme de gestion bancaire</span>
+          </span>
+        </button>
       </div>
 
       <div className="navbar-center">
@@ -51,7 +67,7 @@ function Navbar({ toggleSidebar }) {
           {darkMode ? (
             <Moon className="icon theme-icon" size={20} />
           ) : (
-            <Sun className="icon theme-icon" size={20} style={{ color: '#f59e0b' }}/>
+            <Sun className="icon theme-icon" size={20} />
           )}
         </button>
 
