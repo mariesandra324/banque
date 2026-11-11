@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
 import demandeCreditService from '../../service/demandeCreditService';
 
-// const BASE_URL = 'http://localhost:8080';
+
 import { BACKEND_URL as BASE_URL } from '../../config';
 
 const formatMontant = (montant) =>

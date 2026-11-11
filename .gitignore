@@ -1,0 +1,7 @@
+dump.sql
+node_modules/
+dist/
+target/
+.env
+.env.*
+**/service-account.json
