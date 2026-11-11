@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {Mail,Lock,Eye,EyeOff, AlertCircle,Loader2,} from "lucide-react";
+import {Mail,Lock,Eye,EyeOff, AlertCircle,Loader2} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import loginImage from "../../assets/login-baobabs.png";
 import logo from "../../assets/isalosys-logo-transparent.png";
@@ -36,9 +36,6 @@ function Login() {
             navigate("/dashboard");
 
         } catch (error) {
-
-            // On affiche le message renvoyé par l'API s'il existe,
-            // sinon on retombe sur le message générique.
             setErreur(
                 error?.response?.data?.message || "Email ou mot de passe incorrect."
             );

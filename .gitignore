@@ -5,3 +5,7 @@ target/
 .env
 .env.*
 **/service-account.json
+
+.vercel
+.env*
+.vercel
