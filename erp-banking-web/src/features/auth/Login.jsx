@@ -1,38 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    Mail,
-    Lock,
-    Eye,
-    EyeOff,
-    Landmark,
-    ShieldCheck,
-    Users,
-    TrendingUp,
-    AlertCircle,
-    Loader2,
-    ArrowRight,
-} from "lucide-react";
+import {Mail,Lock,Eye,EyeOff, AlertCircle,Loader2,} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import loginImage from "../../assets/login-baobabs.png";
+import logo from "../../assets/isalosys-logo-transparent.png";
 import "../../styles/login.css";
-
-const AVANTAGES = [
-    {
-        icon: ShieldCheck,
-         titre: "Accès sécurisé et tracé",
-        // texte: "Chaque opération effectuée est journalisée dans l'audit.",
-    },
-    {
-        icon: Users,
-         titre: "Clients, comptes & crédits",
-        // texte: "Pilotez l'ensemble du portefeuille depuis un seul écran.",
-    },
-    {
-        icon: TrendingUp,
-        titre: "Reporting en temps réel",
-        // texte: "Tableaux de bord et indicateurs toujours à jour.",
-    },
-];
 
 function Login() {
 
@@ -83,52 +55,53 @@ function Login() {
 
         <div className="login-page">
 
-            {/* Décor */}
-            <span className="login-blob login-blob--one" />
-            <span className="login-blob login-blob--two" />
-
             <div className="login-shell">
 
-                {/* ===== Colonne présentation ===== */}
-                <aside className="login-side">
+                {/* ===== Colonne image ===== */}
+                <aside
+                    className="login-side"
+                    style={{ "--login-image": `url(${loginImage})` }}
+                >
 
                     <div className="login-brand">
 
-                        <span className="login-logo">
-                            <Landmark size={26} />
-                        </span>
+                        <div className="login-brand-content">
 
-                        <div>
-                            <p className="login-logo-name">ERP Banking</p>
-                            <p className="login-logo-tag">Plateforme de gestion bancaire</p>
+                            <div className="login-brand-icon">
+                                <img
+                                    src={logo}
+                                    alt="Logo ISALOSYS"
+                                    className="login-logo-img"
+                                />
+                            </div>
+
+                            {/* Séparateur vertical */}
+                            <div className="login-brand-separator"></div>
+
+                            {/* Nom et description */}
+                            <div className="login-brand-text">
+                                <h1>Isalosys Bank</h1>
+                                <p>Plateforme de gestion bancaire</p>
+                            </div>
+
+                            {/* Badge */}
+                            <span className="login-bank-badge">Bank</span>
+
                         </div>
 
                     </div>
 
+
                     <div className="login-hero">
-                        <h2>Toute votre banque, en un seul écran</h2>
+                        <h2>Chaque opération, claire et tracée.</h2>
                         <p>
-                            Comptes, crédits, clients et comptabilité : un espace unique,
-                            sécurisé et pensé pour les équipes de guichet.
+                            Comptes, crédits, clients et comptabilité réunis dans un espace
+                            de travail pensé pour les équipes de guichet.
                         </p>
                     </div>
 
-                    <ul className="login-features">
-                        {AVANTAGES.map(({ icon: Icone, titre, texte }) => (
-                            <li className="login-feature" key={titre}>
-                                <span className="login-feature-icon">
-                                    <Icone size={17} />
-                                </span>
-                                <div>
-                                    <p className="login-feature-title">{titre}</p>
-                                    <p className="login-feature-text">{texte}</p>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-
                     <p className="login-side-foot">
-                        © {new Date().getFullYear()} ERP Banking — Tous droits réservés
+                        © {new Date().getFullYear()} ISALOSYS Banking. Tous droits réservés.
                     </p>
 
                 </aside>
@@ -138,11 +111,10 @@ function Login() {
 
                     <div className="login-form-head">
                         <h1>Connexion</h1>
-                        <p>Accédez à votre espace sécurisé</p>
+                        <p>Accédez à votre espace sécurisé.</p>
                     </div>
 
                     {erreur && (
-                        
                         <div className="login-error" role="alert">
                             <AlertCircle size={16} />
                             <span>{erreur}</span>
@@ -158,7 +130,7 @@ function Login() {
                                 <input
                                     id="login-email"
                                     type="email"
-                                    placeholder="prenom.nom@banque.mg"
+                                    placeholder="prenom.nom@isalosys.mg"
                                     value={email}
                                     onChange={(e) => {
                                         setEmail(e.target.value);
@@ -178,7 +150,7 @@ function Login() {
                                 <input
                                     id="login-motdepasse"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
+                                    placeholder="Votre mot de passe"
                                     value={motDePasse}
                                     onChange={(e) => {
                                         setMotDePasse(e.target.value);
@@ -199,27 +171,24 @@ function Login() {
                             </div>
                         </div>
 
-                    <button type="submit" className="login-btn" disabled={loading}>
-                        {loading ? (
-                            <>
-                                <Loader2 size={18} className="login-spinner" />
-                                Connexion en cours...
-                            </>
-                        ) : (
-                            <>
-                                Se connecter
-                                <ArrowRight size={18} />
-                            </>
-                        )}
-                    </button>
-
-                    <div className="login-forgot">
-                        <button type="button" onClick={() => navigate("/mot-de-passe-oublie")}>
-                            Mot de passe oublié ?
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={18} className="login-spinner" />
+                                    Connexion en cours
+                                </>
+                            ) : (
+                                "Se connecter"
+                            )}
                         </button>
-                    </div>
 
-                </form>
+                        <div className="login-forgot">
+                            <button type="button" onClick={() => navigate("/mot-de-passe-oublie")}>
+                                Mot de passe oublié ?
+                            </button>
+                        </div>
+
+                    </form>
 
                     <p className="login-help">
                         Accès réservé au personnel autorisé. En cas d'oubli de mot de passe,
