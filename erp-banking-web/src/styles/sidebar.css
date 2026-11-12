@@ -82,3 +82,34 @@
         box-shadow: 0 0 40px rgba(12, 32, 54, 0.35);
     }
 }
+:root {
+    --sidebar-w: 210px;
+}
+ 
+.sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+ 
+    /* colonne : le haut grandit, le bas reste en bas */
+    display: flex;
+    flex-direction: column;
+}
+ 
+.sidebar-top {
+    flex: 1;                 /* prend toute la place disponible */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;        /* défile si le menu est long, sans cacher Paramètres */
+}
+ 
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
