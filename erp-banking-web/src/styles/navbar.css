@@ -306,3 +306,82 @@
 .theme-icon {
     display: block;
 }
+
+
+/* À AJOUTER À LA FIN de src/styles/navbar.css
+   ⚠️ Supprime d'abord l'ancienne règle .navbar-brand de ce fichier (style de l'ancien <h2>),
+   sinon elle se mélange avec celle-ci. */
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Bouton de marque : texte seul, sans cadre */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.navbar-brand:focus-visible {
+    outline: 2px solid #8db1d8;
+    outline-offset: 4px;
+    border-radius: 6px;
+}
+
+/* Nom sur une ligne, sous-titre en dessous */
+.navbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.navbar-brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: #244c74;
+}
+
+.navbar-brand-tag {
+    font-size: 11px;
+    color: #585858;
+}
+
+/* Mode sombre : adapte le sélecteur à ton useTheme
+   ([data-theme="dark"], .dark ou body.dark) */
+[data-theme="dark"] .navbar-brand-name,
+.dark .navbar-brand-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .navbar-brand-tag,
+.dark .navbar-brand-tag {
+    color: #b8c6d6;
+}
+
+/* Icônes d'action dans la palette du logo */
+.theme-icon {
+    color: #244c74;
+}
+
+[data-theme="dark"] .theme-icon,
+.dark .theme-icon {
+    color: #8db1d8;
+}
+
+/* Responsive : sur petit écran, on garde seulement le nom */
+@media (max-width: 860px) {
+    .navbar-brand-tag {
+        display: none;
+    }
+}

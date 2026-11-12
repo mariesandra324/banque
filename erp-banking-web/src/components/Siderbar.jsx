@@ -1,5 +1,8 @@
 ﻿import { NavLink } from "react-router-dom";
-import {LayoutDashboard, Users, CreditCard,ArrowLeftRight,Landmark,FileText,Settings,UserCog,Smartphone,Calculator,ScrollText,Store,ArrowDownUp} from "lucide-react";
+import {
+  LayoutDashboard, Users, CreditCard, ArrowLeftRight, Landmark, FileText,
+  Settings, UserCog, Smartphone, Calculator, ScrollText, Store, ArrowDownUp,
+} from "lucide-react";
 import "../styles/sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 
@@ -7,101 +10,98 @@ function Sidebar() {
   const { user } = useAuth();
   const role = user?.role;
 
-  const hasAccess = (allowedRoles) => {
-    return allowedRoles.includes(role);
-  };
+  const hasAccess = (allowedRoles) => allowedRoles.includes(role);
 
   return (
     <aside className="sidebar">
-      <NavLink to="/dashboard">
-        <LayoutDashboard size={18} />
-        Tableau de bord
-      </NavLink>
-
-      {hasAccess(["ADMIN"]) && (
-        <NavLink to="/utilisateurs" className={({ isActive }) => isActive ? "active" : ""}>
-          <UserCog size={18} />
-          Utilisateurs
+      {/* ===== Menu principal ===== */}
+      <nav className="sidebar-top">
+        <NavLink to="/dashboard">
+          <LayoutDashboard size={18} />
+          <span>Tableau de bord</span>
         </NavLink>
-      )}
 
-      {hasAccess(["ADMIN", "AGENT"]) && (
-        <NavLink to="/clients" className={({ isActive }) => isActive ? "active" : ""}>
-          <Users size={18} />
-          Clients
-        </NavLink>
-      )}
-
-      {hasAccess(["ADMIN"]) && (
-        <NavLink to="/acces-mobile" className={({ isActive }) => isActive ? "active" : ""}>
-          <Smartphone size={18} />
-          Accès mobiles
-        </NavLink>
-      )}
-
-      {hasAccess(["AGENT"]) && (
-        <NavLink to="/mon-guichet" className={({ isActive }) => isActive ? "active" : ""}>
-          <Store size={18} />
-          Mon Guichet
-        </NavLink>
-      )}
-
-      {hasAccess(["GESTIONNAIRE", "ADMIN"]) && (
-        <NavLink to="/transferts-coffre" className={({ isActive }) => isActive ? "active" : ""}>
-          <ArrowDownUp size={18} />
-          Transferts vers coffre
-        </NavLink>
-      )}
-
-      <NavLink to="/comptes">
-        <CreditCard size={18} />
-        Comptes
-      </NavLink>
-
-      <NavLink to="/transactions">
-        <ArrowLeftRight size={18} />
-        Transactions
-      </NavLink>
-
-      {hasAccess(["ADMIN", "GESTIONNAIRE","AGENT"]) && (
-      <NavLink to="/credits">
-        <Landmark size={18} />
-        Crédits
-      </NavLink>)}
-
-      {hasAccess(["ADMIN", "COMPTABLE"]) && (
-        <NavLink to="/comptabilite" className={({ isActive }) => isActive ? "active" : ""}>
-          <Calculator size={18} />
-          Comptabilité
-        </NavLink>
-      )}
-
-      {hasAccess(["ADMIN", "COMPTABLE"]) && (
-        <NavLink to="/rapports">
-          <FileText size={18} />
-          Rapports
-        </NavLink>
-      )}
-
-      {hasAccess(["ADMIN", "COMPTABLE", "GESTIONNAIRE"]) && (
-        <NavLink to="/audit" className={({ isActive }) => isActive ? "active" : ""}>
-          <ScrollText size={18} />
-          Audit
-        </NavLink>
-      )}
-
-            <aside className="sidebar">
-        <nav className="sidebar-top">
-          {/* Tableau de bord, Clients, Mon guichet, Comptes, Transactions, Crédits */}
-        </nav>
-
-        <nav className="sidebar-bottom">
-          <NavLink to="/parametres" className="sidebar-link">
-            <Settings size={18} />
-            <span>Paramètres</span>
+        {hasAccess(["ADMIN"]) && (
+          <NavLink to="/utilisateurs">
+            <UserCog size={18} />
+            <span>Utilisateurs</span>
           </NavLink>
-        </nav>
-      </aside>
+        )}
+
+        {hasAccess(["ADMIN", "AGENT"]) && (
+          <NavLink to="/clients">
+            <Users size={18} />
+            <span>Clients</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["ADMIN"]) && (
+          <NavLink to="/acces-mobile">
+            <Smartphone size={18} />
+            <span>Accès mobiles</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["AGENT"]) && (
+          <NavLink to="/mon-guichet">
+            <Store size={18} />
+            <span>Mon Guichet</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["GESTIONNAIRE", "ADMIN"]) && (
+          <NavLink to="/transferts-coffre">
+            <ArrowDownUp size={18} />
+            <span>Transferts vers coffre</span>
+          </NavLink>
+        )}
+
+        <NavLink to="/comptes">
+          <CreditCard size={18} />
+          <span>Comptes</span>
+        </NavLink>
+
+        <NavLink to="/transactions">
+          <ArrowLeftRight size={18} />
+          <span>Transactions</span>
+        </NavLink>
+
+        {hasAccess(["ADMIN", "GESTIONNAIRE", "AGENT"]) && (
+          <NavLink to="/credits">
+            <Landmark size={18} />
+            <span>Crédits</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["ADMIN", "COMPTABLE"]) && (
+          <NavLink to="/comptabilite">
+            <Calculator size={18} />
+            <span>Comptabilité</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["ADMIN", "COMPTABLE"]) && (
+          <NavLink to="/rapports">
+            <FileText size={18} />
+            <span>Rapports</span>
+          </NavLink>
+        )}
+
+        {hasAccess(["ADMIN", "COMPTABLE", "GESTIONNAIRE"]) && (
+          <NavLink to="/audit">
+            <ScrollText size={18} />
+            <span>Audit</span>
+          </NavLink>
+        )}
+      </nav>
+
+      {/* ===== Bas de la barre : Paramètres ===== */}
+      <nav className="sidebar-bottom">
+        <NavLink to="/parametres">
+          <Settings size={18} />
+          <span>Paramètres</span>
+        </NavLink>
+      </nav>
     </aside>
   );
 }

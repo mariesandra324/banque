@@ -1,11 +1,8 @@
-/* À AJOUTER À LA FIN de ton CSS de barre latérale (ex. src/styles/sidebar.css).
-   ⚠️ Les noms de classes ci-dessous (.sidebar, .active...) sont les plus courants :
-   si les tiens sont différents, remplace-les (clic droit sur un élément du menu > Inspecter). */
 
 :root {
-    --ink: #244c74;        /* bleu du logo */
-    --ink-deep: #14304f;   /* bleu foncé du panneau de connexion */
-    --accent: #8db1d8;     /* bleu clair */
+    --ink: #244c74;        
+    --ink-deep: #14304f;   
+    --accent: #8db1d8;     
     --sidebar-text: #b8c6d6;
 }
 
