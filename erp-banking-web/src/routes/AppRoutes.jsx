@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from '../pages/Dashboard';
 import Login from '../features/auth/Login';
 import ForgotPassword from '../features/auth/ForgotPassword';
+import BootstrapAdmin from '../features/auth/BootstrapAdmin';
 import Clients from '../pages/Clients';
 import AccesMobile from '../pages/AccesMobile';
 import Comptes from '../pages/Comptes';
@@ -59,6 +60,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
+      <Route path="/initialiser" element={<BootstrapAdmin />} />
 
       <Route
             path="/"

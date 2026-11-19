@@ -758,4 +758,26 @@ public void envoyerConfirmationDemandeCredit(
                 "EMAIL OTP REINITIALISATION ENVOYE A : " + emailClient
         );
     }
+
+    public void envoyerCodeInitialisation(
+            String email,
+            String prenom,
+            String code
+    ) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailUsername);
+        message.setTo(email);
+        message.setSubject("Confirmation de votre inscription - ERP Banking");
+        message.setText(
+                "Bonjour " + prenom + ",\n\n"
+                + "Votre code de confirmation est :\n\n"
+                + "        " + code + "\n\n"
+                + "Ce code est valable pendant 10 minutes.\n"
+                + "Il confirme la création du compte super administrateur.\n\n"
+                + "Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.\n\n"
+                + "Cordialement,\n"
+                + "L'équipe ERP Banking"
+        );
+        mailSender.send(message);
+    }
 }

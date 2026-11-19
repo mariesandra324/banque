@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {Mail,Lock,Eye,EyeOff, AlertCircle,Loader2} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import authService from "../../service/authService";
 import loginImage from "../../assets/login-baobabs.png";
 import logo from "../../assets/isalosys-logo-transparent.png";
 import "../../styles/login.css";
@@ -10,6 +11,16 @@ function Login() {
 
     const navigate = useNavigate();
     const { login } = useAuth();
+
+    useEffect(() => {
+        authService.getBootstrapStatus()
+            .then((data) => {
+                if (data.available) {
+                    navigate("/initialiser", { replace: true });
+                }
+            })
+            .catch(() => {});
+    }, [navigate]);
 
     const [email, setEmail] = useState("");
     const [motDePasse, setMotDePasse] = useState("");

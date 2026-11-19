@@ -36,6 +36,28 @@ const authService = {
     return localStorage.getItem('token');
   },
 
+  getBootstrapStatus: async () => {
+    const response = await api.get('/auth/bootstrap/status');
+    return response.data;
+  },
+
+  startBootstrap: async (request) => {
+    const response = await api.post('/auth/bootstrap/start', request);
+    return response.data;
+  },
+
+  verifyBootstrap: async (request) => {
+    const response = await api.post('/auth/bootstrap/verify', request);
+    const data = response.data;
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('email', data.email);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('codeGuichet', data.codeGuichet || '');
+    }
+    return data;
+  },
+
   updateProfil: async ({ nom, prenom }) => {
     const response = await api.put('/utilisateurs/me/profil', { nom, prenom });
     return response.data;
