@@ -14,7 +14,12 @@ import com.erpbanking.auth.dto.MobileResetPasswordOtpRequest;
 import com.erpbanking.auth.dto.MobileResetPasswordOtpResponse;
 import com.erpbanking.auth.dto.MobileVerifyOtpRequest;
 import com.erpbanking.auth.dto.MobileVerifyOtpResponse;
+import com.erpbanking.auth.dto.BootstrapStartRequest;
+import com.erpbanking.auth.dto.BootstrapStatusResponse;
+import com.erpbanking.auth.dto.BootstrapVerifyRequest;
+import com.erpbanking.auth.dto.BootstrapResponse;
 import com.erpbanking.auth.service.AuthService;
+import com.erpbanking.auth.service.BootstrapService;
 import com.erpbanking.auth.service.PasswordResetService;
 import com.erpbanking.client.service.ClientMobileService;
 import com.erpbanking.utilisateur.entity.Utilisateur;
@@ -37,6 +42,27 @@ public class AuthController {
     private final ClientMobileService clientMobileService;
 
     private final PasswordResetService passwordResetService;
+
+    private final BootstrapService bootstrapService;
+
+    @GetMapping("/bootstrap/status")
+    public ResponseEntity<BootstrapStatusResponse> bootstrapStatus() {
+        return ResponseEntity.ok(bootstrapService.status());
+    }
+
+    @PostMapping("/bootstrap/start")
+    public ResponseEntity<BootstrapResponse> bootstrapStart(
+            @Valid @RequestBody BootstrapStartRequest request
+    ) {
+        return ResponseEntity.ok(bootstrapService.start(request));
+    }
+
+    @PostMapping("/bootstrap/verify")
+    public ResponseEntity<LoginResponse> bootstrapVerify(
+            @Valid @RequestBody BootstrapVerifyRequest request
+    ) {
+        return ResponseEntity.ok(bootstrapService.verify(request));
+    }
 
 
 
