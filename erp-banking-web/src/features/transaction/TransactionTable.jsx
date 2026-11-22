@@ -3,7 +3,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 
 const PAR_PAGE_OPTIONS = [10, 25, 50];
 
-const TransactionTable = ({ transactions, numeroCompteActuel }) => {
+const TransactionTable = ({ transactions, numeroCompteActuel, canCancel = false, onCancel }) => {
   const [recherche, setRecherche] = useState('');
   const [page, setPage] = useState(1);
   const [parPage, setParPage] = useState(10);
@@ -54,12 +54,15 @@ const TransactionTable = ({ transactions, numeroCompteActuel }) => {
               <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Montant</th>
               <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Description</th>
               <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Statut</th>
+              {canCancel && (
+                <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '600' }}>Action</th>
+              )}
             </tr>
           </thead>
           <tbody>
             {transactionsPage.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
+                <td colSpan={canCancel ? 7 : 6} style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
                   Aucune transaction à afficher.
                 </td>
               </tr>
@@ -88,13 +91,43 @@ const TransactionTable = ({ transactions, numeroCompteActuel }) => {
                       <span
                         style={{
                           padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
-                          backgroundColor: tx.statut === 'SUCCES' ? '#dcfce7' : '#fee2e2',
-                          color: tx.statut === 'SUCCES' ? '#15803d' : '#b91c1c',
+                          backgroundColor: tx.statut === 'SUCCES'
+                            ? '#dcfce7'
+                            : tx.statut === 'ANNULEE'
+                              ? '#e2e8f0'
+                              : '#fee2e2',
+                          color: tx.statut === 'SUCCES'
+                            ? '#15803d'
+                            : tx.statut === 'ANNULEE'
+                              ? '#475569'
+                              : '#b91c1c',
                         }}
                       >
                         {tx.statut}
                       </span>
                     </td>
+                    {canCancel && (
+                      <td style={{ padding: '12px 16px' }}>
+                        {tx.statut === 'SUCCES' && (
+                          <button
+                            type="button"
+                            onClick={() => onCancel(tx)}
+                            style={{
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              border: '1px solid #dc2626',
+                              backgroundColor: 'transparent',
+                              color: '#dc2626',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                            }}
+                          >
+                            Annuler
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -105,7 +138,7 @@ const TransactionTable = ({ transactions, numeroCompteActuel }) => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '10px' }}>
         <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          {transactionsFiltrees.length === 0
+          {            transactionsFiltrees.length === 0
             ? 'Aucun résultat'
             : `Affichage de ${(pageActuelle - 1) * parPage + 1} à ${Math.min(pageActuelle * parPage, transactionsFiltrees.length)} sur ${transactionsFiltrees.length} résultats`}
         </span>

@@ -376,6 +376,88 @@ private void envoyerNotificationTransactionDestination(
         return mapToResponse(tx);
     }
 
+    @Override
+    @Transactional
+    public TransactionResponse annulerTransaction(String reference) {
+        Transaction transaction = transactionRepository.findByReference(reference);
+        if (transaction == null) {
+            throw new IllegalArgumentException("Transaction introuvable.");
+        }
+        if (transaction.getStatut() != StatutTransaction.SUCCES) {
+            throw new IllegalStateException("Cette transaction ne peut plus être annulée.");
+        }
+
+        Compte source = transaction.getCompteSource();
+        Compte destination = transaction.getCompteDestination();
+        if (source == null) {
+            throw new IllegalStateException("Compte source introuvable pour cette transaction.");
+        }
+
+        source = compteRepository.findByNumeroCompteForUpdate(source.getNumeroCompte())
+                .orElseThrow(() -> new IllegalStateException("Compte source introuvable."));
+
+        switch (transaction.getType()) {
+            case DEPOT -> {
+                if (source.getSolde() == null
+                        || source.getSolde().compareTo(transaction.getMontant()) < 0) {
+                    throw new IllegalStateException("Annulation impossible : solde insuffisant.");
+                }
+                source.setSolde(source.getSolde().subtract(transaction.getMontant()));
+            }
+            case RETRAIT -> source.setSolde(
+                    (source.getSolde() == null ? BigDecimal.ZERO : source.getSolde())
+                            .add(transaction.getMontant()));
+            case VIREMENT -> {
+                if (destination == null) {
+                    throw new IllegalStateException("Compte destination introuvable.");
+                }
+                String sourceNumero = source.getNumeroCompte();
+                String destinationNumero = destination.getNumeroCompte();
+                String firstNumero = sourceNumero.compareTo(destinationNumero) < 0
+                        ? sourceNumero
+                        : destinationNumero;
+                Compte firstCompte = compteRepository.findByNumeroCompteForUpdate(firstNumero)
+                        .orElseThrow(() -> new IllegalStateException("Compte introuvable."));
+                String secondNumero = firstNumero.equals(sourceNumero)
+                        ? destinationNumero
+                        : sourceNumero;
+                Compte secondCompte = compteRepository.findByNumeroCompteForUpdate(secondNumero)
+                        .orElseThrow(() -> new IllegalStateException("Compte introuvable."));
+                source = firstNumero.equals(sourceNumero) ? firstCompte : secondCompte;
+                destination = firstNumero.equals(destinationNumero) ? firstCompte : secondCompte;
+                if (destination.getSolde() == null
+                        || destination.getSolde().compareTo(transaction.getMontant()) < 0) {
+                    throw new IllegalStateException(
+                            "Annulation impossible : le compte destination ne contient plus suffisamment de fonds.");
+                }
+                destination.setSolde(destination.getSolde().subtract(transaction.getMontant()));
+                source.setSolde(
+                        (source.getSolde() == null ? BigDecimal.ZERO : source.getSolde())
+                                .add(transaction.getMontant()));
+                compteRepository.save(destination);
+            }
+        }
+
+        compteRepository.save(source);
+        transaction.setStatut(StatutTransaction.ANNULEE);
+        transaction.setDescription(
+                (transaction.getDescription() == null ? "" : transaction.getDescription())
+                        + " [Transaction annulée]"
+        );
+        transactionRepository.save(transaction);
+
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.TRANSACTIONS,
+                "Transaction #" + transaction.getId(),
+                "Annulation de la transaction " + transaction.getReference()
+                        + " (" + transaction.getType() + ") d'un montant de "
+                        + transaction.getMontant() + " Ar."
+        );
+
+        return mapToResponse(transaction);
+    }
+
     private TransactionResponse mapToResponse(Transaction tx) {
         return TransactionResponse.builder()
                 .id(tx.getId())

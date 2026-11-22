@@ -1,17 +1,17 @@
 ﻿import { useState, useEffect } from 'react';
-import { getComptes, createCompte, updateCompte, deleteCompte } from '../service/compteService';
+import { getComptes, createCompte, updateCompte, updateStatutCompte, deleteCompte } from '../service/compteService';
 import { clientService } from '../service/clientService';
 import CompteForm from '../features/compte/CompteForm';
 import CompteTable from '../features/compte/CompteTable';
-import carteService from '../service/carteService';
 import { useAuth } from '../hooks/useAuth';
 
 // Le comptable est un rôle de consultation : il ne peut pas ouvrir de compte.
-const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
+const ROLES_AUTORISES_A_CREER = ['SUPER_ADMIN', 'ADMIN', 'AGENT'];
 
 const Comptes = () => {
   const { user } = useAuth();
   const peutCreerCompte = ROLES_AUTORISES_A_CREER.includes(user?.role);
+  const peutModifierCompte = ['SUPER_ADMIN', 'ADMIN', 'AGENT'].includes(user?.role);
 
   const [comptes, setComptes] = useState([]);
   const [clients, setClients] = useState([]);
@@ -96,32 +96,15 @@ const Comptes = () => {
         solde: payload.solde,
         statut: payload.statut,
         clientId: payload.clientId,
+        hasCard: payload.hasCard,
+        typeCarte: payload.typeCarte,
       });
 
-      const compteCree = response.data;
-
-      console.log('Compte créé :', compteCree);
-
-      // ===== CRÉATION DE LA CARTE SI COCHÉE =====
-      if (payload.hasCard) {
-        await carteService.create({
-          compteId: compteCree.id,
-          typeCarte: payload.typeCarte,
-        });
-
-        console.log(
-          'Carte créée pour le compte :',
-          compteCree.id
-        );
-
-        showNotification(
-          'Compte et carte créés avec succès.'
-        );
-      } else {
-        showNotification(
-          'Compte créé avec succès, sans carte.'
-        );
-      }
+      showNotification(
+        payload.hasCard
+          ? 'Compte et carte créés avec succès.'
+          : 'Compte créé avec succès, sans carte.'
+      );
     }
 
     setCompteEnEdition(null);
@@ -147,6 +130,19 @@ const Comptes = () => {
     } catch (err) {
       console.error('Erreur suppression compte :', err);
       setError(err.response?.data?.message || 'Impossible de supprimer le compte.');
+    }
+  };
+
+  const handleChangeStatut = async (compte, statut) => {
+    const action = statut === 'ACTIF' ? 'réactiver' : statut === 'BLOQUE' ? 'bloquer' : 'suspendre';
+    if (!window.confirm(`Voulez-vous vraiment ${action} le compte ${compte.numeroCompte} ?`)) return;
+    try {
+      const response = await updateStatutCompte(compte.id, statut);
+      setComptes((prev) => prev.map((item) => item.id === compte.id ? response.data : item));
+      showNotification(`Compte ${statut === 'ACTIF' ? 'réactivé' : statut === 'BLOQUE' ? 'bloqué' : 'suspendu'} avec succès.`);
+    } catch (err) {
+      console.error('Erreur changement statut compte :', err);
+      setError(err.response?.data?.message || 'Impossible de modifier le statut du compte.');
     }
   };
 
@@ -201,6 +197,8 @@ const Comptes = () => {
           clients={clients}
           onEdit={handleOpenEdit}
           onDelete={handleDelete}
+          onChangeStatut={handleChangeStatut}
+          canManage={peutModifierCompte}
         />
       )}
     </div>

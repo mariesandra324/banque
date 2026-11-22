@@ -29,7 +29,7 @@ public class ParametresInteretsController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('COMPTA_REPORT') or hasAuthority('COMPTA_CLOSE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ParametresInteretsResponse> update(
             @Valid @RequestBody ParametresInteretsRequest request) {
         return ResponseEntity.ok(service.update(request));

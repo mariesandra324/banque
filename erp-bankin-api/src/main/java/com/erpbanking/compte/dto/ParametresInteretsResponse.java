@@ -11,4 +11,5 @@ public class ParametresInteretsResponse {
 
     private BigDecimal montantCourant;
     private BigDecimal montantEpargne;
+    private Integer joursSuspensionRetard;
 }

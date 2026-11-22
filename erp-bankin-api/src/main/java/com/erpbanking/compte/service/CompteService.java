@@ -24,6 +24,8 @@ public interface CompteService {
 
     CompteResponse update(Long id, CompteRequest request);
 
+    CompteResponse updateStatut(Long id, String statut);
+
     void delete(Long id);
 
     /**

@@ -332,7 +332,7 @@ const Comptabilite = () => {
           disabled={enCours || contenuVide}
           style={{
             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '6px',
-            border: 'none', backgroundColor: '#2563eb', color: 'white', cursor: contenuVide ? 'not-allowed' : 'pointer',
+            border: 'none', backgroundColor: '#244c74', color: 'white', cursor: contenuVide ? 'not-allowed' : 'pointer',
             opacity: contenuVide ? 0.6 : 1, fontWeight: '500', fontSize: '14px',
           }}
         >

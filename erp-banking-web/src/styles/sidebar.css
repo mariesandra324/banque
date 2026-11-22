@@ -21,8 +21,8 @@
     align-items: center;
     gap: 12px;
     padding: 11px 18px 11px 15px;
-    border-left: 3px solid transparent;
-    border-radius: 0;
+    border-left: none;
+    border-radius: 8px;
     color: var(--sidebar-text);
     text-decoration: none;
     font-weight: 500;
@@ -104,7 +104,9 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;        /* défile si le menu est long, sans cacher Paramètres */
+    overflow-y: auto; 
+    gap: 4px;
+    padding: 8px 10px;       /* défile si le menu est long, sans cacher Paramètres */
 }
  
 .sidebar-bottom {

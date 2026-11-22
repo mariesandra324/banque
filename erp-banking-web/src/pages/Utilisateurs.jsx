@@ -110,7 +110,7 @@ const Utilisateurs = () => {
         {vue === 'liste' ? (
           <button
             onClick={handleOpenAdd}
-            style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+            style={{ backgroundColor: '#244c74', color: 'white', padding: '10px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
           >
             + Ajouter un utilisateur
           </button>

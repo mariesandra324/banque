@@ -26,7 +26,7 @@ public class UtilisateurController {
     private final UtilisateurService utilisateurService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> create(
             @Validated(OnCreate.class) @RequestBody UtilisateurRequest request) {
 
@@ -37,7 +37,7 @@ public class UtilisateurController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ApiResponse<List<UtilisateurResponse>>> findAll() {
 
         return ResponseEntity.ok(
@@ -73,7 +73,7 @@ public class UtilisateurController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN') or #id == principal.id")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> findById(
             @PathVariable Long id) {
 
@@ -84,7 +84,7 @@ public class UtilisateurController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN') or #id == principal.id")
     public ResponseEntity<ApiResponse<UtilisateurResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody UtilisateurRequest request) {
@@ -96,7 +96,7 @@ public class UtilisateurController {
     }
 
     @PatchMapping("/{id}/bloquer")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ApiResponse<Object>> bloquer(
             @PathVariable Long id) {
 
@@ -109,7 +109,7 @@ public class UtilisateurController {
     }
 
     @PatchMapping("/{id}/debloquer")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ApiResponse<Object>> debloquer(
             @PathVariable Long id) {
 
@@ -122,7 +122,7 @@ public class UtilisateurController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ApiResponse<Object>> delete(
             @PathVariable Long id) {
 

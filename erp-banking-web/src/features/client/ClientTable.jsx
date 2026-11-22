@@ -28,7 +28,17 @@ const libelleStatutMobile = (statut) => {
   return libelles[statut] || statut || 'Aucun accès';
 };
 
-function ClientTable({ clients, comptes = [], recherche = '', onEdit, onDelete, onCreateMobile }) {
+function ClientTable({
+  clients,
+  comptes = [],
+  recherche = '',
+  onEdit,
+  onDelete,
+  onCreateMobile,
+  canEdit = false,
+  canDelete = false,
+  canCreateMobile = false,
+}) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [parPage, setParPage] = useState(10);
@@ -108,7 +118,7 @@ function ClientTable({ clients, comptes = [], recherche = '', onEdit, onDelete, 
                       >
                         {libelleStatutMobile(client.mobileStatut)}
                       </span>
-                    ) : (
+                    ) : canCreateMobile ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); onCreateMobile(client); }}
                         style={{
@@ -119,23 +129,29 @@ function ClientTable({ clients, comptes = [], recherche = '', onEdit, onDelete, 
                       >
                         accès mobile
                       </button>
+                    ) : (
+                      <span style={{ color: 'var(--muted)', fontSize: '12px' }}>Aucun accès</span>
                     )}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onEdit(client); }}
-                      title='modifier'
-                      style={{ marginRight: '12px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
-                    >
-                      <Pencil size={17}/>
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(client.id); }}
-                      title='supprimer'
-                      style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
-                    >
-                      <Trash2 size={17}/>
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(client); }}
+                        title='modifier'
+                        style={{ marginRight: canDelete ? '12px' : 0, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
+                      >
+                        <Pencil size={17}/>
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(client.id); }}
+                        title='supprimer'
+                        style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}
+                      >
+                        <Trash2 size={17}/>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

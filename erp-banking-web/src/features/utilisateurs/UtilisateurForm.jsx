@@ -14,7 +14,7 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
     nom: '',
     prenom: '',
     email: '',
-    telephone: 'PHONE_PREFIX',
+    telephone: PHONE_PREFIX,
     motDePasse: '',
     roleId: '',
     guichetId: '',
@@ -63,8 +63,6 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
       guichetId: ''
     });
   }
-  console.log("GUICHETS :", guichets);
-  console.log("GUICHET ID FORM :", form.guichetId);
   setFieldErrors({});
 }, [utilisateur]);
 
@@ -89,6 +87,10 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
       errors.motDePasse = 'Le mot de passe doit contenir au moins 8 caractères.';
     }
     if (!form.roleId) errors.roleId = 'Le rôle est requis.';
+    const roleSelectionne = roles.find((role) => String(role.id) === String(form.roleId));
+    if (roleSelectionne?.nom === 'AGENT' && !form.guichetId) {
+      errors.guichetId = 'Le guichet est obligatoire pour un agent.';
+    }
     return errors;
   };
 
@@ -128,6 +130,8 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
     && !guichets.some((g) => String(g.id) === String(utilisateur.guichetId))
     ? [{ id: utilisateur.guichetId, codeGuichet: utilisateur.codeGuichet || `#${utilisateur.guichetId}` }, ...guichets]
     : guichets;
+  const roleSelectionne = roles.find((role) => String(role.id) === String(form.roleId));
+  const guichetRequis = roleSelectionne?.nom === 'AGENT';
 
   return (
     <form onSubmit={submit}>
@@ -214,29 +218,29 @@ function UtilisateurForm({ utilisateur, onSuccess, onCancel }) {
             {fieldErrors.roleId && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.roleId}</div>}
           </div>
 
-          <div>
+          {guichetRequis && (
             <div>
-            <label style={labelStyle}>
-              Code guichet <span style={{ color: '#dc2626' }}>*</span>
-            </label>
+              <label style={labelStyle}>
+                Code guichet <span style={{ color: '#dc2626' }}>*</span>
+              </label>
 
-            <select name="guichetId" value={form.guichetId}onChange={change}style={{...inputStyle,fontFamily: 'monospace'}}>
-              <option value="">Choisir un guichet disponible</option>
-              {guichetsOptions.map((guichet) => (
-                <option key={guichet.id} value={guichet.id}>{guichet.codeGuichet}</option>
-              ))}
-            </select>
+              <select name="guichetId" value={form.guichetId} onChange={change} style={{...inputStyle, fontFamily: 'monospace'}}>
+                <option value="">Choisir un guichet disponible</option>
+                {guichetsOptions.map((guichet) => (
+                  <option key={guichet.id} value={guichet.id}>{guichet.codeGuichet}</option>
+                ))}
+              </select>
 
-            {fieldErrors.guichetId && (
-              <div style={{ marginTop: '6px',color: '#dc2626',fontSize: '12px'}}>
-                {fieldErrors.guichetId}
-              </div>
+              {fieldErrors.guichetId && (
+                <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px'}}>
+                  {fieldErrors.guichetId}
+                </div>
               )}
+              <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
+                Agence à laquelle l'utilisateur est rattaché.
+              </div>
             </div>
-            <div style={{ marginTop: '6px', color: 'var(--faint)', fontSize: '12px' }}>
-              Agence à laquelle l'utilisateur est rattaché.
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import com.erpbanking.credit.dto.CreditRequest;
 import com.erpbanking.credit.dto.CreditResponse;
@@ -35,7 +36,7 @@ public class CreditController {
     private final RemboursementService remboursementService;
 
     @PostMapping("/optimize")
-    @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CREDIT_REQUEST') or hasAuthority('CREDIT_APPROVE') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE')")
     public ResponseEntity<List<DemandeCreditResponse>> optimize(
             @RequestParam @Min(0) @Max(1_000_000) int budget) {
         return ResponseEntity.ok(
@@ -45,8 +46,9 @@ public class CreditController {
 
     // Créer un crédit
     @PostMapping
+    @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<CreditResponse> create(
-            @RequestBody CreditRequest request) {
+            @Valid @RequestBody CreditRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -55,6 +57,7 @@ public class CreditController {
 
     // Récupérer tous les crédits
     @GetMapping
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE','AGENT')")
     public ResponseEntity<List<CreditResponse>> getAll() {
 
         return ResponseEntity.ok(
@@ -64,6 +67,7 @@ public class CreditController {
 
     // Récupérer un crédit par ID
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE','AGENT')")
     public ResponseEntity<CreditResponse> getById(
             @PathVariable Long id) {
 
@@ -95,7 +99,7 @@ public class CreditController {
     // Échéancier global de tous les crédits, avec client et montant.
     // Réservé à l'administrateur et au comptable (page Comptabilité).
     @GetMapping("/echeancier")
-    @PreAuthorize("hasAnyRole('ADMIN','COMPTABLE')")
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','COMPTABLE')")
     public ResponseEntity<List<EcheancierGlobalResponse>> getEcheancierGlobal(
             @RequestParam(required = false) StatutEcheance statut) {
 
@@ -126,6 +130,7 @@ public class CreditController {
 
      // récuperer le remboursement
      @PostMapping("/{creditId}/remboursement/{echeanceId}")
+     @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
         public ResponseEntity<RemboursementResponse> effectuerRemboursement(
                 @PathVariable Long creditId,
                 @PathVariable Long echeanceId) {

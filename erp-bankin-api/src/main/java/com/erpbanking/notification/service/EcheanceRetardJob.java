@@ -1,6 +1,7 @@
 package com.erpbanking.notification.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,6 +16,12 @@ import com.erpbanking.credit.entity.StatutEcheance;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.EcheanceRepository;
 import com.erpbanking.notification.entity.NotificationType;
+import com.erpbanking.compte.entity.Compte;
+import com.erpbanking.compte.repository.CompteRepository;
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
+import com.erpbanking.compte.service.ParametresInteretsService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,9 +43,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EcheanceRetardJob {
 
+    private static final int JOURS_AVANT_SUSPENSION_PAR_DEFAUT = 20;
+
     private final EcheanceRepository echeanceRepository;
     private final CreditRepository creditRepository;
     private final NotificationService notificationService;
+    private final CompteRepository compteRepository;
+    private final AuditService auditService;
+    private final ParametresInteretsService parametresInteretsService;
 
     @Scheduled(cron = "0 0 7 * * *")
     @Transactional
@@ -63,6 +75,15 @@ public class EcheanceRetardJob {
             if (credit.getStatut() != StatutCredit.EN_RETARD) {
                 credit.setStatut(StatutCredit.EN_RETARD);
                 creditRepository.save(credit);
+            }
+
+            int joursSuspension = parametresInteretsService.get().getJoursSuspensionRetard();
+            if (joursSuspension <= 0) {
+                joursSuspension = JOURS_AVANT_SUSPENSION_PAR_DEFAUT;
+            }
+            if (ChronoUnit.DAYS.between(echeance.getDateEcheance(), LocalDate.now())
+                    >= joursSuspension) {
+                suspendreCompteLieAuCredit(credit);
             }
 
             Client client = credit.getClient();
@@ -97,6 +118,74 @@ public class EcheanceRetardJob {
             );
         }
     }
+
+    private void suspendreCompteLieAuCredit(Credit credit) {
+        if (credit.getClient() == null) {
+            return;
+        }
+
+        Compte compte = null;
+        Long compteId = credit.getDemandeCredit() != null
+                ? credit.getDemandeCredit().getCompteId()
+                : null;
+
+        if (compteId != null) {
+            compte = compteRepository.findById(compteId).orElse(null);
+            if (compte != null
+                    && (compte.getClient() == null
+                    || !compte.getClient().getId().equals(credit.getClient().getId()))) {
+                compte = null;
+            }
+        }
+
+        if (compte == null) {
+            compte = compteRepository.findByClientId(credit.getClient().getId()).stream()
+                    .filter(c -> "Courant".equalsIgnoreCase(c.getTypeCompte()))
+                    .filter(c -> "ACTIF".equalsIgnoreCase(c.getStatut()))
+                    .findFirst()
+                    .orElseGet(() -> compteRepository.findByClientId(credit.getClient().getId()).stream()
+                            .filter(c -> "ACTIF".equalsIgnoreCase(c.getStatut()))
+                            .findFirst()
+                            .orElse(null));
+        }
+
+        if (compte == null
+                || "SUSPENDU".equalsIgnoreCase(compte.getStatut())
+                || "BLOQUE".equalsIgnoreCase(compte.getStatut())) {
+            return;
+        }
+
+        compte.setStatut("SUSPENDU");
+        compteRepository.save(compte);
+
+        int joursSuspension = parametresInteretsService.get().getJoursSuspensionRetard();
+        String message = "Le compte " + compte.getNumeroCompte()
+                + " a été suspendu automatiquement après " + joursSuspension + " jours "
+                + "de retard sur le crédit " + credit.getNumeroCredit() + ".";
+
+        auditService.journaliser(
+                AuditAction.DESACTIVATION,
+                AuditModule.COMPTES,
+                "Compte #" + compte.getId(),
+                "Suspension automatique du compte " + compte.getNumeroCompte()
+                        + " après " + joursSuspension + " jours de retard sur le crédit "
+                        + credit.getNumeroCredit() + "."
+        );
+
+        notificationService.creerPourClient(
+                credit.getClient().getId(),
+                NotificationType.ECHEANCE_EN_RETARD,
+                message,
+                "compte:" + compte.getId()
+        );
+
+        notificationService.creerPourRole(
+                NotificationType.CREDIT_EN_RETARD,
+                message,
+                "/comptes"
+        );
+    }
+
 
     /** Un crédit clôturé (soldé, terminé ou annulé) ne peut plus être en retard. */
     private boolean estCloture(StatutCredit statut) {

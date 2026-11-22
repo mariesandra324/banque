@@ -3,7 +3,7 @@ import { Search, SlidersHorizontal, Columns3, MoreVertical } from 'lucide-react'
 
 const PAR_PAGE_OPTIONS = [10, 25, 50];
 
-function CompteTable({ comptes, clients, onEdit, onDelete }) {
+function CompteTable({ comptes, clients, onEdit, onDelete, onChangeStatut, canManage = false }) {
   const [recherche, setRecherche] = useState('');
   // const [selection, setSelection] = useState([]);
   const [page, setPage] = useState(1);
@@ -17,7 +17,8 @@ function CompteTable({ comptes, clients, onEdit, onDelete }) {
     const filtres = !q
       ? liste
       : liste.filter((c)=> {
-        const texte = `${c.numeroCompte} ${c.typeCompte} ${clients?.nom || ''} ${clients?.prenom || ''}`.toLowerCase();
+        const client = (Array.isArray(clients) ? clients : []).find((item) => item.id === c.clientId);
+        const texte = `${c.numeroCompte} ${c.typeCompte} ${client?.nom || ''} ${client?.prenom || ''} ${client?.cin || ''}`.toLowerCase();
         return texte.includes(q);
       });
     return [...filtres].sort((a, b) => b.id - a.id);
@@ -90,6 +91,14 @@ function CompteTable({ comptes, clients, onEdit, onDelete }) {
             ) : (
               comptesPage.map((compte) => {
                 const client = clients.find((c) => c.id === compte.clientId);
+                const statut = compte.statut?.toUpperCase();
+                const estActif = statut === 'ACTIF' || statut === 'ACTIVE';
+                const peutReactiver = ['BLOQUE', 'SUSPENDU', 'INACTIF'].includes(statut);
+                const couleurStatut = statut === 'ACTIF' || statut === 'ACTIVE'
+                  ? { backgroundColor: '#dcfce7', color: '#15803d' }
+                  : statut === 'SUSPENDU'
+                    ? { backgroundColor: '#fef3c7', color: '#b45309' }
+                    : { backgroundColor: '#fee2e2', color: '#b91c1c' };
                 return (
                   <tr key={compte.id} style={{ borderBottom: '1px solid var(--faint)' }}>
                     <td style={{ padding: '12px 16px' }}></td>
@@ -106,8 +115,7 @@ function CompteTable({ comptes, clients, onEdit, onDelete }) {
                       <span
                         style={{
                           padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
-                          backgroundColor: compte.statut === 'ACTIF' ? '#dcfce7' : '#fee2e2',
-                          color: compte.statut === 'ACTIF' ? '#15803d' : '#b91c1c',
+                          ...couleurStatut,
                         }}
                       >
                         {compte.statut}
@@ -132,18 +140,42 @@ function CompteTable({ comptes, clients, onEdit, onDelete }) {
                             boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '130px', overflow: 'hidden',
                           }}
                         >
-                          <button
+                          {canManage && estActif && (
+                            <>
+                              <button
+                                onClick={() => { onChangeStatut(compte, 'BLOQUE'); setMenuOuvertId(null); }}
+                                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#dc2626' }}
+                              >
+                                Bloquer
+                              </button>
+                              <button
+                                onClick={() => { onChangeStatut(compte, 'SUSPENDU'); setMenuOuvertId(null); }}
+                                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#b45309' }}
+                              >
+                                Suspendre
+                              </button>
+                            </>
+                          )}
+                          {canManage && peutReactiver && (
+                            <button
+                              onClick={() => { onChangeStatut(compte, 'ACTIF'); setMenuOuvertId(null); }}
+                              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#15803d' }}
+                            >
+                              Réactiver
+                            </button>
+                          )}
+                          {canManage && <button
                             onClick={() => { onEdit(compte); setMenuOuvertId(null); }}
                             style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}
                           >
                             Modifier
-                          </button>
-                          <button
+                          </button>}
+                          {canManage && <button
                             onClick={() => { onDelete(compte.id); setMenuOuvertId(null); }}
                             style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#dc2626' }}
                           >
                             Supprimer
-                          </button>
+                          </button>}
                         </div>
                       )}
                     </td>

@@ -24,7 +24,7 @@ public class ClientMobileController {
     private final ClientMobileService clientMobileService;
 
     @PostMapping("/client/{clientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CLIENT_READ') or hasAuthority('CLIENT_UPDATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE')")
     public ResponseEntity<ClientMobileResponse> creerAccesMobile(
             @PathVariable Long clientId,
             @Valid @RequestBody ClientMobileCreateRequest request) {
@@ -41,7 +41,7 @@ public class ClientMobileController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<List<ClientMobileResponse>> listerTous() {
 
         return ResponseEntity.ok(
@@ -50,7 +50,7 @@ public class ClientMobileController {
     }
 
     @PatchMapping("/{id}/statut/{statut}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE') or hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<ClientMobileResponse> mettreAJourStatut(
             @PathVariable Long id,
             @PathVariable StatutMobile statut) {

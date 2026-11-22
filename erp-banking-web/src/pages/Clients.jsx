@@ -9,12 +9,15 @@ import ClientMobileModal from '../features/client/ClientMobileModal';
 import { useAuth } from '../hooks/useAuth';
 import { extraireMessageErreur } from '../utils/messageErreur';
 
-// Le comptable est un rôle de consultation : il ne peut pas créer de client.
-const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
+// Les rôles autorisés à créer un client doivent correspondre au backend.
+const ROLES_AUTORISES_A_CREER = ['SUPER_ADMIN', 'ADMIN', 'AGENT'];
 
 const Clients = () => {
   const { user } = useAuth();
   const peutCreerClient = ROLES_AUTORISES_A_CREER.includes(user?.role);
+  const peutModifierClient = ['SUPER_ADMIN', 'ADMIN', 'AGENT'].includes(user?.role);
+  const peutSupprimerClient = peutModifierClient;
+  const peutCreerAccesMobile = ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'GESTIONNAIRE'].includes(user?.role);
 
   const [clients, setClients] = useState([]);
   const [comptes, setComptes] = useState([]);
@@ -170,6 +173,9 @@ const Clients = () => {
             onEdit={handleOpenEdit}
             onDelete={handleDelete}
             onCreateMobile={setClientMobileCible}
+            canEdit={peutModifierClient}
+            canDelete={peutSupprimerClient}
+            canCreateMobile={peutCreerAccesMobile}
           />
         )
       )}

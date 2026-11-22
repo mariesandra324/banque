@@ -16,3 +16,8 @@ export const getAllTransactions = async () => {
   const response = await api.get(RESOURCE);
   return response.data;
 };
+
+export const annulerTransaction = async (reference) => {
+  const response = await api.post(`${RESOURCE}/${reference}/annuler`);
+  return response.data;
+};

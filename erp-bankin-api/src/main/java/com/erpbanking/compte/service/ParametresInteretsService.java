@@ -28,6 +28,11 @@ public class ParametresInteretsService {
         ParametresInterets parametres = chargerParametres();
         parametres.setMontantCourant(request.getMontantCourant());
         parametres.setMontantEpargne(request.getMontantEpargne());
+        parametres.setJoursSuspensionRetard(
+                request.getJoursSuspensionRetard() == null
+                        ? 20
+                        : request.getJoursSuspensionRetard()
+        );
         return toResponse(repository.save(parametres));
     }
 
@@ -41,6 +46,11 @@ public class ParametresInteretsService {
         return ParametresInteretsResponse.builder()
                 .montantCourant(parametres.getMontantCourant())
                 .montantEpargne(parametres.getMontantEpargne())
+                .joursSuspensionRetard(
+                        parametres.getJoursSuspensionRetard() == null
+                                ? 20
+                                : parametres.getJoursSuspensionRetard()
+                )
                 .build();
     }
 }

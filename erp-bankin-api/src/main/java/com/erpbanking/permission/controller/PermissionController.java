@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/permissions")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_MANAGE') or hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class PermissionController {
 
 

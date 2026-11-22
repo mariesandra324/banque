@@ -288,16 +288,17 @@ const handleCardChange = (e) => {
 
             <div>
               <label style={labelStyle}>
-                Solde <span style={{ color: '#dc2626' }}>*</span>
+                Solde
               </label>
               <input
                 type="number"
                 step="0.01"
                 name="solde"
                 value={formData.solde}
-                onChange={handleInputChange}
-                required
-                style={inputStyle}
+                disabled={isEditing}
+                onChange={isEditing ? undefined : handleInputChange}
+                required={!isEditing}
+                style={{ ...inputStyle, ...(isEditing ? disabledStyle : {}) }}
               />
               {fieldErrors.solde && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.solde}</div>}
             </div>

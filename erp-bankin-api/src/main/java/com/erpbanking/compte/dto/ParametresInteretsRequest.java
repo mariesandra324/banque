@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,4 +23,9 @@ public class ParametresInteretsRequest {
     @DecimalMin(value = "0.00", message = "Le montant pour un compte d'épargne ne peut pas être négatif.")
     @Digits(integer = 12, fraction = 2, message = "Le montant pour un compte d'épargne est invalide.")
     private BigDecimal montantEpargne;
+
+    @NotNull(message = "Le délai de suspension est requis.")
+    @Min(value = 1, message = "Le délai doit être d'au moins 1 jour.")
+    @Max(value = 365, message = "Le délai ne peut pas dépasser 365 jours.")
+    private Integer joursSuspensionRetard;
 }

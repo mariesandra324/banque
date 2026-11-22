@@ -30,6 +30,7 @@ final class CategoriesSql {
 }
 
 public interface TransactionRepository  extends JpaRepository<Transaction, Long>{
+    boolean existsByCompteSourceIdOrCompteDestinationId(Long compteSourceId, Long compteDestinationId);
     @Query("SELECT DISTINCT t FROM Transaction t LEFT JOIN FETCH t.compteSource cs LEFT JOIN FETCH t.compteDestination cd WHERE cs.numeroCompte = :numeroCompte OR cd.numeroCompte = :numeroCompte ORDER BY t.dateTransaction DESC")
     List<Transaction> findByNumeroCompte(@Param("numeroCompte") String numeroCompte);
 

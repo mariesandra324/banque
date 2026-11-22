@@ -33,7 +33,7 @@ public class DemandeCreditController {
 
         // Créer une demande de crédit
         @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT', 'CLIENT')")
+        @PreAuthorize("hasAuthority('CREDIT_REQUEST') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','CLIENT')")
         public ResponseEntity<DemandeCreditResponse> creer(
             @RequestPart("demande") String demandeJson,
 
@@ -89,7 +89,7 @@ public class DemandeCreditController {
 
         // Récupérer toutes les demandes
         @GetMapping
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','COMPTABLE')")
+        @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE','COMPTABLE')")
         public ResponseEntity<List<DemandeCreditResponse>> getAll() {
 
                 return ResponseEntity.ok(
@@ -99,7 +99,7 @@ public class DemandeCreditController {
 
         // Récupérer une demande par ID
         @GetMapping("/{id}")
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE')")
+        @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> getById(
                 @PathVariable Long id) {
 
@@ -110,7 +110,7 @@ public class DemandeCreditController {
 
         // Récupérer les demandes d'un client
         @GetMapping("/client/{clientId}")
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE', 'CLIENT')")
+        @PreAuthorize("hasAuthority('CREDIT_READ') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE','CLIENT')")
         public ResponseEntity<List<DemandeCreditResponse>> getByClientId(
                 @PathVariable Long clientId) {
 
@@ -121,7 +121,7 @@ public class DemandeCreditController {
 
         // Récupérer les demandes par statut
         @GetMapping("/statut/{statut}")
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE','GESTIONNAIRE')")
+        @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE')")
         public ResponseEntity<List<DemandeCreditResponse>> getByStatut(
                 @PathVariable StatutDemandeCredit statut) {
 
@@ -132,7 +132,7 @@ public class DemandeCreditController {
 
         //méttre à jour le statut d'une demande
         @PutMapping("/{id}/statut")
-        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','GESTIONNAIRE')")
+        @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> updateStatut(
                 @PathVariable Long id,
                 @RequestParam StatutDemandeCredit statut,
@@ -144,7 +144,7 @@ public class DemandeCreditController {
 	}
 
         @PostMapping("/optimize")
-        @PreAuthorize("hasAnyRole('ADMIN','AGENT','GESTIONNAIRE')")
+        @PreAuthorize("hasAuthority('CREDIT_EVALUATE') or hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT','GESTIONNAIRE')")
         public ResponseEntity<List<DemandeCreditResponse>> optimize() {
                 return ResponseEntity.ok(
                         demandeCreditService.optimiserDemandes()
@@ -152,7 +152,7 @@ public class DemandeCreditController {
         }
 
         @PutMapping("/{id}/ACCEPTER")
-        @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','GESTIONNAIRE')")
+        @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
         public ResponseEntity<DemandeCreditResponse> accepter(
                 @PathVariable Long id) {
 

@@ -415,10 +415,9 @@ public class NotificationService {
     }
 
     private boolean preferenceAutorise(IdentiteCourante identite, NotificationType type) {
-        if (identite.isClient()) {
-            return pushActivePourClient(identite.clientId(), type);
-        }
-        return pushActivePourStaff(identite.utilisateurId(), type);
+        // La cloche in-app doit toujours afficher les notifications métier.
+        // Les préférences push/FCM ne doivent pas masquer une alerte persistée.
+        return true;
     }
 
     private boolean pushActivePourClient(Long clientId, NotificationType type) {

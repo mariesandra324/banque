@@ -17,5 +17,9 @@ public class CompteRequest {
     private String statut;
 
     private Long clientId;
+
+    private Boolean hasCard;
+
+    private String typeCarte;
     
 }

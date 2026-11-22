@@ -40,7 +40,7 @@ const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
 
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
 
   const menu = [
     {
@@ -94,7 +94,6 @@ const Settings = () => {
 
       <div className="settings-header">
         <div>
-          <span className="settings-eyebrow">Compte & préférences</span>
           <h1>Paramètres</h1>
           <p>
             Gérez votre profil, l'apparence et la sécurité de votre compte.
@@ -187,7 +186,11 @@ const Settings = () => {
 
 
 const InteretsMensuels = () => {
-  const [form, setForm] = useState({ montantCourant: "", montantEpargne: "" });
+  const [form, setForm] = useState({
+    montantCourant: "",
+    montantEpargne: "",
+    joursSuspensionRetard: "20",
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -199,6 +202,7 @@ const InteretsMensuels = () => {
         setForm({
           montantCourant: String(data.montantCourant),
           montantEpargne: String(data.montantEpargne),
+          joursSuspensionRetard: String(data.joursSuspensionRetard ?? 20),
         });
       })
       .catch(() => setErrorMessage("Impossible de charger les paramètres des intérêts."))
@@ -220,10 +224,12 @@ const InteretsMensuels = () => {
       const { data } = await updateInteretsMensuels({
         montantCourant: Number(form.montantCourant),
         montantEpargne: Number(form.montantEpargne),
+        joursSuspensionRetard: Number(form.joursSuspensionRetard),
       });
       setForm({
         montantCourant: String(data.montantCourant),
         montantEpargne: String(data.montantEpargne),
+        joursSuspensionRetard: String(data.joursSuspensionRetard ?? 20),
       });
       setSuccessMessage("Les montants des intérêts mensuels ont été enregistrés.");
     } catch (error) {
@@ -281,6 +287,20 @@ const InteretsMensuels = () => {
                 step="1"
                 required
                 value={form.montantEpargne}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="joursSuspensionRetard">Suspension après retard (jours)</label>
+              <input
+                id="joursSuspensionRetard"
+                name="joursSuspensionRetard"
+                type="number"
+                min="1"
+                max="365"
+                step="1"
+                required
+                value={form.joursSuspensionRetard}
                 onChange={handleChange}
               />
             </div>

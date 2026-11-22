@@ -30,7 +30,7 @@ public class AuditController {
     private final AuditService auditService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','COMPTABLE')")
+    @PreAuthorize("hasAuthority('COMPTA_READ') or hasAuthority('COMPTA_REPORT') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE')")
     public AuditPageResponse consulter(
             @RequestParam(required = false) Long utilisateurId,
             @RequestParam(required = false) String role,
@@ -59,13 +59,13 @@ public class AuditController {
     }
 
     @GetMapping("/filtres")
-    @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','COMPTABLE')")
+    @PreAuthorize("hasAuthority('COMPTA_READ') or hasAuthority('COMPTA_REPORT') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE')")
     public AuditFiltresResponse filtres() {
         return auditService.filtres();
     }
 
     @GetMapping("/export")
-    @PreAuthorize("hasAnyRole('ADMIN','GESTIONNAIRE','COMPTABLE')")
+    @PreAuthorize("hasAuthority('COMPTA_READ') or hasAuthority('COMPTA_REPORT') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE')")
     public ResponseEntity<String> exporter(
             @RequestParam(required = false) Long utilisateurId,
             @RequestParam(required = false) String role,

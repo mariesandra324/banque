@@ -28,7 +28,7 @@ public class CompteController {
 
     // Création d'un compte
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('COMPTE_CREATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<CompteResponse> create(
             @RequestBody CompteRequest request
     ) {
@@ -40,7 +40,7 @@ public class CompteController {
 
     // Preview generated account number for selected client and type
     @GetMapping("/preview")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('COMPTE_CREATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<Map<String, String>> previewNumero(
             @RequestParam Long clientId,
             @RequestParam(required = false) String typeCompte
@@ -52,7 +52,7 @@ public class CompteController {
 
     // Liste des comptes
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
+    @PreAuthorize("hasAuthority('COMPTE_READ') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE')")
     public ResponseEntity<List<CompteResponse>> findAll() {
 
         return ResponseEntity.ok(
@@ -63,7 +63,7 @@ public class CompteController {
 
     // Recherche d'un compte par ID
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE') or @authorizationService.isCompteOwner(#id)")
+    @PreAuthorize("hasAuthority('COMPTE_READ') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE') or @authorizationService.isCompteOwner(#id)")
     public ResponseEntity<CompteResponse> findById(
             @PathVariable Long id
     ) {
@@ -76,7 +76,7 @@ public class CompteController {
 
     // Modification d'un compte
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('COMPTE_CLOSE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<CompteResponse> update(
             @PathVariable Long id,
             @RequestBody CompteRequest request
@@ -87,10 +87,20 @@ public class CompteController {
         );
     }
 
+    // Changement de statut d'un compte
+    @PatchMapping("/{id}/statut")
+    @PreAuthorize("hasAuthority('COMPTE_CLOSE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
+    public ResponseEntity<CompteResponse> updateStatut(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request
+    ) {
+        return ResponseEntity.ok(compteService.updateStatut(id, request.get("statut")));
+    }
+
 
     // Suppression d'un compte
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('COMPTE_CLOSE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id
     ) {

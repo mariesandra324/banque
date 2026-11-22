@@ -65,8 +65,22 @@ public class RemboursementService {
             );
         }
 
+        for (Echeance precedente :
+                echeanceRepository.findByCreditIdOrderByNumeroEcheanceAsc(credit.getId())) {
+            if (precedente.getNumeroEcheance() >= echeance.getNumeroEcheance()) {
+                break;
+            }
+            if (precedente.getStatut() != StatutEcheance.PAYEE) {
+                throw new RuntimeException(
+                        "Vous devez rembourser les échéances précédentes avant cette échéance."
+                );
+            }
+        }
+
         // 5. Vérifier que le crédit est encore actif
-        if (credit.getStatut() == StatutCredit.SOLDE) {
+        if (credit.getStatut() == StatutCredit.SOLDE
+                || credit.getStatut() == StatutCredit.TERMINE
+                || credit.getStatut() == StatutCredit.ANNULE) {
             throw new RuntimeException(
                     "Ce crédit est déjà soldé"
             );

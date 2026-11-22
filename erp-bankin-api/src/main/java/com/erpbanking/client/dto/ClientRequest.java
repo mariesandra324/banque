@@ -3,6 +3,8 @@ package com.erpbanking.client.dto;
 import java.time.LocalDate;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -12,7 +14,10 @@ import lombok.*;
 @AllArgsConstructor
 public class ClientRequest {
 
+    @Size(max = 100, message = "Le nom ne doit pas dépasser 100 caractères.")
     private String nom;
+
+    @Size(max = 100, message = "Le prénom ne doit pas dépasser 100 caractères.")
     private String prenom;
 
     @NotBlank(message = "Le CIN est obligatoire.")
@@ -27,7 +32,13 @@ public class ClientRequest {
     @NotBlank(message = "Le téléphone est obligatoire.")
     @Pattern(regexp = "^\\+261(34|37|33|32|38|36)\\d{7}$", message = "Le téléphone doit être au format +26134xxxxxxx, +26137xxxxxxx, +26133xxxxxxx, +26132xxxxxxx ou +26138xxxxxxx.")
     private String telephone;
+
+    @NotBlank(message = "L'adresse est obligatoire.")
+    @Size(max = 255, message = "L'adresse ne doit pas dépasser 255 caractères.")
     private String adresse;
+
+    @NotNull(message = "La date de naissance est obligatoire.")
+    @Past(message = "La date de naissance doit être antérieure à aujourd'hui.")
     private LocalDate dateNaissance;
 
     // ===== Accès mobile (création client) =====

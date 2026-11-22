@@ -28,6 +28,8 @@ public interface OffreCreditService {
 
     OffreCreditResponse refuserOffre(Long offreId);
 
+    OffreCreditResponse refuserOffreParClient(Long offreId, Long clientId);
+
     OffreCreditResponse consulterParToken(String token);
 
     CreditResponse accepterParToken(String token);

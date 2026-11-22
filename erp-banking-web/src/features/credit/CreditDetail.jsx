@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, CalendarDays } from 'lucide-react';
 import api from '../../api/axios';
+import { useAuth } from '../../hooks/useAuth';
 
 const formatMontant = (montant) =>
   new Intl.NumberFormat('fr-FR').format(montant || 0) + ' Ar';
@@ -17,6 +18,7 @@ const formatDate = (dateString) => {
 
 const STATUTS_CREDIT = {
   ACTIF: {label: 'Actif',bg: '#dbeafe',color: '#1e40af',},
+  EN_COURS: {label: 'En cours',bg: '#dbeafe',color:'#1e40af',},
   SOLDE: {label: 'Soldé',bg: '#dcfce7',color: '#166534',},
   EN_RETARD: {label: 'En retard',bg: '#fee2e2',color: '#991b1b',},
 };
@@ -36,6 +38,8 @@ function CreditDetail({
 }) {
   const [remboursementLoading, setRemboursementLoading] = useState(false);
   const [selectedEcheance, setSelectedEcheance] = useState(null);
+  const { user } = useAuth();
+  const peutRembourser = ['SUPER_ADMIN', 'ADMIN', 'GESTIONNAIRE'].includes(user?.role);
 
   const effectuerRemboursement = async (echeance) => {
   if (!credit?.id || !echeance?.id) {
@@ -237,28 +241,18 @@ function CreditDetail({
                       <td style={tdStyle}>{formatMontant(echeance.capitalRestant)}</td>
                       <td style={tdStyle}>{echeance.statut}</td>
                       <td style={tdStyle}>
-                        {echeance.statut === 'PAYEE' ? (
-                            <span style={{color: '#166534', fontWeight: '600',fontSize: '12px',}}>
-                             Payée
-                            </span>
-                        ) : (
-                            <button
-                            onClick={() => effectuerRemboursement(echeance)}disabled={remboursementLoading && selectedEcheance === echeance.id}
-                            style={{padding: '7px 12px', border: 'none',borderRadius: '7px', backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: '12px',fontWeight: '600',
-                                opacity:
-                                remboursementLoading &&
-                                selectedEcheance === echeance.id
-                                    ? 0.6
-                                    : 1,
-                            }}
-                            >
-                            {remboursementLoading &&
-                            selectedEcheance === echeance.id
-                                ? 'Paiement...'
-                                : 'Rembourser'}
-                            </button>
-                        )}
-                        </td>
+                        {echeance.statut === 'PAYEE'
+                          ? <span style={{color:'#166534',fontWeight:'600',fontSize:'12px'}}>Payée</span>
+                          : peutRembourser
+                            ? <button
+                                onClick={() => effectuerRemboursement(echeance)}
+                                disabled={remboursementLoading && selectedEcheance === echeance.id}
+                                style={{padding:'7px 12px',border:'none',borderRadius:'7px',backgroundColor:'#2563eb',color:'#fff',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}
+                              >
+                                {remboursementLoading && selectedEcheance === echeance.id ? 'Paiement...' : 'Rembourser'}
+                              </button>
+                            : <span style={{color:'var(--muted)',fontSize:'12px'}}>Lecture seule</span>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

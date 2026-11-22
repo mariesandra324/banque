@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import "../../styles/offres-credit.css";
 import offreCreditService from "../../service/offreCreditService";
+import { useAuth } from "../../hooks/useAuth";
 
 const formatMontant = (montant) => {
     if (montant === null || montant === undefined) return "-";
@@ -31,6 +32,8 @@ const DOCUMENTS_PAR_DEFAUT = [
 function OffreCreditDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const peutRepondre = user?.role === "CLIENT";
 
     const [offre, setOffre] = useState(null);
     const [chargement, setChargement] = useState(true);
@@ -212,7 +215,7 @@ function OffreCreditDetail() {
             </button>
 
             <div className="toolbar-actions">
-                {offreEnAttente && (
+                {offreEnAttente && peutRepondre && (
                     <>
                         <button
                             onClick={handleAccepter}

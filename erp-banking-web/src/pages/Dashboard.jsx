@@ -1,54 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Users,
-  Wallet,
-  ArrowLeftRight,
-  Landmark,
-  AlertTriangle,
-  RefreshCw,
-  CalendarDays,
-  Inbox,
-  WalletCards,
-  Activity,
-  Store,
-  DoorOpen,
-  DoorClosed,
-  ArrowRight,
-  History,
-  BookOpen,
-  BarChart3,
-  ClipboardList,
+  Users,Wallet,ArrowLeftRight,Landmark,AlertTriangle,RefreshCw,CalendarDays,
+  Inbox,WalletCards,Activity,Store,DoorOpen,DoorClosed,ArrowRight,History,BookOpen,BarChart3,ClipboardList,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
-import {
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Cell,
-  Area,
-  AreaChart,
-  Line,
-  ComposedChart,
-  ReferenceLine,
-} from 'recharts';
+import {Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,Cell,Area,AreaChart,Line,ComposedChart,ReferenceLine,} from 'recharts';
 import { clientService } from '../service/clientService';
 import { getComptes } from '../service/compteService';
 import demandeCreditService from '../service/demandeCreditService';
 import { getCredits } from '../service/creditService';
 import { getAllTransactions } from '../service/transactionService';
 import { repartitionTypeComptes } from '../utils/typeCompte';
-import {
-  PERIODES,
-  METRIQUES,
-  construireBuckets,
-  serieSolde,
-  serieTransactions,
-  serieCredits,
-  seriePerformance,
-} from '../utils/evolution';
+import {PERIODES,METRIQUES,construireBuckets,serieSolde,serieTransactions,serieCredits,seriePerformance,} from '../utils/evolution';
 import { getMonGuichet, getPositionCash, ouvrirSession, fermerSession } from '../service/caisseService';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';

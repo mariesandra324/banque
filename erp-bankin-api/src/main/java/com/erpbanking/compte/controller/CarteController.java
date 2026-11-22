@@ -46,6 +46,12 @@ public class CarteController {
         );
     }
 
+    @PostMapping("/{id}/reinitialiser-pin")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    public ResponseEntity<CarteResponse> reinitialiserPin(@PathVariable Long id) {
+        return ResponseEntity.ok(carteService.reinitialiserPin(id));
+    }
+
     @PostMapping
     public ResponseEntity<CarteResponse> create(
             @RequestBody CarteRequest request

@@ -74,37 +74,20 @@ public class Utilisateur implements UserDetails{
 
     @Override
 public Collection<? extends GrantedAuthority> getAuthorities() {
-
     List<GrantedAuthority> authorities = new ArrayList<>();
+    if (role != null) {
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getNom()));
 
-    authorities.add(
-            new SimpleGrantedAuthority("ROLE_" + role.getNom())
-    );
-
-    if (role.getPermissions() != null) {
-
-        for (Permission permission : role.getPermissions()) {
-
-            System.out.println("Permission : " + permission);
-
-            if (permission == null) {
-                System.out.println("Permission NULL");
-                continue;
-            }
-
-            System.out.println("Nom = " + permission.getNom());
-            System.out.println("Actif = " + permission.getActif());
-
-            if (Boolean.TRUE.equals(permission.getActif())
-                    && permission.getNom() != null) {
-
-                authorities.add(
-                        new SimpleGrantedAuthority(permission.getNom())
-                );
+        if (role.getPermissions() != null) {
+            for (Permission permission : role.getPermissions()) {
+                if (Boolean.TRUE.equals(permission.getActif())
+                        && permission.getNom() != null
+                        && !permission.getNom().isBlank()) {
+                    authorities.add(new SimpleGrantedAuthority(permission.getNom()));
+                }
             }
         }
     }
-
     return authorities;
 }
 

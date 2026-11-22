@@ -39,7 +39,7 @@ public class OffreCreditController {
      * Créer une offre de crédit
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<OffreCreditResponse> create(
             @Valid @RequestBody OffreCreditRequest request) {
 
@@ -69,7 +69,7 @@ public class OffreCreditController {
      * Récupérer toutes les offres
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE','AGENT')")
     public ResponseEntity<List<OffreCreditResponse>> getAll() {
 
         return ResponseEntity.ok(
@@ -83,9 +83,10 @@ public class OffreCreditController {
     @GetMapping("/{id}")
     @PreAuthorize("""
             hasAnyRole(
+                'SUPER_ADMIN',
                 'ADMIN',
                 'AGENT',
-                'GESTIONNAIRE', 'GESTIONNAIRE',
+                'GESTIONNAIRE',
                 'CLIENT'
             )
             """)
@@ -101,14 +102,7 @@ public class OffreCreditController {
      * Récupérer les offres d'un client
      */
     @GetMapping("/client/{clientId}")
-    @PreAuthorize("""
-            hasAnyRole(
-                'ADMIN',
-                'AGENT',
-                'GESTIONNAIRE', 'GESTIONNAIRE',
-                'CLIENT'
-            )
-            """)
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE','AGENT','CLIENT')")
     public ResponseEntity<List<OffreCreditResponse>> getByClientId(
             @PathVariable Long clientId) {
 
@@ -121,14 +115,7 @@ public class OffreCreditController {
      * Récupérer les offres liées à une demande
      */
     @GetMapping("/demande/{demandeCreditId}")
-    @PreAuthorize("""
-            hasAnyRole(
-                'ADMIN',
-                'AGENT',
-                'GESTIONNAIRE', 'GESTIONNAIRE',
-                'CLIENT'
-            )
-            """)
+    @PreAuthorize("hasAuthority('CREDIT_READ') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','COMPTABLE','AGENT','CLIENT')")
     public ResponseEntity<List<OffreCreditResponse>>
     getByDemandeCreditId(
             @PathVariable Long demandeCreditId) {
@@ -143,14 +130,7 @@ public class OffreCreditController {
      * Modifier le statut d'une offre
      */
     @PutMapping("/{id}/statut/{statut}")
-    @PreAuthorize("""
-            hasAnyRole(
-                'ADMIN',
-                'AGENT',
-                'GESTIONNAIRE', 'GESTIONNAIRE',
-                'CLIENT'
-            )
-            """)
+    @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<OffreCreditResponse> updateStatut(
             @PathVariable Long id,
             @PathVariable String statut) {
@@ -164,7 +144,7 @@ public class OffreCreditController {
      * Supprimer une offre
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('CREDIT_APPROVE') or hasAuthority('CREDIT_EVALUATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id) {
 
@@ -175,7 +155,7 @@ public class OffreCreditController {
 
     
     @PutMapping("/{id}/accepter")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'GESTIONNAIRE', 'GESTIONNAIRE', 'CLIENT')")
+    @PreAuthorize("hasRole('CLIENT')")
         public ResponseEntity<CreditResponse> accepterOffre(
                 @PathVariable Long id,
                 @AuthenticationPrincipal ClientUserDetails clientUserDetails) {
@@ -188,6 +168,24 @@ public class OffreCreditController {
                 offreCreditService.accepterOffreParClient(id, clientId)
         );
         }
+
+    @PutMapping("/{id}/refuser")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<OffreCreditResponse> refuserOffre(
+            @PathVariable Long id,
+            @AuthenticationPrincipal ClientUserDetails clientUserDetails
+    ) {
+        if (clientUserDetails == null) {
+            throw new IllegalArgumentException("Connexion client requise.");
+        }
+
+        return ResponseEntity.ok(
+                offreCreditService.refuserOffreParClient(
+                        id,
+                        clientUserDetails.getClient().getId()
+                )
+        );
+    }
 
 @GetMapping(
         value = "/token/{token}/confirmer-accepter",

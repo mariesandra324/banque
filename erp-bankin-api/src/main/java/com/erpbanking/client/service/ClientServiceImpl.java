@@ -160,7 +160,14 @@ private CreditResponse mapCreditToResponse(Credit credit) {
             .build();
 }
     @Override
+    @Transactional
     public ClientResponse create(ClientRequest request) {
+        if ((request.getNom() == null || request.getNom().isBlank())
+                && (request.getPrenom() == null || request.getPrenom().isBlank())) {
+            throw new IllegalArgumentException(
+                    "Indiquez au moins un nom ou un prénom."
+            );
+        }
         if (clientRepository.existsByCin(request.getCin())) {
             throw new DuplicateResourceException("CIN déjà utilisé");
         }
@@ -275,6 +282,13 @@ private CreditResponse mapCreditToResponse(Credit credit) {
                 .orElseThrow(() ->
                     new RuntimeException("Client introuvable")
                 );
+
+        if ((request.getNom() == null || request.getNom().isBlank())
+                && (request.getPrenom() == null || request.getPrenom().isBlank())) {
+            throw new IllegalArgumentException(
+                    "Indiquez au moins un nom ou un prénom."
+            );
+        }
         
         if (!request.getCin().equals(client.getCin()) && clientRepository.existsByCin(request.getCin())) {
             throw new RuntimeException("CIN déjà utilisé");
@@ -316,6 +330,42 @@ private CreditResponse mapCreditToResponse(Credit credit) {
                 .orElseThrow(() ->
                     new RuntimeException("Client introuvable")
                 );
+
+        if (compteRepository.countByClientId(id) > 0) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des comptes bancaires."
+            );
+        }
+        if (!carteRepository.findByClientId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des cartes bancaires."
+            );
+        }
+        if (!transactionRepository.findByClientId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des transactions."
+            );
+        }
+        if (!demandeCreditRepository.findByClientId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des demandes de crédit."
+            );
+        }
+        if (!offreCreditRepository.findByClientId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des offres de crédit."
+            );
+        }
+        if (!creditRepository.findByClientId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce client possède des crédits."
+            );
+        }
+        if (clientMobileRepository.existsByClientId(id)) {
+            throw new IllegalStateException(
+                    "Suppression impossible : désactivez ou supprimez d'abord l'accès mobile du client."
+            );
+        }
 
         String identite = client.getPrenom() + " " + client.getNom();
 

@@ -426,6 +426,12 @@ public class DemandeCreditServiceImpl implements DemandeCreditService {
                         )
                 );
 
+        if (demande.getStatut() != StatutDemandeCredit.EN_ATTENTE) {
+                throw new IllegalArgumentException(
+                        "Cette demande a déjà reçu une décision."
+                );
+        }
+
         demande.setStatut(statut);
         demande.setDateDecision(LocalDateTime.now());
 

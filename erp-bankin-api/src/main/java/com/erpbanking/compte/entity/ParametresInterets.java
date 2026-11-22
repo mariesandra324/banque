@@ -25,4 +25,7 @@ public class ParametresInterets {
 
     @Column(name = "montant_epargne", precision = 14, scale = 2, nullable = false)
     private BigDecimal montantEpargne;
+
+    @Column(name = "jours_suspension_retard", nullable = false)
+    private Integer joursSuspensionRetard;
 }

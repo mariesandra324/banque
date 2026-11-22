@@ -21,4 +21,6 @@ public interface CarteService {
     void delete(Long id);
 
     VerificationPinResponse verifierPin(Long clientId, VerificationPinRequest request);
+
+    CarteResponse reinitialiserPin(Long carteId);
 }

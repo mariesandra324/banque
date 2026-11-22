@@ -400,7 +400,7 @@ function AuditPanel() {
               padding: '8px 12px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: c.action,
+              backgroundColor: '#244c74',
               color: 'white',
               cursor: 'pointer',
               fontSize: '13px',

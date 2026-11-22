@@ -15,5 +15,8 @@ export const previewNumero = (clientId, typeCompte) =>
 export const updateCompte = (id, compte) =>
     api.put(`/comptes/${id}`, compte);
 
+export const updateStatutCompte = (id, statut) =>
+    api.patch(`/comptes/${id}/statut`, { statut });
+
 export const deleteCompte = (id) =>
     api.delete(`/comptes/${id}`);

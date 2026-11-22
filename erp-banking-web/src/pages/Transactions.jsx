@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
-import { getAllTransactions, getHistoriqueCompte } from '../service/transactionService';
+import { getAllTransactions, getHistoriqueCompte, annulerTransaction } from '../service/transactionService';
 import TransactionForm from '../features/transaction/TransactionForm';
 import TransactionTable from '../features/transaction/TransactionTable';
 import { useAuth } from '../hooks/useAuth';
 
 // Le comptable est un rôle de consultation : il ne peut pas saisir de transaction.
-const ROLES_AUTORISES_A_CREER = ['ADMIN', 'AGENT', 'GESTIONNAIRE'];
+const ROLES_AUTORISES_A_CREER = ['SUPER_ADMIN', 'ADMIN', 'AGENT'];
 
 const Transactions = () => {
   const { user } = useAuth();
   const peutCreerTransaction = ROLES_AUTORISES_A_CREER.includes(user?.role);
+  const peutAnnulerTransaction = ['SUPER_ADMIN', 'ADMIN'].includes(user?.role);
 
   const [vue, setVue] = useState('liste'); 
   const [transactions, setTransactions] = useState([]);
@@ -45,6 +46,16 @@ const Transactions = () => {
 
   const voirFormulaire = () => {
     setVue('form');
+  };
+
+  const handleAnnulerTransaction = async (transaction) => {
+    if (!window.confirm(`Voulez-vous annuler la transaction ${transaction.reference} ?`)) return;
+    try {
+      await annulerTransaction(transaction.reference);
+      await chargerHistorique(numeroCompteFiltre);
+    } catch (err) {
+      setHistoryError(err.response?.data?.message || "Impossible d'annuler la transaction.");
+    }
   };
 
   // Après une transaction réussie, si on est déjà sur la liste, on la rafraîchit
@@ -92,7 +103,12 @@ const Transactions = () => {
           {loadingHistory ? (
             <div style={{ padding: '20px', color: 'var(--muted)' }}>Chargement de l'historique...</div>
           ) : (
-            <TransactionTable transactions={transactions} numeroCompteActuel={numeroCompteFiltre} />
+            <TransactionTable
+              transactions={transactions}
+              numeroCompteActuel={numeroCompteFiltre}
+              canCancel={peutAnnulerTransaction}
+              onCancel={handleAnnulerTransaction}
+            />
           )}
         </div>
       )}

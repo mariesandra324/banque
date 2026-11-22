@@ -29,19 +29,19 @@ public class GuichetController {
     private final GuichetService guichetService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<List<Guichet>> findAll() {
         return ResponseEntity.ok(guichetService.findAll());
     }
 
     @GetMapping("/disponibles")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<List<Guichet>> getGuichetsDisponibles() {
         return ResponseEntity.ok(guichetService.findGuichetsDisponibles());
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Guichet> create(@Valid @RequestBody GuichetRequest request) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -49,7 +49,7 @@ public class GuichetController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Guichet> update(
             @PathVariable Long id,
             @Valid @RequestBody GuichetRequest request) {
@@ -57,7 +57,7 @@ public class GuichetController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         guichetService.delete(id);
         return ResponseEntity.noContent().build();

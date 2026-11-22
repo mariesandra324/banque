@@ -22,6 +22,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.springframework.stereotype.Service;
 
@@ -164,6 +166,33 @@ public class CreditServiceImpl implements CreditService {
                 .toList();
     }
 
+    private BigDecimal calculerMensualite(
+            BigDecimal montant,
+            BigDecimal tauxAnnuel,
+            Integer duree
+    ) {
+        if (montant == null || duree == null || duree <= 0) {
+            return BigDecimal.ZERO;
+        }
+        if (tauxAnnuel == null
+                || tauxAnnuel.compareTo(BigDecimal.ZERO) == 0) {
+            return montant.divide(
+                    BigDecimal.valueOf(duree),
+                    2,
+                    RoundingMode.HALF_UP
+            );
+        }
+
+        BigDecimal tauxMensuel = tauxAnnuel
+                .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
+                .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
+        BigDecimal base = BigDecimal.ONE.add(tauxMensuel).pow(duree);
+        return montant
+                .multiply(tauxMensuel)
+                .multiply(base)
+                .divide(base.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
+    }
+
     private String genererNumeroCredit() {
 
         return "CR-" + UUID.randomUUID()
@@ -233,9 +262,10 @@ public class CreditServiceImpl implements CreditService {
                 .montant(demande.getMontantDemande())
                 .tauxInteret(demande.getTauxInteret())
                 .duree(demande.getDuree())
-
-                // À adapter selon ton calcul actuel
-                .mensualite(demande.getRevenuMensuel())
+                .mensualite(calculerMensualite(
+                        demande.getMontantDemande(),
+                        demande.getTauxInteret(),
+                        demande.getDuree()))
 
                 .dateDebut(LocalDateTime.now())
                 .capitalRestant(demande.getMontantDemande())

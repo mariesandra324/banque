@@ -6,7 +6,7 @@ import { extraireMessageErreur } from '../utils/messageErreur';
 
 const AccesMobile = () => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
   const [accesMobiles, setAccesMobiles] = useState([]);
   const [loading, setLoading] = useState(true);

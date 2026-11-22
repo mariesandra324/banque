@@ -72,7 +72,7 @@ function ClientDossier() {
   const credits = useMemo(() => dossier?.credits || [], [dossier]);
 
   const reinitialiserPin = async (carte) => {
-    if (user?.role !== "ADMIN") return;
+    if (!["SUPER_ADMIN", "ADMIN"].includes(user?.role)) return;
     const numeroMasque = `•••• ${carte.numeroCarte?.slice(-4) || ""}`;
     if (!window.confirm(
       `Voulez-vous réinitialiser le PIN de la carte ${numeroMasque} de ${client.prenom ?? ""} ${client.nom ?? ""} ?`
@@ -367,7 +367,7 @@ function ClientDossier() {
                   <h2>Cartes bancaires</h2>
                   <p>
                     Cartes associées aux comptes du client
-                    {user?.role === "ADMIN" && " — double-cliquez sur une carte pour réinitialiser son PIN"}
+                    {["SUPER_ADMIN", "ADMIN"].includes(user?.role) && " — double-cliquez sur une carte pour réinitialiser son PIN"}
                   </p>
                 </div>
 
@@ -389,8 +389,8 @@ function ClientDossier() {
                         className="bank-card"
                         key={carte.id}
                         onDoubleClick={() => reinitialiserPin(carte)}
-                        title={user?.role === "ADMIN" ? "Double-cliquez pour réinitialiser le PIN" : undefined}
-                        style={user?.role === "ADMIN" ? { cursor: "pointer" } : undefined}
+                        title={["SUPER_ADMIN", "ADMIN"].includes(user?.role) ? "Double-cliquez pour réinitialiser le PIN" : undefined}
+                        style={["SUPER_ADMIN", "ADMIN"].includes(user?.role) ? { cursor: "pointer" } : undefined}
                       >
                         <div className="bank-card-top">
                           <span>ERP BANKING</span>

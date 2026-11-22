@@ -75,7 +75,7 @@ const AppRoutes = () => {
             <Route
               path="clients"
               element={
-                <RoleRoute allowedRoles={["ADMIN", "AGENT", "GESTIONNAIRE", "COMPTABLE"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "AGENT", "GESTIONNAIRE", "COMPTABLE"]}>
                   <Clients />
                 </RoleRoute>
               }
@@ -84,7 +84,7 @@ const AppRoutes = () => {
             <Route
               path="mon-guichet"
               element={
-                <RoleRoute allowedRoles={["AGENT", "ADMIN"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "AGENT", "ADMIN"]}>
                   <MonGuichet />
                 </RoleRoute>
               }
@@ -92,7 +92,7 @@ const AppRoutes = () => {
             <Route
               path="transferts-coffre"
               element={
-                <RoleRoute allowedRoles={["GESTIONNAIRE", "ADMIN"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "GESTIONNAIRE", "ADMIN"]}>
                   <TransfertsCoffre />
                 </RoleRoute>
               }
@@ -101,7 +101,7 @@ const AppRoutes = () => {
             <Route
               path="acces-mobile"
               element={
-                <RoleRoute allowedRoles={["ADMIN", "GESTIONNAIRE"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "GESTIONNAIRE"]}>
                   <AccesMobile />
                 </RoleRoute>
               }
@@ -116,7 +116,7 @@ const AppRoutes = () => {
             <Route
               path="comptabilite"
               element={
-                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "COMPTABLE"]}>
                   <Comptabilite />
                 </RoleRoute>
               }
@@ -125,7 +125,7 @@ const AppRoutes = () => {
             <Route
               path="audit"
               element={
-                <RoleRoute allowedRoles={["ADMIN", "COMPTABLE", "GESTIONNAIRE"]}>
+                <RoleRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "COMPTABLE", "GESTIONNAIRE"]}>
                   <Audit />
                 </RoleRoute>
               }

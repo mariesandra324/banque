@@ -6,6 +6,8 @@ import com.erpbanking.auth.repository.PasswordResetOtpRepository;
 import com.erpbanking.compte.service.EmailService;
 import com.erpbanking.role.entity.Role;
 import com.erpbanking.role.repository.RoleRepository;
+import com.erpbanking.permission.entity.Permission;
+import com.erpbanking.permission.repository.PermissionRepository;
 import com.erpbanking.security.JwtService;
 import com.erpbanking.utilisateur.entity.Utilisateur;
 import com.erpbanking.utilisateur.repository.UtilisateurRepository;
@@ -25,6 +27,7 @@ public class BootstrapServiceImpl implements BootstrapService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
     private final PasswordResetOtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -95,12 +98,23 @@ public class BootstrapServiceImpl implements BootstrapService {
             throw new IllegalArgumentException("Code invalide ou expiré.");
         }
 
-        Role role = roleRepository.findByNom("ADMIN")
+        java.util.Set<Permission> permissions = initialiserPermissions();
+        Role role = roleRepository.findByNom("SUPER_ADMIN")
                 .orElseGet(() -> roleRepository.save(Role.builder()
-                        .nom("ADMIN")
-                        .description("Administrateur")
+                        .nom("SUPER_ADMIN")
+                        .description("Super administrateur")
                         .actif(true)
+                        .permissions(permissions)
                         .build()));
+        role.setPermissions(permissions);
+        roleRepository.save(role);
+
+        roleRepository.findByNom("ADMIN").orElseGet(() -> roleRepository.save(Role.builder()
+                .nom("ADMIN")
+                .description("Administrateur")
+                .actif(true)
+                .permissions(permissions)
+                .build()));
 
         Utilisateur utilisateur = Utilisateur.builder()
                 .nom(request.getNom().trim())
@@ -135,5 +149,29 @@ public class BootstrapServiceImpl implements BootstrapService {
             return null;
         }
         return value.trim();
+    }
+
+    private java.util.Set<Permission> initialiserPermissions() {
+        String[] codes = {
+                "USER_MANAGE", "ROLE_MANAGE", "PERMISSION_MANAGE",
+                "CLIENT_CREATE", "CLIENT_READ", "CLIENT_UPDATE",
+                "COMPTE_CREATE", "COMPTE_READ", "COMPTE_CLOSE",
+                "TRANSACTION_CREATE", "TRANSACTION_READ", "TRANSACTION_VALIDATE", "TRANSACTION_CANCEL",
+                "CREDIT_REQUEST", "CREDIT_EVALUATE", "CREDIT_APPROVE", "CREDIT_READ",
+                "COMPTA_REPORT", "COMPTA_CLOSE", "COMPTA_READ"
+        };
+
+        java.util.Set<Permission> permissions = new java.util.HashSet<>();
+        for (String code : codes) {
+            Permission permission = permissionRepository.findByNom(code)
+                    .orElseGet(() -> permissionRepository.save(Permission.builder()
+                            .nom(code)
+                            .description(code)
+                            .actif(true)
+                            .build()));
+            permission.setActif(true);
+            permissions.add(permissionRepository.save(permission));
+        }
+        return permissions;
     }
 }

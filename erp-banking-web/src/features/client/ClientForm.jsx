@@ -82,8 +82,10 @@ function ClientForm({ client, onSuccess, onCancel }) {
     const phoneRegex = /^\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}$|^\+261(32|33|34|37|38)\d{7}$/;
     const errors = {};
 
-    if (!formData.nom.trim()) errors.nom = 'Le nom est requis.';
-    if (!formData.prenom.trim()) errors.prenom = 'Le prénom est requis.';
+    if (!formData.nom.trim() && !formData.prenom.trim()) {
+      errors.nom = 'Indiquez au moins un nom ou prénom.';
+      errors.prenom = 'Indiquez au moins un nom ou prénom.';
+    }
     if (!formData.email.trim()) errors.email = "L'email est requis.";
     if (!formData.adresse.trim()) errors.adresse = "L'adresse est requise.";
     if (!formData.dateNaissance) errors.dateNaissance = 'La date de naissance est requise.';
@@ -150,13 +152,13 @@ function ClientForm({ client, onSuccess, onCancel }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
-              <label style={labelStyle}>Nom <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>Nom</label>
               <input name="nom" value={formData.nom} onChange={handleChange} style={inputStyle} />
               {fieldErrors.nom && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.nom}</div>}
             </div>
 
             <div>
-              <label style={labelStyle}>Prénom <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>Prénom</label>
               <input name="prenom" value={formData.prenom} onChange={handleChange} style={inputStyle} />
               {fieldErrors.prenom && <div style={{ marginTop: '6px', color: '#dc2626', fontSize: '12px' }}>{fieldErrors.prenom}</div>}
             </div>

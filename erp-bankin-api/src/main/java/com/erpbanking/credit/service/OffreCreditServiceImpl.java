@@ -3,6 +3,9 @@ package com.erpbanking.credit.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,7 @@ import com.erpbanking.credit.dto.OffreCreditRequest;
 import com.erpbanking.credit.dto.OffreCreditResponse;
 import com.erpbanking.credit.entity.DemandeCredit;
 import com.erpbanking.credit.entity.OffreCredit;
+import com.erpbanking.credit.entity.StatutDemandeCredit;
 import com.erpbanking.credit.repository.OffreCreditRepository;
 import com.erpbanking.credit.repository.CreditRepository;
 import com.erpbanking.credit.repository.DemandeCreditRepository;
@@ -57,6 +61,40 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                                         + request.getDemandeCreditId()
                         )
                 );
+
+        if (demandeCredit.getStatut() != StatutDemandeCredit.ACCEPTER) {
+            throw new IllegalArgumentException(
+                    "Une offre ne peut être créée que pour une demande acceptée."
+            );
+        }
+
+        if (request.getMontantPropose().compareTo(demandeCredit.getMontantDemande()) != 0) {
+            throw new IllegalArgumentException(
+                    "Le montant proposé doit correspondre au montant de la demande acceptée."
+            );
+        }
+
+        BigDecimal mensualiteCalculee;
+        if (request.getTauxInteret().compareTo(BigDecimal.ZERO) == 0) {
+            mensualiteCalculee = request.getMontantPropose()
+                    .divide(BigDecimal.valueOf(request.getDuree()), 2, RoundingMode.HALF_UP);
+        } else {
+            BigDecimal tauxMensuel = request.getTauxInteret()
+                    .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
+                    .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
+            BigDecimal base = BigDecimal.ONE.add(tauxMensuel).pow(request.getDuree());
+            mensualiteCalculee = request.getMontantPropose()
+                    .multiply(tauxMensuel)
+                    .multiply(base)
+                    .divide(base.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
+        }
+
+        if (request.getMensualite().subtract(mensualiteCalculee).abs()
+                .compareTo(new BigDecimal("0.02")) > 0) {
+            throw new IllegalArgumentException(
+                    "La mensualité ne correspond pas au montant, au taux et à la durée proposés."
+            );
+        }
 
         // 2. Vérifier qu'aucune offre encore active n'existe déjà pour cette demande.
         //    Une offre REFUSEE ou EXPIREE ne bloque plus : le gestionnaire peut
@@ -237,15 +275,17 @@ public class OffreCreditServiceImpl implements OffreCreditService {
                         )
                 );
 
-        String nouveauStatut = statut.toUpperCase();
+        String nouveauStatut = statut == null ? "" : statut.toUpperCase();
 
-        if (!nouveauStatut.equals("EN_ATTENTE")
-                && !nouveauStatut.equals("ACCEPTEE")
-                && !nouveauStatut.equals("REFUSEE")
-                && !nouveauStatut.equals("EXPIREE")) {
-
+        if (!nouveauStatut.equals("EXPIREE")) {
             throw new IllegalArgumentException(
-                    "Statut invalide : " + statut
+                    "Seul le passage au statut EXPIREE est autorisé ici."
+            );
+        }
+
+        if (!"EN_ATTENTE".equalsIgnoreCase(offre.getStatut())) {
+            throw new IllegalArgumentException(
+                    "Une offre répondue ne peut pas être marquée expirée."
             );
         }
 
@@ -258,15 +298,17 @@ public class OffreCreditServiceImpl implements OffreCreditService {
 
     @Override
     public void delete(Long id) {
+        OffreCredit offre = offreCreditRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Offre de crédit introuvable : " + id));
 
-        if (!offreCreditRepository.existsById(id)) {
-
+        if ("ACCEPTEE".equalsIgnoreCase(offre.getStatut())) {
             throw new IllegalArgumentException(
-                    "Offre de crédit introuvable : " + id
+                    "Une offre acceptée ne peut pas être supprimée."
             );
         }
 
-        offreCreditRepository.deleteById(id);
+        offreCreditRepository.delete(offre);
     }
 
     /**
@@ -418,7 +460,9 @@ public CreditResponse accepterOffreParClient(Long offreId, Long clientId) {
                     )
             );
 
-    if (clientId != null && !offre.getClient().getId().equals(clientId)) {
+    if (clientId == null
+            || offre.getClient() == null
+            || !offre.getClient().getId().equals(clientId)) {
         throw new IllegalArgumentException(
                 "Cette offre ne vous appartient pas."
         );
@@ -483,12 +527,41 @@ public OffreCreditResponse refuserOffre(Long offreId) {
     return toResponse(saved);
     }
 
+    @Override
+    public OffreCreditResponse refuserOffreParClient(Long offreId, Long clientId) {
+        OffreCredit offre = offreCreditRepository.findById(offreId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Offre de crédit introuvable : " + offreId));
+
+        if (clientId == null
+                || offre.getClient() == null
+                || !offre.getClient().getId().equals(clientId)) {
+            throw new IllegalArgumentException("Cette offre ne vous appartient pas.");
+        }
+
+        return refuserOffre(offreId);
+    }
+
     private String nomComplet(Client client) {
         if (client == null) {
             return "";
         }
         return ((client.getNom() != null ? client.getNom() : "") + " "
                 + (client.getPrenom() != null ? client.getPrenom() : "")).trim();
+    }
+
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void expirerOffresEnAttente() {
+        LocalDate aujourdHui = LocalDate.now();
+        for (OffreCredit offre :
+                offreCreditRepository.findByStatut("EN_ATTENTE")) {
+            if (offre.getDateExpiration() != null
+                    && aujourdHui.isAfter(offre.getDateExpiration())) {
+                offre.setStatut("EXPIREE");
+                offreCreditRepository.save(offre);
+            }
+        }
     }
 
 private OffreCredit getOffreParTokenValide(String token) {

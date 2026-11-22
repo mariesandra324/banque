@@ -24,6 +24,8 @@ const ONGLETS = [
 function Credit() {
   const { user } = useAuth();
   const estAgent = user?.role === 'AGENT';
+  const peutCreerDemande = ['SUPER_ADMIN', 'ADMIN', 'AGENT'].includes(user?.role);
+  const peutCreerOffre = ['SUPER_ADMIN', 'ADMIN', 'GESTIONNAIRE'].includes(user?.role);
   const [searchParams] = useSearchParams();
   const demandeCreditId = searchParams.get('demandeCreditId') || '';
   const [ongletActif, setOngletActif] = useState(
@@ -35,6 +37,9 @@ function Credit() {
   const [erreur, setErreur] = useState(null);
   const [formOuvert, setFormOuvert] = useState(!estAgent && !!demandeCreditId);
   const [offres, setOffres] = useState([]);
+  const peutCreerDansOnglet = ongletActif === 'demandes'
+    ? peutCreerDemande
+    : peutCreerOffre;
 
   const chargerDonnees = async () => {
     setChargement(true);
@@ -123,6 +128,7 @@ function Credit() {
       onClose={fermerFormulaire}
       onSubmit={handleCreerOffre}
       demandeCreditId={demandeCreditId}
+      offresExistantes={offres}
     />
   );
 }
@@ -165,11 +171,11 @@ function Credit() {
           Crédit
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button
+          {peutCreerDansOnglet && <button
             onClick={() => setFormOuvert(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
-              borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: 'white',
+              borderRadius: '8px', border: 'none', backgroundColor: '#244c74', color: 'white',
               fontSize: '13px', fontWeight: '600', cursor: 'pointer',
             }}
           >
@@ -181,7 +187,7 @@ function Credit() {
                 : ongletActif === 'offres'
                   ? 'Nouvelle offre'
                   : 'Nouveau crédit'}
-          </button>
+          </button>}
         </div>
       </div>
 

@@ -37,79 +37,79 @@ public class CaisseController {
     private final CaisseService caisseService;
 
     @GetMapping("/mon-guichet")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN','GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<MonGuichetResponse> monGuichet() {
         return ResponseEntity.ok(caisseService.monGuichet());
     }
 
     @GetMapping("/position-cash")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_READ') or hasAuthority('TRANSACTION_VALIDATE') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<PositionCashResponse> positionCash() {
         return ResponseEntity.ok(caisseService.positionCash());
     }
 
     @PostMapping("/ouvrir-session")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_CREATE') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN')")
     public ResponseEntity<SessionCaisseResponse> ouvrirSession(@Valid @RequestBody OuvrirSessionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(caisseService.ouvrirSession(request));
     }
 
     @PostMapping("/fermer-session")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_CREATE') or hasAuthority('TRANSACTION_CANCEL') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN')")
     public ResponseEntity<SessionCaisseResponse> fermerSession(@RequestBody FermerSessionRequest request) {
         return ResponseEntity.ok(caisseService.fermerSession(request));
     }
 
     @PostMapping("/demande-transfert")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_CREATE') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN')")
     public ResponseEntity<DemandeTransfertCoffreResponse> creerDemandeTransfert(@Valid @RequestBody DemandeTransfertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(caisseService.creerDemandeTransfert(request));
     }
 
     @GetMapping("/mes-demandes-transfert")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN','GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<List<DemandeTransfertCoffreResponse>> mesDemandesTransfert() {
         return ResponseEntity.ok(caisseService.mesDemandesTransfert());
     }
 
     @GetMapping("/demandes-transfert/en-attente")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_VALIDATE') or hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<List<DemandeTransfertCoffreResponse>> demandesEnAttente() {
         return ResponseEntity.ok(caisseService.demandesTransfertEnAttente());
     }
 
     @GetMapping("/demandes-transfert")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_VALIDATE') or hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<List<DemandeTransfertCoffreResponse>> demandesTransfert() {
         return ResponseEntity.ok(caisseService.demandesTransfert());
     }
 
     @PostMapping("/demandes-transfert/{id}/traiter")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_VALIDATE') or hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<DemandeTransfertCoffreResponse> traiterDemande(@PathVariable Long id, @RequestBody TraitementDemandeRequest request) {
         return ResponseEntity.ok(caisseService.traiterDemandeTransfert(id, request));
     }
 
     @PostMapping("/comptage")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_CREATE') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN')")
     public ResponseEntity<ComptageCaisseResponse> comptage(@RequestBody ComptageRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(caisseService.enregistrerComptage(request));
     }
 
     @GetMapping("/mes-comptages")
-    @PreAuthorize("hasAnyRole('AGENT','ADMIN','GESTIONNAIRE')")
+    @PreAuthorize("hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','AGENT','ADMIN','GESTIONNAIRE')")
     public ResponseEntity<List<ComptageCaisseResponse>> mesComptages() {
         return ResponseEntity.ok(caisseService.mesComptages());
     }
 
     @GetMapping("/clotures")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_VALIDATE') or hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<List<ClotureCaisseResponse>> clotures() {
         return ResponseEntity.ok(caisseService.clotures());
     }
 
     @PostMapping("/clotures/{sessionId}/valider")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE','ADMIN')")
+    @PreAuthorize("hasAuthority('TRANSACTION_VALIDATE') or hasAuthority('TRANSACTION_READ') or hasAnyRole('SUPER_ADMIN','GESTIONNAIRE','ADMIN')")
     public ResponseEntity<ClotureCaisseResponse> validerCloture(@PathVariable Long sessionId) {
         return ResponseEntity.ok(caisseService.validerCloture(sessionId));
     }

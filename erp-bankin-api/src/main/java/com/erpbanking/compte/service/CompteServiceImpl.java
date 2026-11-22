@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 
 import com.erpbanking.notification.entity.NotificationType;
 import com.erpbanking.notification.service.NotificationService;
@@ -29,6 +30,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.transaction.annotation.Transactional;
+import com.erpbanking.compte.repository.CarteRepository;
+import com.erpbanking.compte.entity.Carte;
+import com.erpbanking.compte.service.EmailService;
+import com.erpbanking.transaction.repository.TransactionRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +55,14 @@ public class CompteServiceImpl implements CompteService {
     private final AuditService auditService;
 
     private final ParametresInteretsService parametresInteretsService;
+
+    private final CarteRepository carteRepository;
+
+    private final TransactionRepository transactionRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final EmailService emailService;
 
     // Préfixe à 2 chiffres selon le type de compte (norme RIB : 11 chiffres au total pour numeroCompte).
     // Les clés doivent matcher exactement les valeurs du <select> côté frontend (Comptes.jsx).
@@ -145,6 +160,7 @@ public class CompteServiceImpl implements CompteService {
     }
 
     @Override
+    @Transactional
     public CompteResponse create(CompteRequest request) {
 
 
@@ -176,6 +192,10 @@ public class CompteServiceImpl implements CompteService {
 
         Compte saved = compteRepository.save(compte);
 
+        if (Boolean.TRUE.equals(request.getHasCard())) {
+            creerCarteInitiale(saved, request.getTypeCarte());
+        }
+
         String nomClient = (client.getPrenom() != null ? client.getPrenom() : "")
                 + " " + (client.getNom() != null ? client.getNom() : "");
         String detail = "Compte " + saved.getNumeroCompte()
@@ -205,6 +225,43 @@ public class CompteServiceImpl implements CompteService {
         return compteMapper.toResponse(saved);
     }
 
+    private void creerCarteInitiale(Compte compte, String typeCarte) {
+        if (compte.getCarte() != null || carteRepository.existsByCompteId(compte.getId())) {
+            throw new IllegalArgumentException("Ce compte possède déjà une carte.");
+        }
+        if (typeCarte == null || !List.of("VISA", "MASTERCARD").contains(typeCarte.toUpperCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("Type de carte invalide.");
+        }
+
+        String numeroCarte;
+        do {
+            numeroCarte = String.format("%016d",
+                    ThreadLocalRandom.current().nextLong(1000000000000000L, 10000000000000000L));
+        } while (carteRepository.findByNumeroCarte(numeroCarte).isPresent());
+
+        String pin = String.format("%04d", ThreadLocalRandom.current().nextInt(10000));
+        Carte carte = Carte.builder()
+                .numeroCarte(numeroCarte)
+                .dateExpiration(LocalDate.now().plusYears(3))
+                .typeCarte(typeCarte.toUpperCase(Locale.ROOT))
+                .statut("ACTIVE")
+                .pinHash(passwordEncoder.encode(pin))
+                .compte(compte)
+                .build();
+        carteRepository.save(carte);
+
+        Client client = compte.getClient();
+        if (client != null && client.getEmail() != null) {
+            emailService.envoyerPinCarte(
+                    client.getEmail(),
+                    ((client.getPrenom() == null ? "" : client.getPrenom()) + " "
+                            + (client.getNom() == null ? "" : client.getNom())).trim(),
+                    numeroCarte,
+                    pin
+            );
+        }
+    }
+
     /**
      * Récupère le codeGuichet de l'utilisateur actuellement authentifié (Agent ou Admin).
      * Lève une erreur explicite si l'utilisateur connecté n'a pas de guichet renseigné
@@ -218,10 +275,11 @@ public class CompteServiceImpl implements CompteService {
         }
 
         if (utilisateur.getGuichet() == null) {
-            throw new RuntimeException(
-                    "Aucun guichet n'est associé à votre compte utilisateur. "
-                  + "Contactez un administrateur pour vous assigner un guichet avant de créer un compte."
-            );
+            String role = utilisateur.getRole() != null ? utilisateur.getRole().getNom() : "";
+            if ("SUPER_ADMIN".equals(role) || "ADMIN".equals(role)) {
+                return "00000";
+            }
+            throw new RuntimeException("Aucun guichet n'est associé à votre compte utilisateur.");
         }
 
         return utilisateur.getGuichet().getCodeGuichet();
@@ -267,6 +325,7 @@ public class CompteServiceImpl implements CompteService {
 
 
     @Override
+    @Transactional
     public void delete(Long id) {
 
         Compte compte = compteRepository.findById(id)
@@ -275,6 +334,17 @@ public class CompteServiceImpl implements CompteService {
                 );
 
         String numero = compte.getNumeroCompte();
+
+        if (compte.getCarte() != null || carteRepository.existsByCompteId(id)) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce compte possède une carte bancaire."
+            );
+        }
+        if (transactionRepository.existsByCompteSourceIdOrCompteDestinationId(id, id)) {
+            throw new IllegalStateException(
+                    "Suppression impossible : ce compte possède un historique de transactions."
+            );
+        }
 
         compteRepository.deleteById(id);
 
@@ -289,6 +359,7 @@ public class CompteServiceImpl implements CompteService {
 
 
     @Override
+    @Transactional
     public CompteResponse update(Long id, CompteRequest request) {
 
         Compte compte = compteRepository.findById(id)
@@ -305,7 +376,6 @@ public class CompteServiceImpl implements CompteService {
 
         // Ne pas modifier le numéro de compte / RIB / IBAN / guichet existants lors de la mise à jour
         compte.setTypeCompte(request.getTypeCompte());
-        compte.setSolde(request.getSolde() != null ? request.getSolde() : compte.getSolde());
         compte.setStatut(request.getStatut() != null && !request.getStatut().isBlank() ? request.getStatut() : compte.getStatut());
         compte.setClient(client);
 
@@ -318,6 +388,33 @@ public class CompteServiceImpl implements CompteService {
                 "Modification du compte " + updated.getNumeroCompte()
                         + " (type : " + updated.getTypeCompte()
                         + ", statut : " + updated.getStatut() + ")."
+        );
+
+        return compteMapper.toResponse(updated);
+    }
+
+    @Override
+    public CompteResponse updateStatut(Long id, String statut) {
+        String nouveauStatut = statut == null ? "" : statut.trim().toUpperCase(Locale.ROOT);
+        if (!List.of("ACTIF", "BLOQUE", "SUSPENDU").contains(nouveauStatut)) {
+            throw new IllegalArgumentException("Le statut doit être ACTIF, BLOQUE ou SUSPENDU.");
+        }
+
+        Compte compte = compteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Compte introuvable"));
+        compte.setStatut(nouveauStatut);
+        Compte updated = compteRepository.save(compte);
+
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.COMPTES,
+                "Compte #" + updated.getId(),
+                ("SUSPENDU".equals(nouveauStatut)
+                        ? "Suspension temporaire du compte "
+                        : "BLOQUE".equals(nouveauStatut)
+                            ? "Blocage définitif du compte "
+                            : "Réactivation du compte ")
+                        + updated.getNumeroCompte() + "."
         );
 
         return compteMapper.toResponse(updated);

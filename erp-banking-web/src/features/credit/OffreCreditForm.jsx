@@ -30,7 +30,7 @@ const calculerMensualite = (montant, taux, duree) => {
   return '';
 };
 
-function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
+function OffreCreditForm({ onClose, onSubmit, demandeCreditId, offresExistantes = [] }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,7 +75,21 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
 
       try {
         const data = await demandeCreditService.getByStatut('ACCEPTER');
-        setDemandes(Array.isArray(data) ? data : []);
+        const offres = Array.isArray(offresExistantes) ? offresExistantes : [];
+        const demandesAvecOffreActive = new Set(
+          offres
+            .filter((offre) =>
+              ['EN_ATTENTE', 'ACCEPTEE'].includes(
+                String(offre.statut || '').toUpperCase()
+              )
+            )
+            .map((offre) => String(offre.demandeCreditId))
+        );
+        setDemandes(
+          (Array.isArray(data) ? data : []).filter(
+            (demande) => !demandesAvecOffreActive.has(String(demande.id))
+          )
+        );
       } catch (err) {
         console.error(
           'Erreur chargement demandes :',
@@ -94,7 +108,7 @@ function OffreCreditForm({ onClose, onSubmit, demandeCreditId }) {
     };
 
     chargerDemandes();
-  }, []);
+  }, [offresExistantes]);
 
   useEffect(() => {
     const idDemande = donnees.demandeCreditId;

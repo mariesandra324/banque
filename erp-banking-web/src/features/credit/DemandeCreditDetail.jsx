@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
 import demandeCreditService from '../../service/demandeCreditService';
+import { useAuth } from '../../hooks/useAuth';
 
 
 import { BACKEND_URL as BASE_URL } from '../../config';
@@ -18,6 +19,8 @@ const formatDate = (dateString) => {
 function DemandeCreditDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const peutGererDemande = ['SUPER_ADMIN', 'ADMIN', 'GESTIONNAIRE'].includes(user?.role);
 
   const [demande, setDemande] = useState(null);
   const [chargement, setChargement] = useState(true);
@@ -310,7 +313,7 @@ function DemandeCreditDetail() {
 
       </div>
 
-      {estEnAttente && (
+      {estEnAttente && peutGererDemande && (
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={handleApprouver}

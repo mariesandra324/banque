@@ -51,9 +51,15 @@ public class UtilisateurServiceImpl implements UtilisateurService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Rôle introuvable."));
 
-        Guichet guichet= guichetRepository.findById(request.getGuichetId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("code guichet introuvable"));
+        Guichet guichet = null;
+        if (request.getGuichetId() != null) {
+            guichet = guichetRepository.findById(request.getGuichetId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Code guichet introuvable."));
+        }
+        if ("AGENT".equals(role.getNom()) && guichet == null) {
+            throw new IllegalArgumentException("Un guichet est obligatoire pour un agent.");
+        }
         Utilisateur utilisateur = Utilisateur.builder()
                 .nom(request.getNom())
                 .prenom(request.getPrenom())
@@ -115,6 +121,10 @@ if (request.getGuichetId() != null) {
                 new RuntimeException("Guichet introuvable")
             );
 }
+
+    if ("AGENT".equals(role.getNom()) && guichet == null) {
+        throw new IllegalArgumentException("Un guichet est obligatoire pour un agent.");
+    }
 
 utilisateur.setGuichet(guichet);
 

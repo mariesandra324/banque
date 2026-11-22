@@ -7,6 +7,7 @@ const PAR_PAGE = 10;
 
 const STATUTS_CREDIT = {
   ACTIF: { label: 'Actif', bg: '#dbeafe', color: '#1e40af' },
+  EN_COURS: { label: 'En cours', bg: '#dbeafe', color: '#1e40af' },
   SOLDE: { label: 'Soldé', bg: '#dcfce7', color: '#166534' },
   EN_RETARD: { label: 'En retard', bg: '#fee2e2', color: '#991b1b' },
 };
@@ -35,7 +36,7 @@ function CreditTable({ credits = [], onVoir }) {
     let filtres = !q
       ? liste
       : liste.filter((c) => {
-          const texte = `${c.client?.nom || ''} ${c.client?.prenom || ''} ${c.numeroCredit || ''}`.toLowerCase();
+          const texte = `${c.clientNom || ''} ${c.clientPrenom || ''} ${c.numeroCredit || ''}`.toLowerCase();
           return texte.includes(q);
         });
 

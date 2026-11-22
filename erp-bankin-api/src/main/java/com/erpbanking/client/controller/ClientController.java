@@ -29,7 +29,7 @@ public class ClientController {
 
     // Création d'un client
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('CLIENT_CREATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<ClientResponse> create(
             @Valid @RequestBody ClientRequest request
     ) {
@@ -42,7 +42,7 @@ public class ClientController {
 
     // Liste des clients
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
+    @PreAuthorize("hasAuthority('CLIENT_READ') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE')")
     public ResponseEntity<List<ClientResponse>> findAll() {
 
         return ResponseEntity.ok(
@@ -52,10 +52,8 @@ public class ClientController {
     
     @GetMapping("/{id}/dossier")
         @PreAuthorize(
-                "hasRole('ADMIN') or " +
-                "hasRole('GESTIONNAIRE') or " +
-                "hasRole('AGENT') or " +
-                "hasRole('COMPTABLE') or " +
+                "hasAuthority('CLIENT_READ') or " +
+                "hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE') or " +
                 "@authorizationService.isClientOwner(#id)"
         )
         public ResponseEntity<ClientDossierResponse> getDossier(
@@ -69,7 +67,7 @@ public class ClientController {
 
     // Recherche par ID
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE') or @authorizationService.isClientOwner(#id)")
+    @PreAuthorize("hasAuthority('CLIENT_READ') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE') or @authorizationService.isClientOwner(#id)")
     public ResponseEntity<ClientResponse> findById(
             @PathVariable Long id
     ) {
@@ -80,7 +78,7 @@ public class ClientController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('GESTIONNAIRE') or hasRole('AGENT') or hasRole('COMPTABLE')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE') or hasAnyRole('SUPER_ADMIN','ADMIN','GESTIONNAIRE','AGENT','COMPTABLE')")
     public ResponseEntity<List<ClientResponse>> searchClients(@RequestParam("query") String query) {
         List<ClientResponse> results = clientService.searchClients(query);
         return ResponseEntity.ok(results);
@@ -89,7 +87,7 @@ public class ClientController {
 
     // Modification d'un client
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or @authorizationService.isClientOwner(#id)")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT') or @authorizationService.isClientOwner(#id)")
     public ResponseEntity<ClientResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody ClientRequest request
@@ -103,7 +101,7 @@ public class ClientController {
 
     // Suppression d'un client
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    @PreAuthorize("hasAuthority('CLIENT_UPDATE') or hasAnyRole('SUPER_ADMIN','ADMIN','AGENT')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id
     ) {

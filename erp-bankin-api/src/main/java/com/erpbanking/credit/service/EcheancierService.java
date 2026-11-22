@@ -53,6 +53,19 @@ public class EcheancierService {
                 .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP)
                 .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP);
 
+        BigDecimal mensualiteCalculee = mensualite;
+        if (tauxMensuel.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal base = BigDecimal.ONE.add(tauxMensuel).pow(duree);
+            mensualiteCalculee = montantCredit
+                    .multiply(tauxMensuel)
+                    .multiply(base)
+                    .divide(base.subtract(BigDecimal.ONE), SCALE, RoundingMode.HALF_UP);
+        } else {
+            mensualiteCalculee = montantCredit
+                    .divide(BigDecimal.valueOf(duree), SCALE, RoundingMode.HALF_UP);
+        }
+        mensualite = mensualiteCalculee;
+
         BigDecimal capitalRestant = montantCredit;
 
         LocalDate datePremiereEcheance =

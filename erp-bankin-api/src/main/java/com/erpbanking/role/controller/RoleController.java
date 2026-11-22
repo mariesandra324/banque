@@ -16,7 +16,7 @@ import lombok.*;
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_MANAGE') or hasAuthority('USER_MANAGE') or hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class RoleController {
     private final RoleService roleService;
 

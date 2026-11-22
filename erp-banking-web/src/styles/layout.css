@@ -68,12 +68,6 @@ body {
     margin: 0;              
 }
 
-/* Sidebar ouverte */
-
-.main-content.sidebar-open {
-   margin-left: var(--sidebar-w);
-}
-
 
 /* Voile sombre derrière le menu lorsqu'il est ouvert en mode mobile/tablette */
 .sidebar-layer {

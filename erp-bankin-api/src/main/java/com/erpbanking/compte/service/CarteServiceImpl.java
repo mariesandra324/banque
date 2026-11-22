@@ -19,6 +19,10 @@ import com.erpbanking.compte.repository.CarteRepository;
 import com.erpbanking.compte.repository.CompteRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
+import com.erpbanking.audit.entity.AuditAction;
+import com.erpbanking.audit.entity.AuditModule;
+import com.erpbanking.audit.service.AuditService;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class CarteServiceImpl implements CarteService{
     private final CarteMapper carteMapper;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AuditService auditService;
 
 
     @Override
@@ -199,6 +204,45 @@ System.out.println("DESTINATAIRE = [" + emailClient + "]");
         }
 
         carteRepository.deleteById(id);
+    }
+
+
+    @Override
+    @Transactional
+    public CarteResponse reinitialiserPin(Long carteId) {
+        Carte carte = carteRepository.findById(carteId)
+                .orElseThrow(() -> new RuntimeException("Carte introuvable"));
+
+        Compte compte = carte.getCompte();
+        if (compte == null || compte.getClient() == null) {
+            throw new RuntimeException("Aucun client n'est associé à cette carte.");
+        }
+
+        String nouveauPin = String.format(
+                "%04d",
+                ThreadLocalRandom.current().nextInt(10000)
+        );
+        carte.setPinHash(passwordEncoder.encode(nouveauPin));
+        Carte updated = carteRepository.save(carte);
+
+        Client client = compte.getClient();
+        emailService.envoyerPinCarte(
+                client.getEmail().trim(),
+                construireNomClient(client),
+                carte.getNumeroCarte(),
+                nouveauPin
+        );
+
+        auditService.journaliser(
+                AuditAction.MODIFICATION,
+                AuditModule.CARTES,
+                "Carte #" + carte.getId(),
+                "Réinitialisation du code secret de la carte "
+                        + carte.getNumeroCarte()
+                        + " pour le client #" + client.getId() + "."
+        );
+
+        return carteMapper.toResponse(updated);
     }
 
 

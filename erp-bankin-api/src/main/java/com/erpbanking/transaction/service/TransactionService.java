@@ -20,4 +20,6 @@ public interface TransactionService {
     TransactionResponse obtenirReference(String reference);
     TransactionResponse obtenirParReference(String reference);
     List<TransactionResponse> obtenirHistoriqueClient(Long clientId);
+
+    TransactionResponse annulerTransaction(String reference);
 }
